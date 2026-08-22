@@ -1,0 +1,96 @@
+"use client";
+
+import { useState } from "react";
+import { CheckCircle, Send } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { AnimatedSection } from "@/components/ui/AnimatedSection";
+
+export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
+  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+
+  if (submitted) {
+    return (
+      <AnimatedSection>
+        <div className="container-custom max-w-xl py-8 text-center">
+          <CheckCircle className="mx-auto mb-4 h-12 w-12 text-sage" />
+          <h2 className="font-display text-3xl font-semibold tracking-tight text-ink">
+            Tak for din besked
+          </h2>
+          <p className="mt-3 text-ink/65">Jeg vender tilbage hurtigst muligt.</p>
+        </div>
+      </AnimatedSection>
+    );
+  }
+
+  return (
+    <AnimatedSection id="kontakt">
+      <div className="container-custom max-w-2xl">
+        {showHeading && (
+          <SectionHeading
+            eyebrow="Kontakt"
+            title="Har du spørgsmål? Kontakt mig."
+            description="Vil du hellere spørge, før du booker? Send en kort besked."
+          />
+        )}
+        <form
+          className="space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSubmitted(true);
+          }}
+        >
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field
+              id="name"
+              label="Navn"
+              value={formData.name}
+              onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
+            />
+            <Field
+              id="phone"
+              label="Telefon"
+              type="tel"
+              value={formData.phone}
+              onChange={(value) => setFormData((prev) => ({ ...prev, phone: value }))}
+            />
+          </div>
+          <Field
+            id="email"
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(value) => setFormData((prev) => ({ ...prev, email: value }))}
+          />
+          <div>
+            <label htmlFor="message" className="mb-2 block text-sm font-medium text-ink">
+              Besked
+            </label>
+            <textarea
+              id="message"
+              required
+              rows={5}
+              value={formData.message}
+              onChange={(event) =>
+                setFormData((prev) => ({ ...prev, message: event.target.value }))
+              }
+              className="w-full resize-none rounded-xl border border-sand bg-white px-4 py-3 text-base outline-none ring-sage/40 placeholder:text-ink/35 focus:ring-2"
+              placeholder="Hvad vil du gerne have hjælp til?"
+            />
+          </div>
+          <Button type="submit" size="lg">
+            <Send className="h-4 w-4" />
+            Send besked
+          </Button>
+        </form>
+      </div>
+    </AnimatedSection>
+  );
+}
