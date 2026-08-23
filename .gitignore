@@ -34,8 +34,13 @@ yarn-error.log*
 .env*
 !.env.example
 
-# vercel
+# vercel (never commit prebuilt output or project link)
 .vercel
+.vercel/output
+Dockerfile
+Dockerfile.vercel
+Containerfile
+Containerfile.vercel
 
 # typescript
 *.tsbuildinfo
