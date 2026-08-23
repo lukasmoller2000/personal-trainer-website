@@ -5,14 +5,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function getSiteUrl() {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercel) return vercel.startsWith("http") ? vercel : `https://${vercel}`;
+  return "http://localhost:3001";
+}
+
 export const siteConfig = {
   name: "Lukas Møller",
   trainer: "Lukas Møller",
-  experience: "+13 års erfaring",
-  role: "Ledelsesrepræsentant",
+  role: "Personlig træner",
   description:
     "Personlig træning i Viborg med Lukas Møller. Book en PT til 350 kr. eller start Online Coaching fra 799 kr./md.",
-  url: "https://nordicfit.dk",
   location: "Viborg",
   postalCode: "8800",
   venue: "Viborg Fitness Gym",

@@ -2,9 +2,9 @@ import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { siteConfig } from "@/lib/utils";
 
 const stats = [
-  { value: "+13 år", label: "Erfaring" },
   { value: "1:1", label: "Personlig træning" },
   { value: "350 kr.", label: "Pr. PT" },
+  { value: "799 kr.", label: "Fra /md. online" },
   { value: siteConfig.location, label: siteConfig.venue },
 ];
 

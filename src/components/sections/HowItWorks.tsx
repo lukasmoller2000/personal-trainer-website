@@ -15,7 +15,7 @@ const steps = [
   {
     number: "03",
     title: "Du får en plan",
-    text: "Du får en konkret plan for træning og kost, så du altid ved, hvad næste skridt er.",
+    text: "Du får en konkret plan, så du altid ved, hvad næste skridt er.",
   },
   {
     number: "04",

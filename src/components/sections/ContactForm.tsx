@@ -39,7 +39,7 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
           <SectionHeading
             eyebrow="Kontakt"
             title="Har du spørgsmål? Kontakt mig."
-            description="Vil du hellere spørge, før du booker? Send en kort besked."
+            description="Vil du hellere spørge, før du booker PT eller starter Online Coaching? Send en kort besked."
           />
         )}
         <form

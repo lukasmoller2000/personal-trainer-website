@@ -11,7 +11,7 @@ import { siteConfig } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Om",
-  description: `Mød ${siteConfig.trainer} — personlig træner og ${siteConfig.role.toLowerCase()} i ${siteConfig.venue}. ${siteConfig.experience}.`,
+  description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. Book PT til 350 kr. eller start Online Coaching fra 799 kr./md.`,
 };
 
 const philosophy = [

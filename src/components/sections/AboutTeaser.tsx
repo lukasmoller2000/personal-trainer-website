@@ -26,7 +26,7 @@ export function AboutTeaser() {
             align="left"
             eyebrow="Om træneren"
             title={siteConfig.trainer}
-            description={`${siteConfig.experience}. Jeg er ${siteConfig.role.toLowerCase()} i ${siteConfig.venue}. Jeg har selv lært at komme hertil — og jeg kan vise dig vejen.`}
+            description={`Jeg er personlig træner i ${siteConfig.venue}. Jeg har selv lært at komme hertil — og jeg kan vise dig vejen.`}
           />
           <p className="mb-4 leading-relaxed text-ink/65">
             Book en personlig træning til 350 kr., eller få løbende hjælp gennem Online Coaching.

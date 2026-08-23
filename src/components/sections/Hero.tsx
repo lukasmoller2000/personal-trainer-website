@@ -28,7 +28,7 @@ export function Hero() {
             <GymLogo size={56} />
             <p className="text-[11px] font-semibold tracking-[0.22em] text-white/45 uppercase">
               {siteConfig.trainer}
-              <span className="mt-1 block text-sage">{siteConfig.experience} · 1:1</span>
+              <span className="mt-1 block text-sage">Personlig træner · 1:1</span>
             </p>
           </motion.div>
 

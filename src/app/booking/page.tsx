@@ -5,7 +5,7 @@ import { PageHero } from "@/components/ui/PageHero";
 export const metadata: Metadata = {
   title: "Booking",
   description:
-    "Vælg den løsning, der passer til dig, og tag første skridt mod dine mål.",
+    "Book personlig træning med dato og tid, eller send en forespørgsel om Online Coaching. Opstart aftales.",
 };
 
 export default async function BookingPage({
@@ -19,8 +19,8 @@ export default async function BookingPage({
     <>
       <PageHero
         eyebrow="Booking"
-        title="Book dit forløb"
-        description="Vælg den løsning, der passer til dig, og tag første skridt mod dine mål."
+        title="Book eller send forespørgsel"
+        description="Personlig træning bookes med dato og tid. Online Coaching er en forespørgsel — opstart aftales."
       />
       <section className="pb-20 pt-10 md:pb-28">
         <div className="container-custom">

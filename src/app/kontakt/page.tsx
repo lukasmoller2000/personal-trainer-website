@@ -9,7 +9,8 @@ import { siteConfig } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Kontakt",
-  description: "Kontakt Lukas Møller — book træning eller stil et spørgsmål.",
+  description:
+    "Kontakt Lukas Møller — book personlig træning, send en forespørgsel om Online Coaching, eller stil et spørgsmål.",
 };
 
 const info = [
@@ -33,7 +34,7 @@ const info = [
   },
   {
     icon: Clock,
-    label: "Tider",
+    label: "Åbningstider i gymmet",
     value: siteConfig.hours,
     href: undefined,
   },
@@ -45,7 +46,7 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Kontakt"
         title="Har du spørgsmål? Kontakt mig."
-        description="Vil du i gang med det samme, så book en tid. Ellers skriv — så tager vi den derfra."
+        description="Book personlig træning med dato og tid, eller send en forespørgsel om Online Coaching. Har du spørgsmål først, så skriv her."
       />
 
       <section className="pt-12">

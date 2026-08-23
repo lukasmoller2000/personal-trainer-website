@@ -6,7 +6,7 @@ import { CtaBanner } from "@/components/sections/CtaBanner";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Ofte stillede spørgsmål om personlig træning, forløb og booking hos Lukas Møller.",
+    "Ofte stillede spørgsmål om personlig træning, Online Coaching og booking hos Lukas Møller.",
 };
 
 export default function FAQPage() {
@@ -15,7 +15,7 @@ export default function FAQPage() {
       <PageHero
         eyebrow="FAQ"
         title="Spørgsmål og svar"
-        description="Det, folk typisk spørger om, før de booker en session eller et forløb."
+        description="Det, folk typisk spørger om, før de booker PT eller starter Online Coaching."
       />
       <FAQ showHeading={false} />
       <CtaBanner />

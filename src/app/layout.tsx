@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Archivo, Outfit } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { siteConfig } from "@/lib/utils";
+import { getSiteUrl, siteConfig } from "@/lib/utils";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -19,8 +19,10 @@ const archivo = Archivo({
   display: "swap",
 });
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Lukas Møller – Personlig træning",
     template: `%s | ${siteConfig.name}`,
@@ -30,14 +32,14 @@ export const metadata: Metadata = {
     "Lukas Møller",
     "personlig træner",
     "personlig træning Viborg",
-    "PT forløb",
+    "online coaching",
     "book personlig træning",
     "styrketræning",
   ],
   openGraph: {
     type: "website",
     locale: "da_DK",
-    url: siteConfig.url,
+    url: siteUrl,
     title: "Lukas Møller – Personlig træning",
     description: siteConfig.description,
     siteName: siteConfig.name,
@@ -65,7 +67,7 @@ export default function RootLayout({
     "@type": "LocalBusiness",
     name: siteConfig.name,
     description: siteConfig.description,
-    url: siteConfig.url,
+    url: siteUrl,
     email: siteConfig.links.email,
     telephone: siteConfig.links.phone,
     founder: {

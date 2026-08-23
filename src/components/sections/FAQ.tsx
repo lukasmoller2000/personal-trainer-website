@@ -49,9 +49,14 @@ export const faqs = [
       "Enkelt PT: aflys senest 24 timer før. Online Coaching opsiges måneden ud.",
   },
   {
+    question: "Hvordan starter jeg Online Coaching?",
+    answer:
+      "Du sender en forespørgsel via booking. Du vælger ikke tid i gymmet — opstart aftales, og Lukas kontakter dig.",
+  },
+  {
     question: "Hvordan betaler jeg?",
     answer:
-      "Efter booking får du en bekræftelse. Betaling kan ske via MobilePay, bankoverførsel eller kontant inden første session.",
+      "Efter du har sendt en booking eller forespørgsel, vender jeg tilbage med bekræftelse og betalingsinfo. Tiden er ikke reserveret, før jeg har bekræftet. Betaling kan ske via MobilePay, bankoverførsel eller kontant.",
   },
 ];
 

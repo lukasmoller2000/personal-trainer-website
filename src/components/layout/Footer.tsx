@@ -28,8 +28,7 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Logo inverted />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-cream/55">
-              Personlig træning med {siteConfig.trainer} i {siteConfig.venue}.{" "}
-              {siteConfig.experience}.{" "}
+              Personlig træning med {siteConfig.trainer} i{" "}
               <a
                 href={siteConfig.gymUrl}
                 target="_blank"
@@ -38,6 +37,7 @@ export function Footer() {
               >
                 {siteConfig.venue}
               </a>
+              . Book en PT til 350 kr. eller start Online Coaching fra 799 kr./md.
             </p>
             <div className="mt-5">
               <SocialLinks inverted personalInstagram />
