@@ -139,7 +139,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
         <p className="mt-6 text-ink/60">
           {isInquiry
             ? "Lukas kontakter dig om opstart af dit online forløb."
-            : "Du hører fra mig med bekræftelse og betalingsinfo."}
+            : "Tiden er ikke reserveret endnu — jeg bekræfter tidspunktet og sender betalingsinfo."}
         </p>
         <Button href="/" className="mt-8">
           Til forsiden

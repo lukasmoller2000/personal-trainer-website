@@ -9,6 +9,8 @@ import { AnimatedSection } from "@/components/ui/AnimatedSection";
 
 export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -42,9 +44,26 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
         )}
         <form
           className="space-y-5"
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
-            setSubmitted(true);
+            setSubmitting(true);
+            setError(null);
+            try {
+              const response = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+              });
+              const data = (await response.json()) as { error?: string };
+              if (!response.ok) {
+                throw new Error(data.error ?? "Beskeden kunne ikke sendes");
+              }
+              setSubmitted(true);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Noget gik galt");
+            } finally {
+              setSubmitting(false);
+            }
           }}
         >
           <div className="grid gap-5 md:grid-cols-2">
@@ -85,9 +104,10 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
               placeholder="Hvad vil du gerne have hjælp til?"
             />
           </div>
-          <Button type="submit" size="lg">
+          {error && <p className="text-sm text-red-700">{error}</p>}
+          <Button type="submit" size="lg" disabled={submitting}>
             <Send className="h-4 w-4" />
-            Send besked
+            {submitting ? "Sender..." : "Send besked"}
           </Button>
         </form>
       </div>

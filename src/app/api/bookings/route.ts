@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createBooking, getBookedTimes } from "@/lib/bookings";
+import { createBooking } from "@/lib/bookings";
+import { MailNotConfiguredError, isValidEmail } from "@/lib/mail";
 import { getProduct, requiresTimeslot } from "@/lib/products";
 import { getSlotsForDate, isBookableDate } from "@/lib/availability";
+import { siteConfig } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const date = request.nextUrl.searchParams.get("date");
@@ -9,19 +11,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Dato mangler" }, { status: 400 });
   }
 
-  const times = await getBookedTimes(date);
-  return NextResponse.json({ times });
+  return NextResponse.json({ times: [] });
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { productId, date, time, name, email, phone, goal, notes } = body as Record<
-    string,
-    string | undefined
-  >;
+  let body: Record<string, string | undefined>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
+  }
 
-  if (!productId || !name || !email || !phone || !goal) {
+  const { productId, date, time, name, email, phone, goal, notes } = body;
+
+  if (!productId || !name?.trim() || !email?.trim() || !phone?.trim() || !goal?.trim()) {
     return NextResponse.json({ error: "Udfyld alle påkrævede felter" }, { status: 400 });
+  }
+
+  if (!isValidEmail(email)) {
+    return NextResponse.json({ error: "Ugyldig email" }, { status: 400 });
   }
 
   const product = getProduct(productId);
@@ -49,16 +57,24 @@ export async function POST(request: NextRequest) {
     const booking = await createBooking({
       productId,
       type: product.bookingType,
-      name,
-      email,
-      phone,
-      goal,
-      notes,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      goal: goal.trim(),
+      notes: notes?.trim() || undefined,
       ...(needsTimeslot ? { date, time } : {}),
     });
     return NextResponse.json({ booking });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Kunne ikke booke";
-    return NextResponse.json({ error: message }, { status: 409 });
+    if (error instanceof MailNotConfiguredError) {
+      return NextResponse.json(
+        {
+          error: `Formularen er midlertidigt ude af drift. Skriv direkte til ${siteConfig.links.email}.`,
+        },
+        { status: 503 }
+      );
+    }
+    const message = error instanceof Error ? error.message : "Kunne ikke sende booking";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
