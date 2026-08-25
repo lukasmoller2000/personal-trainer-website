@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Outfit } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -20,6 +20,12 @@ const archivo = Archivo({
 });
 
 const siteUrl = getSiteUrl();
+
+export const viewport: Viewport = {
+  themeColor: "#f3f1ec",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -369,11 +369,13 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                   />
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field
+                      id="name"
                       label="Navn"
                       value={form.name}
                       onChange={(value) => setForm((prev) => ({ ...prev, name: value }))}
                     />
                     <Field
+                      id="phone"
                       label="Telefon"
                       type="tel"
                       value={form.phone}
@@ -381,6 +383,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                     />
                   </div>
                   <Field
+                    id="email"
                     label="Email"
                     type="email"
                     value={form.email}

@@ -33,6 +33,12 @@ export function Field({
         required={required}
         value={value}
         placeholder={placeholder}
+        autoComplete={
+          type === "email" ? "email" : type === "tel" ? "tel" : inputId === "name" ? "name" : undefined
+        }
+        inputMode={type === "email" ? "email" : type === "tel" ? "tel" : undefined}
+        autoCapitalize={type === "email" ? "none" : undefined}
+        autoCorrect={type === "email" || type === "tel" ? "off" : undefined}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
           "min-h-12 w-full rounded-xl border border-sand bg-white px-4 py-3 text-base text-ink outline-none transition-shadow",

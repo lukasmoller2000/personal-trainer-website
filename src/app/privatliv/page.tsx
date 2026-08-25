@@ -19,8 +19,17 @@ export default function PrivacyPage() {
               1. Dataansvarlig
             </h2>
             <p>
-              {siteConfig.name} er dataansvarlig for de oplysninger, du giver via hjemmesiden,
+              {siteConfig.name} er dataansvarlig for de personoplysninger, du giver via hjemmesiden,
               herunder booking og kontaktformular.
+            </p>
+            <p className="mt-3">
+              {siteConfig.trainer}
+              <br />
+              {siteConfig.address}
+              <br />
+              Email: {siteConfig.links.email}
+              <br />
+              Telefon: {siteConfig.links.phone}
             </p>
           </section>
           <section>
@@ -28,19 +37,20 @@ export default function PrivacyPage() {
               2. Hvad vi indsamler
             </h2>
             <p>
-              Navn, email, telefon, dit mål og eventuelle bemærkninger, når du booker eller skriver.
-              Vi bruger oplysningerne til at gennemføre træning og svare dig.
+              Når du booker eller skriver, indsamler vi navn, email, telefonnummer, dit mål og
+              eventuelle bemærkninger. Vi indsamler ikke CPR-nummer og beder ikke om helbredsdata
+              som et fast felt. Skriver du selv om skader eller helbred i fritekst, behandles det
+              kun for at kunne svare og tilrettelægge træning.
             </p>
           </section>
           <section>
             <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
-              3. Opbevaring og videregivelse
+              3. Formål
             </h2>
             <p>
-              Booking- og kontaktforespørgsler sendes til {siteConfig.trainer} via e-mail, så
-              henvendelsen kan besvares. E-mailen sendes med Resend som databehandler. Vi gemmer
-              ikke bookinger i en kalenderdatabase på siden, og vi sælger ikke dine data. Du kan
-              skrive til {siteConfig.links.email} for indsigt eller sletning.
+              Oplysningerne bruges til at besvare din henvendelse, bekræfte eller aftale træning
+              og levere den ydelse, du har bedt om. Vi bruger ikke oplysningerne til nyhedsbreve
+              eller markedsføring, medmindre du selv beder om det.
             </p>
           </section>
           <section>
@@ -48,8 +58,65 @@ export default function PrivacyPage() {
               4. Retsgrundlag
             </h2>
             <p>
-              Oplysningerne behandles for at kunne besvare din henvendelse og levere den ydelse,
-              du har bedt om (kontrakt/foranstaltninger forud for kontrakt).
+              Behandlingen sker for at kunne opfylde eller forberede en aftale med dig (GDPR art.
+              6, stk. 1, litra b). Eventuel fritekst om helbred behandles kun, hvis det er
+              nødvendigt for at levere træningen, og du selv har givet oplysningen.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
+              5. Databehandlere og videregivelse
+            </h2>
+            <p>
+              Booking- og kontaktforespørgsler sendes som e-mail til {siteConfig.trainer}. E-mailen
+              sendes med Resend som databehandler. Resend er en amerikansk udbyder, så oplysninger
+              kan blive behandlet uden for EU/EØS. Resend tilbyder databehandleraftale.
+            </p>
+            <p className="mt-3">
+              Hvis der er tilkoblet en database, gemmes de samme oplysninger også i PostgreSQL hos
+              den udbyder, der er valgt til hosting. Uden database sendes kun e-mail. Vi sælger
+              ikke dine data, og vi deler dem ikke med andre, medmindre det er nødvendigt for at
+              levere træningen, eller vi er forpligtet ved lov.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
+              6. Opbevaring
+            </h2>
+            <p>
+              E-mails opbevares i indbakken, så henvendelsen kan besvares og træningen kan
+              gennemføres. Databaseposter (hvis de findes) opbevares med samme formål. Når
+              henvendelsen er afsluttet, og der ikke længere er et praktisk behov, slettes
+              oplysningerne efter anmodning eller i almindelig oprydning. Skriv til{" "}
+              {siteConfig.links.email} for indsigt eller sletning.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
+              7. Cookies
+            </h2>
+            <p>
+              Siden bruger ikke analyse-, reklame- eller tracking-cookies. Hostingudbyderen kan
+              sætte teknisk nødvendige cookies for at levere siden sikkert.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
+              8. Dine rettigheder
+            </h2>
+            <p>
+              Du kan bede om indsigt, berigtigelse, sletning, begrænsning, dataportabilitet og
+              gøre indsigelse. Skriv til {siteConfig.links.email}. Du kan også klage til
+              Datatilsynet (
+              <a
+                href="https://www.datatilsynet.dk"
+                className="text-ink underline underline-offset-2"
+                target="_blank"
+                rel="noreferrer"
+              >
+                datatilsynet.dk
+              </a>
+              ).
             </p>
           </section>
         </div>

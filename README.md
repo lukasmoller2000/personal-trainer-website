@@ -28,8 +28,14 @@ Ret navn, priser, adresse og kontakt i:
 - `src/lib/products.ts` — ydelser og priser
 - `src/lib/availability.ts` — ledige tider til PT
 
-Booking og kontakt sendes via Resend (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `BOOKINGS_NOTIFY_EMAIL`).
+Booking og kontakt sendes via Resend. Uden `RESEND_API_KEY` returnerer formularerne 503 — der vises aldrig falsk success.
+
+Valgfri PostgreSQL (`DATABASE_URL`): uden den sendes kun e-mail; med den gemmes bookinger og kontaktbeskeder også.
+
+Kanonisk URL til sitemap, robots og Open Graph kommer kun fra `NEXT_PUBLIC_SITE_URL`.
+
+Alle variabler står i `.env.example`.
 
 ## Stack
 
-Next.js 15 · React 19 · TypeScript · Tailwind CSS · Framer Motion
+Next.js 15 · React 19 · TypeScript · Tailwind CSS · Framer Motion · Resend · Prisma (valgfri)
