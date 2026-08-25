@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { Honeypot } from "@/components/ui/Honeypot";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 
@@ -16,6 +17,7 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
     email: "",
     phone: "",
     message: "",
+    website: "",
   });
 
   if (submitted) {
@@ -43,7 +45,7 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
           />
         )}
         <form
-          className="space-y-5"
+          className="relative space-y-5"
           onSubmit={async (event) => {
             event.preventDefault();
             setSubmitting(true);
@@ -66,6 +68,10 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
             }
           }}
         >
+          <Honeypot
+            value={formData.website}
+            onChange={(value) => setFormData((prev) => ({ ...prev, website: value }))}
+          />
           <div className="grid gap-5 md:grid-cols-2">
             <Field
               id="name"

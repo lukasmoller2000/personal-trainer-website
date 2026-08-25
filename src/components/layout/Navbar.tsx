@@ -51,6 +51,8 @@ export function Navbar() {
           type="button"
           className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-white lg:hidden"
           onClick={() => setIsOpen((open) => !open)}
+          aria-expanded={isOpen}
+          aria-controls="mobilmenu"
           aria-label={isOpen ? "Luk menu" : "Åbn menu"}
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -63,6 +65,7 @@ export function Navbar() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
+            id="mobilmenu"
             className="mx-auto mt-2 max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-ink/95 backdrop-blur-md lg:hidden"
           >
             <div className="flex flex-col gap-1 px-5 py-5">

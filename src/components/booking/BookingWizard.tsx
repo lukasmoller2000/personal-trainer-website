@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { Honeypot } from "@/components/ui/Honeypot";
 import {
   getCalendarDays,
   getSlotsForDate,
@@ -22,6 +23,7 @@ type FormState = {
   phone: string;
   goal: string;
   notes: string;
+  website: string;
 };
 
 type StepId = "product" | "date" | "time" | "details";
@@ -32,6 +34,7 @@ const emptyForm: FormState = {
   phone: "",
   goal: "",
   notes: "",
+  website: "",
 };
 
 const stepCopy: Record<StepId, string> = {
@@ -354,12 +357,16 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                   </p>
                 )}
                 <form
-                  className="mt-6 space-y-4"
+                  className="relative mt-6 space-y-4"
                   onSubmit={(event) => {
                     event.preventDefault();
                     void submit();
                   }}
                 >
+                  <Honeypot
+                    value={form.website}
+                    onChange={(value) => setForm((prev) => ({ ...prev, website: value }))}
+                  />
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field
                       label="Navn"
@@ -386,10 +393,11 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                     placeholder="Styrke, vægttab, struktur..."
                   />
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-ink">
+                    <label htmlFor="booking-notes" className="mb-2 block text-sm font-medium text-ink">
                       Evt. bemærkninger
                     </label>
                     <textarea
+                      id="booking-notes"
                       rows={4}
                       value={form.notes}
                       onChange={(event) =>

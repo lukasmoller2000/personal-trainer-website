@@ -91,6 +91,7 @@ export function FAQ({
               >
                 <span className="font-medium text-ink">{faq.question}</span>
                 <span
+                  aria-hidden
                   className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                     openIndex === index ? "bg-ink text-cream" : "bg-sand text-ink"

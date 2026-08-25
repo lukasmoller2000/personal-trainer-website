@@ -87,7 +87,7 @@ export function SiteVideo({
         muted={!playOnClick}
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         controls={controls && playing}
         poster={poster}
       />
@@ -96,7 +96,8 @@ export function SiteVideo({
           type="button"
           className={cn(
             "absolute inset-0 z-10 flex items-center justify-center",
-            playing ? "bg-transparent" : "bg-ink/25"
+            playing ? "bg-transparent" : "bg-ink/25",
+            playing && controls && "pointer-events-none"
           )}
           onClick={toggle}
           onMouseEnter={() => setShowPause(true)}

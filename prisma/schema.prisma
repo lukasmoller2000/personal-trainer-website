@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  productId String
+  type      String
+  date      String?
+  time      String?
+  name      String
+  email     String
+  phone     String
+  goal      String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -55,7 +55,7 @@ export default function AboutPage() {
           <div className="relative aspect-[473/922] self-start overflow-hidden rounded-2xl bg-ink">
             <Image
               src="/images/lukas-portrait.png"
-              alt={`${siteConfig.trainer}, personlig træner hos ${siteConfig.name}`}
+              alt={`${siteConfig.trainer}, personlig træner i ${siteConfig.venue}`}
               fill
               className="object-cover object-top"
               sizes="(min-width: 1024px) 50vw, 100vw"

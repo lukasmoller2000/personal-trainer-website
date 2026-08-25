@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import type { BookingType } from "@/lib/products";
 import { getProduct } from "@/lib/products";
+import { persistBooking } from "@/lib/db";
 import { sendNotification } from "@/lib/mail";
 import { formatDate } from "@/lib/utils";
 
@@ -65,6 +66,12 @@ export async function createBooking(
     text: lines.join("\n"),
     replyTo: input.email,
   });
+
+  try {
+    await persistBooking(booking);
+  } catch (error) {
+    console.error("Booking-email blev sendt, men kunne ikke gemmes i databasen", error);
+  }
 
   return booking;
 }

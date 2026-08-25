@@ -5,7 +5,8 @@ import { siteConfig } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Handelsbetingelser",
-  description: "Betingelser for booking af personlig træning hos Lukas Møller.",
+  description:
+    "Betingelser for personlig træning og Online Coaching hos Lukas Møller.",
 };
 
 export default function TermsPage() {

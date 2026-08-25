@@ -52,6 +52,19 @@ export const metadata: Metadata = {
       },
     ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lukas Møller – Personlig træning",
+    description: siteConfig.description,
+    images: ["/images/lukas-training.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
@@ -85,7 +98,7 @@ export default function RootLayout({
     },
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Falkevej 16B",
+      streetAddress: siteConfig.address.split(",")[0].trim(),
       postalCode: siteConfig.postalCode,
       addressLocality: siteConfig.location,
       addressCountry: "DK",

@@ -1,15 +1,14 @@
 import { Resend } from "resend";
 import { siteConfig } from "@/lib/utils";
+import { isValidEmail } from "@/lib/validation";
+
+export { isValidEmail };
 
 export class MailNotConfiguredError extends Error {
   constructor() {
     super("Email er ikke konfigureret");
     this.name = "MailNotConfiguredError";
   }
-}
-
-export function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 export function getNotifyEmail() {

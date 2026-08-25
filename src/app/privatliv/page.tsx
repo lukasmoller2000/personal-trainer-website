@@ -34,11 +34,22 @@ export default function PrivacyPage() {
           </section>
           <section>
             <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
-              3. Opbevaring
+              3. Opbevaring og videregivelse
             </h2>
             <p>
-              Bookinger gemmes, så tider ikke dobbeltbookes. Vi sælger ikke dine data. Du kan
+              Booking- og kontaktforespørgsler sendes til {siteConfig.trainer} via e-mail, så
+              henvendelsen kan besvares. E-mailen sendes med Resend som databehandler. Vi gemmer
+              ikke bookinger i en kalenderdatabase på siden, og vi sælger ikke dine data. Du kan
               skrive til {siteConfig.links.email} for indsigt eller sletning.
+            </p>
+          </section>
+          <section>
+            <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
+              4. Retsgrundlag
+            </h2>
+            <p>
+              Oplysningerne behandles for at kunne besvare din henvendelse og levere den ydelse,
+              du har bedt om (kontrakt/foranstaltninger forud for kontrakt).
             </p>
           </section>
         </div>

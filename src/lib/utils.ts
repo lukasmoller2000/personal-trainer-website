@@ -10,7 +10,8 @@ export function getSiteUrl() {
   if (explicit) return explicit.replace(/\/$/, "");
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
   if (vercel) return vercel.startsWith("http") ? vercel : `https://${vercel}`;
-  return "http://localhost:3001";
+  // Local metadata fallback only. Set NEXT_PUBLIC_SITE_URL in production.
+  return "http://localhost:3000";
 }
 
 export const siteConfig = {

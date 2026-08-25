@@ -14,7 +14,7 @@ export function AboutTeaser() {
           <div className="relative aspect-[473/922] overflow-hidden rounded-2xl bg-ink">
             <Image
               src="/images/lukas-portrait.png"
-              alt={`${siteConfig.trainer}, personlig træner hos ${siteConfig.name}`}
+              alt={`${siteConfig.trainer}, personlig træner i ${siteConfig.venue}`}
               fill
               className="object-cover object-top"
               sizes="(min-width: 1024px) 38vw, (min-width: 640px) 24rem, 85vw"

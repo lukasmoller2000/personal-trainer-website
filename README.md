@@ -6,10 +6,10 @@ Hjemmeside til personlig træning i Viborg. Book en PT til 350 kr. eller send en
 
 ```bash
 npm install
-npm run dev -- -p 3001
+npm run dev
 ```
 
-Åbn [http://localhost:3001](http://localhost:3001).
+Åbn [http://localhost:3000](http://localhost:3000). Brug `npm run dev -- -p 3001`, hvis port 3000 allerede er i brug.
 
 ## Sider
 

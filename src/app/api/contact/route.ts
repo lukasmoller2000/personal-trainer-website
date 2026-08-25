@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MailNotConfiguredError, isValidEmail, sendNotification } from "@/lib/mail";
+import { persistContactMessage } from "@/lib/db";
+import { MailNotConfiguredError, sendNotification } from "@/lib/mail";
+import { getClientKey, rateLimit } from "@/lib/rate-limit";
 import { siteConfig } from "@/lib/utils";
+import {
+  honeypotFilled,
+  isFilled,
+  isValidEmail,
+  isValidPhone,
+  readString,
+} from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(`contact:${getClientKey(request)}`);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "For mange forsøg. Vent et øjeblik, og prøv igen." },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } }
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -10,35 +27,42 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
   }
 
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const email = typeof body.email === "string" ? body.email.trim() : "";
-  const phone = typeof body.phone === "string" ? body.phone.trim() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
+  if (honeypotFilled(body.website)) {
+    return NextResponse.json({ ok: true });
+  }
 
-  if (!name || !email || !phone || !message) {
+  const name = readString(body, "name");
+  const email = readString(body, "email");
+  const phone = readString(body, "phone");
+  const message = readString(body, "message");
+
+  if (!isFilled(name, 80) || !isFilled(message, 2000)) {
     return NextResponse.json({ error: "Udfyld alle påkrævede felter" }, { status: 400 });
   }
 
-  if (!isValidEmail(email)) {
+  if (!isValidEmail(email.trim())) {
     return NextResponse.json({ error: "Ugyldig email" }, { status: 400 });
+  }
+
+  if (!isValidPhone(phone)) {
+    return NextResponse.json({ error: "Ugyldigt telefonnummer" }, { status: 400 });
   }
 
   try {
     await sendNotification({
-      subject: `Ny besked fra ${name}`,
+      subject: `Ny besked fra ${name.trim()}`,
       text: [
         "Ny besked fra kontaktformularen.",
         "",
-        `Navn: ${name}`,
-        `Email: ${email}`,
-        `Telefon: ${phone}`,
+        `Navn: ${name.trim()}`,
+        `Email: ${email.trim()}`,
+        `Telefon: ${phone.trim()}`,
         "",
         "Besked:",
-        message,
+        message.trim(),
       ].join("\n"),
-      replyTo: email,
+      replyTo: email.trim(),
     });
-    return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof MailNotConfiguredError) {
       return NextResponse.json(
@@ -51,4 +75,17 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : "Kunne ikke sende";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
+
+  try {
+    await persistContactMessage({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      message: message.trim(),
+    });
+  } catch (error) {
+    console.error("Kontakt-email blev sendt, men kunne ikke gemmes i databasen", error);
+  }
+
+  return NextResponse.json({ ok: true });
 }
