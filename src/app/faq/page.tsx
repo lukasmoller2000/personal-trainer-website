@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { FAQ } from "@/components/sections/FAQ";
 import { PageHero } from "@/components/ui/PageHero";
 import { CtaBanner } from "@/components/sections/CtaBanner";
+import { pageSeo } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageSeo("/faq", {
   title: "FAQ",
   description:
     "Ofte stillede spørgsmål om personlig træning, Online Coaching og booking hos Lukas Møller.",
-};
+});
 
 export default function FAQPage() {
   return (

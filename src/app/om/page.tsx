@@ -8,11 +8,12 @@ import { CtaBanner } from "@/components/sections/CtaBanner";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { siteConfig } from "@/lib/utils";
+import { pageSeo } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageSeo("/om", {
   title: "Om",
   description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. Book PT til 350 kr. eller start Online Coaching fra 799 kr./md.`,
-};
+});
 
 const philosophy = [
   {

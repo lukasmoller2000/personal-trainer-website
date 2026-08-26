@@ -88,6 +88,7 @@ export function FAQ({
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="flex min-h-14 w-full items-center justify-between gap-4 py-5 text-left"
                 aria-expanded={openIndex === index}
+                aria-controls={`faq-panel-${index}`}
               >
                 <span className="font-medium text-ink">{faq.question}</span>
                 <span
@@ -107,6 +108,7 @@ export function FAQ({
               <AnimatePresence>
                 {openIndex === index && (
                   <motion.div
+                    id={`faq-panel-${index}`}
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}

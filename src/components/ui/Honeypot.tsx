@@ -8,7 +8,7 @@ export function Honeypot({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+    <div className="sr-only" aria-hidden="true">
       <label htmlFor="website">Website</label>
       <input
         id="website"

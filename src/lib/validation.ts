@@ -12,10 +12,24 @@ export function isFilled(value: string, max: number, min = 2) {
   return trimmed.length >= min && trimmed.length <= max;
 }
 
+export async function readErrorMessage(response: Response, fallback: string) {
+  try {
+    const data = (await response.json()) as { error?: string };
+    return data.error ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function isIsoDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const parsed = new Date(`${value}T12:00:00`);
-  return !Number.isNaN(parsed.getTime());
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(year, month - 1, day);
+  return (
+    parsed.getFullYear() === year &&
+    parsed.getMonth() === month - 1 &&
+    parsed.getDate() === day
+  );
 }
 
 export function isClockTime(value: string) {

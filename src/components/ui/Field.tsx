@@ -10,6 +10,8 @@ export function Field({
   type = "text",
   placeholder,
   required = true,
+  minLength,
+  maxLength,
 }: {
   id?: string;
   label: string;
@@ -18,8 +20,14 @@ export function Field({
   type?: string;
   placeholder?: string;
   required?: boolean;
+  minLength?: number;
+  maxLength?: number;
 }) {
   const inputId = id ?? label.toLowerCase().replace(/\s+/g, "-");
+  const inferredMax =
+    maxLength ??
+    (type === "email" ? 254 : type === "tel" ? 30 : inputId === "name" ? 80 : undefined);
+  const inferredMin = minLength ?? (type === "tel" ? 8 : required ? 2 : undefined);
 
   return (
     <div>
@@ -33,6 +41,8 @@ export function Field({
         required={required}
         value={value}
         placeholder={placeholder}
+        minLength={inferredMin}
+        maxLength={inferredMax}
         autoComplete={
           type === "email" ? "email" : type === "tel" ? "tel" : inputId === "name" ? "name" : undefined
         }

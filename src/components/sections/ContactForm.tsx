@@ -7,6 +7,7 @@ import { Field } from "@/components/ui/Field";
 import { Honeypot } from "@/components/ui/Honeypot";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { readErrorMessage } from "@/lib/validation";
 
 export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
   const [submitted, setSubmitted] = useState(false);
@@ -56,9 +57,8 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
               });
-              const data = (await response.json()) as { error?: string };
               if (!response.ok) {
-                throw new Error(data.error ?? "Beskeden kunne ikke sendes");
+                throw new Error(await readErrorMessage(response, "Beskeden kunne ikke sendes"));
               }
               setSubmitted(true);
             } catch (err) {
@@ -101,6 +101,8 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
             <textarea
               id="message"
               required
+              minLength={2}
+              maxLength={2000}
               rows={5}
               value={formData.message}
               onChange={(event) =>

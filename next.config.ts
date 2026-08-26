@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        // Keep Next internals on their own Content-Type. nosniff on a 404
+        // text/plain JS chunk becomes a window error Event → overlay "[object Event]".
+        source: "/((?!_next/).*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

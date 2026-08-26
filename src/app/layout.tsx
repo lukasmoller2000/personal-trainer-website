@@ -45,7 +45,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "da_DK",
-    url: siteUrl,
     title: "Lukas Møller – Personlig træning",
     description: siteConfig.description,
     siteName: siteConfig.name,
@@ -67,9 +66,6 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-  },
-  alternates: {
-    canonical: siteUrl,
   },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
@@ -109,6 +105,21 @@ export default function RootLayout({
       addressLocality: siteConfig.location,
       addressCountry: "DK",
     },
+    priceRange: "350-799 DKK",
+    makesOffer: [
+      {
+        "@type": "Offer",
+        name: "Personlig træning",
+        price: "350",
+        priceCurrency: "DKK",
+      },
+      {
+        "@type": "Offer",
+        name: "Online Coaching",
+        price: "799",
+        priceCurrency: "DKK",
+      },
+    ],
   };
 
   return (
@@ -118,8 +129,14 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <a
+          href="#indhold"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-sage focus:px-4 focus:py-2 focus:text-ink"
+        >
+          Spring til indhold
+        </a>
         <Navbar />
-        <main>{children}</main>
+        <main id="indhold">{children}</main>
         <Footer />
       </body>
     </html>

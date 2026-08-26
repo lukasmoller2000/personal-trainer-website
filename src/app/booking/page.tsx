@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { BookingWizard } from "@/components/booking/BookingWizard";
 import { PageHero } from "@/components/ui/PageHero";
+import { pageSeo } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageSeo("/booking", {
   title: "Booking",
   description:
     "Book personlig træning med dato og tid, eller send en forespørgsel om Online Coaching. Opstart aftales.",
-};
+});
 
 export default async function BookingPage({
   searchParams,

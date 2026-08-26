@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/ui/PageHero";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { siteConfig } from "@/lib/utils";
+import { pageSeo } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageSeo("/privatliv", {
   title: "Privatlivspolitik",
   description: "Hvordan Lukas Møller behandler personoplysninger.",
-};
+});
 
 export default function PrivacyPage() {
   return (

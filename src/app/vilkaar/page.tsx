@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/ui/PageHero";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { siteConfig } from "@/lib/utils";
+import { pageSeo } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageSeo("/vilkaar", {
   title: "Handelsbetingelser",
   description:
     "Betingelser for personlig træning og Online Coaching hos Lukas Møller.",
-};
+});
 
 export default function TermsPage() {
   return (

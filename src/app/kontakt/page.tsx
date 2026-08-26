@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/Button";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { siteConfig } from "@/lib/utils";
+import { pageSeo } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageSeo("/kontakt", {
   title: "Kontakt",
   description:
     "Kontakt Lukas Møller — book personlig træning, send en forespørgsel om Online Coaching, eller stil et spørgsmål.",
-};
+});
 
 const info = [
   {

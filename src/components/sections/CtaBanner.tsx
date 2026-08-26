@@ -28,11 +28,11 @@ export function CtaBanner() {
         </p>
         <div className="mt-8">
           <Button
-            href="/#ydelser"
+            href="/booking"
             size="lg"
             className="uppercase tracking-[0.14em]"
           >
-            Find din løsning
+            Book nu
           </Button>
         </div>
       </div>

@@ -6,12 +6,13 @@ import { HowItWorks } from "@/components/sections/HowItWorks";
 import { CtaBanner } from "@/components/sections/CtaBanner";
 import { products } from "@/lib/products";
 import { cn, priceLabel } from "@/lib/utils";
+import { pageSeo } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageSeo("/ydelser", {
   title: "Ydelser",
   description:
     "Personlig træning og Online Coaching hos Lukas Møller i Viborg.",
-};
+});
 
 export default function ServicesPage() {
   return (

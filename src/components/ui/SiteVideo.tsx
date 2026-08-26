@@ -34,9 +34,15 @@ export function SiteVideo({
 
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
+    const onMediaError = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setPlaying(false);
+    };
 
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
+    video.addEventListener("error", onMediaError);
 
     if (playOnClick) {
       video.pause();
@@ -54,6 +60,7 @@ export function SiteVideo({
       return () => {
         video.removeEventListener("play", onPlay);
         video.removeEventListener("pause", onPause);
+        video.removeEventListener("error", onMediaError);
         video.removeEventListener("canplay", tryPlay);
         video.removeEventListener("loadeddata", tryPlay);
       };
@@ -62,6 +69,7 @@ export function SiteVideo({
     return () => {
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
+      video.removeEventListener("error", onMediaError);
     };
   }, [mediaSrc, playOnClick]);
 
@@ -71,7 +79,7 @@ export function SiteVideo({
 
     if (video.paused) {
       if (playOnClick) video.muted = false;
-      void video.play();
+      void video.play().catch(() => setPlaying(false));
     } else {
       video.pause();
     }
@@ -90,6 +98,11 @@ export function SiteVideo({
         preload="metadata"
         controls={controls && playing}
         poster={poster}
+        onError={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setPlaying(false);
+        }}
       />
       {playOnClick && (
         <button

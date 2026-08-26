@@ -9,7 +9,7 @@ export default function Error({
   reset: () => void;
 }) {
   return (
-    <section className="flex min-h-[70vh] flex-col items-center justify-center px-5 text-center">
+    <section className="flex min-h-[70vh] flex-col items-center justify-center px-5 pt-28 text-center">
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sage">Fejl</p>
       <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-ink">
         Noget gik galt

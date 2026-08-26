@@ -16,6 +16,7 @@ import {
 } from "@/lib/availability";
 import { getProduct, products, requiresTimeslot, type Product } from "@/lib/products";
 import { cn, formatDate, priceLabel } from "@/lib/utils";
+import { readErrorMessage } from "@/lib/validation";
 
 type FormState = {
   name: string;
@@ -105,9 +106,8 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
             : {}),
         }),
       });
-      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error ?? "Booking kunne ikke oprettes");
+        throw new Error(await readErrorMessage(response, "Booking kunne ikke oprettes"));
       }
       setDone(true);
     } catch (err) {
@@ -334,6 +334,11 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                     );
                   })}
                 </div>
+                {slots.length > 0 && slots.every((slot) => takenTimes.includes(slot)) && (
+                  <p className="mt-4 text-sm text-ink/55">
+                    Alle tider er optaget denne dag. Vælg en anden dato.
+                  </p>
+                )}
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Button variant="ghost" onClick={() => setStep(1)}>
                     <ArrowLeft className="h-4 w-4" /> Tilbage
@@ -394,6 +399,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                     value={form.goal}
                     onChange={(value) => setForm((prev) => ({ ...prev, goal: value }))}
                     placeholder="Styrke, vægttab, struktur..."
+                    maxLength={200}
                   />
                   <div>
                     <label htmlFor="booking-notes" className="mb-2 block text-sm font-medium text-ink">
@@ -402,6 +408,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                     <textarea
                       id="booking-notes"
                       rows={4}
+                      maxLength={2000}
                       value={form.notes}
                       onChange={(event) =>
                         setForm((prev) => ({ ...prev, notes: event.target.value }))
