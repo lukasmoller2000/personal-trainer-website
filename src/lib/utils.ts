@@ -5,10 +5,38 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function stripTrailingSlash(url: string) {
+  return url.replace(/\/$/, "");
+}
+
+function asHttpsUrl(hostOrUrl: string) {
+  const value = stripTrailingSlash(hostOrUrl.trim());
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return `https://${value}`;
+}
+
+function isLocalhostUrl(value: string) {
+  return /localhost|127\.0\.0\.1/i.test(value);
+}
+
 export function getSiteUrl() {
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, "");
-  // Local metadata fallback only. Canonical URL comes from NEXT_PUBLIC_SITE_URL.
+  const onVercel = Boolean(process.env.VERCEL);
+
+  // Never ship localhost as the canonical URL on Vercel.
+  if (explicit && !(onVercel && isLocalhostUrl(explicit))) {
+    return stripTrailingSlash(explicit);
+  }
+
+  if (process.env.VERCEL_ENV === "production") {
+    const productionHost =
+      process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() || process.env.VERCEL_URL?.trim();
+    if (productionHost) return asHttpsUrl(productionHost);
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) return asHttpsUrl(vercelUrl);
+
   return "http://localhost:3000";
 }
 

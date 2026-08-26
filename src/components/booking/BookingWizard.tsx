@@ -166,7 +166,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
             <li
               key={id}
               className={cn(
-                "rounded-full px-2 py-2 text-center text-[11px] font-medium sm:text-sm",
+                "truncate rounded-full px-2 py-2 text-center text-[11px] font-medium sm:text-sm",
                 step === index
                   ? "bg-ink text-cream"
                   : step > index
@@ -395,6 +395,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                     onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
                   />
                   <Field
+                    id="goal"
                     label="Dit mål"
                     value={form.goal}
                     onChange={(value) => setForm((prev) => ({ ...prev, goal: value }))}

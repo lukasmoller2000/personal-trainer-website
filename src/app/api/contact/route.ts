@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { persistContactMessage } from "@/lib/db";
-import { MailNotConfiguredError, sendNotification } from "@/lib/mail";
+import {
+  formUnavailableMessage,
+  MailNotConfiguredError,
+  MailSendError,
+  sendNotification,
+} from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
-import { siteConfig } from "@/lib/utils";
 import {
   honeypotFilled,
   isFilled,
@@ -65,15 +69,16 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof MailNotConfiguredError) {
-      return NextResponse.json(
-        {
-          error: `Formularen er midlertidigt ude af drift. Skriv direkte til ${siteConfig.links.email}.`,
-        },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: formUnavailableMessage() }, { status: 503 });
     }
-    const errorMessage = error instanceof Error ? error.message : "Kunne ikke sende";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    if (error instanceof MailSendError) {
+      return NextResponse.json({ error: formUnavailableMessage() }, { status: 502 });
+    }
+    console.error("Kunne ikke sende kontaktbesked", error);
+    return NextResponse.json(
+      { error: "Kunne ikke sende. Prøv igen, eller skriv direkte." },
+      { status: 500 }
+    );
   }
 
   try {

@@ -25,9 +25,26 @@ export function Navbar() {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen]);
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-5 md:pt-4">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-white/10 bg-ink/80 px-3 py-2 shadow-premium backdrop-blur-md md:px-4">
+      {isOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-0 bg-ink/50 lg:hidden"
+          aria-label="Luk menu"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between rounded-full border border-white/10 bg-ink/80 px-3 py-2 shadow-premium backdrop-blur-md md:px-4">
         <Logo inverted />
 
         <div className="hidden items-center gap-1 lg:flex">
@@ -73,7 +90,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             id="mobilmenu"
-            className="mx-auto mt-2 max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-ink/95 backdrop-blur-md lg:hidden"
+            className="relative z-10 mx-auto mt-2 max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-ink/95 backdrop-blur-md lg:hidden"
           >
             <div className="flex flex-col gap-1 px-5 py-5">
               {siteConfig.nav.map((item) => (

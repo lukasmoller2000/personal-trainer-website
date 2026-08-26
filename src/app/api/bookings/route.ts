@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createBooking } from "@/lib/bookings";
 import { getTakenTimes } from "@/lib/db";
-import { MailNotConfiguredError } from "@/lib/mail";
+import {
+  formUnavailableMessage,
+  MailNotConfiguredError,
+  MailSendError,
+} from "@/lib/mail";
 import { getProduct, requiresTimeslot } from "@/lib/products";
 import { getSlotsForDate, isBookableDate } from "@/lib/availability";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
-import { siteConfig } from "@/lib/utils";
 import {
   honeypotFilled,
   isClockTime,
@@ -115,14 +118,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ booking });
   } catch (error) {
     if (error instanceof MailNotConfiguredError) {
-      return NextResponse.json(
-        {
-          error: `Formularen er midlertidigt ude af drift. Skriv direkte til ${siteConfig.links.email}.`,
-        },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: formUnavailableMessage() }, { status: 503 });
     }
-    const message = error instanceof Error ? error.message : "Kunne ikke sende booking";
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (error instanceof MailSendError) {
+      return NextResponse.json({ error: formUnavailableMessage() }, { status: 502 });
+    }
+    console.error("Kunne ikke oprette booking", error);
+    return NextResponse.json(
+      { error: "Kunne ikke sende booking. Prøv igen, eller skriv direkte." },
+      { status: 500 }
+    );
   }
 }

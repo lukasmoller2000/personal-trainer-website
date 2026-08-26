@@ -115,7 +115,7 @@ export function SiteVideo({
           onClick={toggle}
           onMouseEnter={() => setShowPause(true)}
           onMouseLeave={() => setShowPause(false)}
-          aria-label={playing ? "Pause video" : "Afspil video"}
+          aria-label={playing ? "Sæt video på pause" : "Afspil video"}
         >
           {(!playing || showPause) && (
             <span className="flex h-20 w-20 items-center justify-center rounded-full border border-white/40 bg-white/15 text-white backdrop-blur-sm transition-transform duration-200 hover:scale-[1.04] hover:border-sage hover:bg-sage hover:text-ink">

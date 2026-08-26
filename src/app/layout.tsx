@@ -83,6 +83,7 @@ export default function RootLayout({
     name: siteConfig.name,
     description: siteConfig.description,
     url: siteUrl,
+    image: `${siteUrl}/images/lukas-training.jpg`,
     email: siteConfig.links.email,
     telephone: siteConfig.links.phone,
     founder: {
@@ -105,6 +106,12 @@ export default function RootLayout({
       addressLocality: siteConfig.location,
       addressCountry: "DK",
     },
+    sameAs: [
+      siteConfig.links.instagramPersonal,
+      siteConfig.links.instagram,
+      siteConfig.links.facebook,
+      siteConfig.links.tiktok,
+    ],
     priceRange: "350-799 DKK",
     makesOffer: [
       {
