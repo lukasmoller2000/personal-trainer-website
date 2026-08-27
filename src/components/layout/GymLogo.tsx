@@ -13,15 +13,19 @@ export function GymLogo({
       href={siteConfig.gymUrl}
       target="_blank"
       rel="noreferrer"
-      className={cn("inline-flex shrink-0", className)}
+      className={cn(
+        "inline-flex shrink-0 overflow-hidden rounded-full bg-ink",
+        className,
+      )}
       aria-label={`${siteConfig.venue} — åbn hjemmeside`}
+      style={{ width: size, height: size }}
     >
       <Image
-        src="/images/viborg-fitness-gym.jpg"
+        src="/images/vfg-logo.png"
         alt={siteConfig.venue}
         width={size}
         height={size}
-        className="rounded-full"
+        className="h-full w-full object-contain"
       />
     </a>
   );
