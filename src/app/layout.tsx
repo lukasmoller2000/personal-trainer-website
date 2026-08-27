@@ -3,6 +3,7 @@ import { Archivo, Outfit } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { getSiteUrl, siteConfig } from "@/lib/utils";
+import { siteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -30,38 +31,39 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Lukas Møller – Personlig træning",
+    default: "Lukas Møller – Personlig træner i Viborg",
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
   keywords: [
     "Lukas Møller",
-    "personlig træner",
+    "personlig træner Viborg",
+    "PT Viborg",
     "personlig træning Viborg",
     "online coaching",
-    "book personlig træning",
     "styrketræning",
+    "book personlig træning",
   ],
   openGraph: {
     type: "website",
     locale: "da_DK",
-    title: "Lukas Møller – Personlig træning",
+    title: "Lukas Møller – Personlig træner i Viborg",
     description: siteConfig.description,
     siteName: siteConfig.name,
     images: [
       {
-        url: "/images/lukas-training.jpg",
-        width: 800,
-        height: 1200,
-        alt: "Lukas Møller, personlig træner",
+        url: "/images/lukas-portrait.png",
+        width: 473,
+        height: 922,
+        alt: "Lukas Møller, personlig træner i Viborg",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lukas Møller – Personlig træning",
+    title: "Lukas Møller – Personlig træner i Viborg",
     description: siteConfig.description,
-    images: ["/images/lukas-training.jpg"],
+    images: ["/images/lukas-portrait.png"],
   },
   robots: {
     index: true,
@@ -77,57 +79,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: siteConfig.name,
-    description: siteConfig.description,
-    url: siteUrl,
-    image: `${siteUrl}/images/lukas-training.jpg`,
-    email: siteConfig.links.email,
-    telephone: siteConfig.links.phone,
-    founder: {
-      "@type": "Person",
-      name: siteConfig.trainer,
-      jobTitle: siteConfig.role,
-      worksFor: {
-        "@type": "HealthClub",
-        name: siteConfig.venue,
-      },
-    },
-    containedInPlace: {
-      "@type": "HealthClub",
-      name: siteConfig.venue,
-    },
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: siteConfig.address.split(",")[0].trim(),
-      postalCode: siteConfig.postalCode,
-      addressLocality: siteConfig.location,
-      addressCountry: "DK",
-    },
-    sameAs: [
-      siteConfig.links.instagramPersonal,
-      siteConfig.links.instagram,
-      siteConfig.links.facebook,
-      siteConfig.links.tiktok,
-    ],
-    priceRange: "350-799 DKK",
-    makesOffer: [
-      {
-        "@type": "Offer",
-        name: "Personlig træning",
-        price: "350",
-        priceCurrency: "DKK",
-      },
-      {
-        "@type": "Offer",
-        name: "Online Coaching",
-        price: "799",
-        priceCurrency: "DKK",
-      },
-    ],
-  };
+  const jsonLd = siteJsonLd(siteUrl);
 
   return (
     <html lang="da" className={`${outfit.variable} ${archivo.variable}`}>

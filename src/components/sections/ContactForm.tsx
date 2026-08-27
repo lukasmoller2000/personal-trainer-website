@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Honeypot } from "@/components/ui/Honeypot";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { track } from "@/lib/track";
 import { readErrorMessage } from "@/lib/validation";
 
 export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submitLock = useRef(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,7 +31,9 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
           <h2 className="font-display text-3xl font-semibold tracking-tight text-ink">
             Tak for din besked
           </h2>
-          <p className="mt-3 text-ink/65">Jeg vender tilbage hurtigst muligt.</p>
+          <p className="mt-3 text-ink/65">
+            Jeg vender tilbage hurtigst muligt på mail eller telefon.
+          </p>
         </div>
       </AnimatedSection>
     );
@@ -41,14 +45,17 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
         {showHeading && (
           <SectionHeading
             eyebrow="Kontakt"
-            title="Har du spørgsmål? Kontakt mig."
-            description="Vil du hellere spørge, før du booker PT eller starter Online Coaching? Send en kort besked."
+            title="Tag en uforpligtende snak"
+            description="Vil du spørge, før du booker PT eller starter online coaching? Skriv om dit mål, og hvilket program du overvejer."
           />
         )}
         <form
           className="relative space-y-5"
+          aria-busy={submitting}
           onSubmit={async (event) => {
             event.preventDefault();
+            if (submitLock.current) return;
+            submitLock.current = true;
             setSubmitting(true);
             setError(null);
             try {
@@ -58,10 +65,13 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
                 body: JSON.stringify(formData),
               });
               if (!response.ok) {
+                submitLock.current = false;
                 throw new Error(await readErrorMessage(response, "Beskeden kunne ikke sendes"));
               }
+              track("contact_submitted");
               setSubmitted(true);
             } catch (err) {
+              submitLock.current = false;
               setError(err instanceof Error ? err.message : "Noget gik galt");
             } finally {
               setSubmitting(false);
@@ -109,10 +119,14 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
                 setFormData((prev) => ({ ...prev, message: event.target.value }))
               }
               className="w-full resize-none rounded-xl border border-sand bg-white px-4 py-3 text-base outline-none ring-sage/40 placeholder:text-ink/35 focus:ring-2"
-              placeholder="Hvad vil du gerne have hjælp til?"
+              placeholder="Fx personlig træning i Viborg, online coaching, eller hvilket program der passer."
             />
           </div>
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-700" role="alert">
+              {error}
+            </p>
+          )}
           <Button type="submit" size="lg" disabled={submitting}>
             <Send className="h-4 w-4" />
             {submitting ? "Sender..." : "Send besked"}

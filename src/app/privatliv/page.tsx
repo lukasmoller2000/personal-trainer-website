@@ -38,10 +38,12 @@ export default function PrivacyPage() {
               2. Hvad vi indsamler
             </h2>
             <p>
-              Når du booker eller skriver, indsamler vi navn, email, telefonnummer, dit mål og
-              eventuelle bemærkninger. Vi indsamler ikke CPR-nummer og beder ikke om helbredsdata
-              som et fast felt. Skriver du selv om skader eller helbred i fritekst, behandles det
-              kun for at kunne svare og tilrettelægge træning.
+              Når du booker, indsamler vi navn, email, telefonnummer, dit mål, eventuelle
+              bemærkninger og — ved personlig træning — ønsket dato og tid. Når du skriver via
+              kontaktformularen, indsamler vi navn, email, telefonnummer og din besked. Vi
+              indsamler ikke CPR-nummer og beder ikke om helbredsdata som et fast felt. Skriver du
+              selv om skader eller helbred i fritekst, behandles det kun for at kunne svare og
+              tilrettelægge træning.
             </p>
           </section>
           <section>
@@ -98,7 +100,9 @@ export default function PrivacyPage() {
             </h2>
             <p>
               Siden bruger ikke analyse-, reklame- eller tracking-cookies. Hostingudbyderen kan
-              sætte teknisk nødvendige cookies for at levere siden sikkert.
+              sætte teknisk nødvendige cookies for at levere siden sikkert. Hvis der registreres
+              klik eller formularer, sker det lokalt i browseren uden tredjepartscookies og uden at
+              sende data til analysevirksomheder.
             </p>
           </section>
           <section>

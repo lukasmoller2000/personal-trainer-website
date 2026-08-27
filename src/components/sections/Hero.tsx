@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { SiteVideo } from "@/components/ui/SiteVideo";
@@ -13,38 +13,40 @@ const fadeUp = {
 };
 
 export function Hero() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section className="relative overflow-hidden bg-ink text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,255,0,0.08),transparent_42%)]" />
 
       <div className="container-custom relative grid min-h-[100svh] items-center gap-12 pt-28 pb-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16 lg:pt-32 lg:pb-20">
         <motion.div
-          initial="hidden"
+          initial={reduceMotion ? false : "hidden"}
           animate="show"
-          transition={{ staggerChildren: 0.08, delayChildren: 0.08 }}
+          transition={{ staggerChildren: reduceMotion ? 0 : 0.08, delayChildren: reduceMotion ? 0 : 0.08 }}
           className="max-w-2xl"
         >
           <motion.div variants={fadeUp} className="mb-8 flex items-center gap-4">
             <GymLogo size={56} />
             <p className="text-[11px] font-semibold tracking-[0.22em] text-white/45 uppercase">
               {siteConfig.trainer}
-              <span className="mt-1 block text-sage">Personlig træner · 1:1</span>
+              <span className="mt-1 block text-sage">Personlig træner · Viborg</span>
             </p>
           </motion.div>
 
           <motion.h1
             variants={fadeUp}
-            className="font-display text-[2.85rem] font-extrabold italic uppercase leading-[0.92] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.35rem] xl:text-8xl"
+            className="font-display text-[2.55rem] font-extrabold italic uppercase leading-[0.92] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.1rem] xl:text-[5.5rem]"
           >
-            Byg en stærkere
-            <span className="mt-2 block text-sage">version af dig selv</span>
+            Styrke, fedttab
+            <span className="mt-2 block text-sage">og en hverdag der holder</span>
           </motion.h1>
 
           <motion.p
             variants={fadeUp}
             className="mt-8 max-w-lg text-base leading-relaxed text-white/70 sm:text-lg md:mt-10 md:text-xl md:leading-relaxed"
           >
-            Personlig træning i Viborg med {siteConfig.trainer} hos{" "}
+            Jeg hjælper dig med at træne målrettet — 1:1 i{" "}
             <a
               href={siteConfig.gymUrl}
               target="_blank"
@@ -53,8 +55,7 @@ export function Hero() {
             >
               {siteConfig.venue}
             </a>
-            . Ingen tilfældige træningsplaner – bare målrettet træning, struktur og en plan, der
-            passer til dig.
+            , eller med online coaching hvis du træner selv. Klar plan, ærlig opfølgning. Ingen hype.
           </motion.p>
 
           <motion.div
@@ -64,34 +65,27 @@ export function Hero() {
             <Button
               href="/booking?produkt=session"
               size="lg"
+              trackEvent="pt_cta_clicked"
               className="group min-h-12 px-7 text-[13px] font-semibold tracking-[0.14em] uppercase"
             >
               Book personlig træning
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
             <Button
-              href="/booking?produkt=online"
+              href="/kontakt"
               variant="light"
               size="lg"
               className="min-h-12 px-7 text-[13px] font-semibold tracking-[0.14em] uppercase"
             >
-              Start online coaching
-            </Button>
-            <Button
-              href={siteConfig.gymUrl}
-              variant="accent"
-              size="lg"
-              className="min-h-12 px-7 text-[13px] font-semibold tracking-[0.14em] uppercase"
-            >
-              Viborg Fitness Gym
+              Tag en uforpligtende snak
             </Button>
           </motion.div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, x: 28 }}
+          initial={reduceMotion ? false : { opacity: 0, x: 28 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
+          transition={{ duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1], delay: reduceMotion ? 0 : 0.18 }}
           className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none"
         >
           <div className="absolute -inset-3 rounded-[2.2rem] border border-sage/20 lg:-inset-4" />

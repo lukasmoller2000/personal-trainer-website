@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +15,7 @@ import {
   weekdayLabels,
 } from "@/lib/availability";
 import { getProduct, products, requiresTimeslot, type Product } from "@/lib/products";
+import { track } from "@/lib/track";
 import { cn, formatDate, priceLabel } from "@/lib/utils";
 import { readErrorMessage } from "@/lib/validation";
 
@@ -67,6 +68,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const submitLock = useRef(false);
 
   const steps = stepsForProduct(product);
   const currentStep = steps[step] ?? "product";
@@ -80,6 +82,10 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
   const slots = selectedDate ? getSlotsForDate(selectedDate) : [];
 
   useEffect(() => {
+    track("booking_started");
+  }, []);
+
+  useEffect(() => {
     if (!selectedDate) return;
     const iso = toIsoDate(selectedDate);
     fetch(`/api/bookings?date=${iso}`)
@@ -89,8 +95,9 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
   }, [selectedDate]);
 
   const submit = async () => {
-    if (!product) return;
+    if (!product || submitLock.current) return;
     if (needsTimeslot && (!selectedDate || !selectedTime)) return;
+    submitLock.current = true;
     setSubmitting(true);
     setError(null);
 
@@ -107,10 +114,13 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
         }),
       });
       if (!response.ok) {
+        submitLock.current = false;
         throw new Error(await readErrorMessage(response, "Booking kunne ikke oprettes"));
       }
+      track("booking_completed", { productId: product.id });
       setDone(true);
     } catch (err) {
+      submitLock.current = false;
       setError(err instanceof Error ? err.message : "Noget gik galt");
     } finally {
       setSubmitting(false);
@@ -141,8 +151,8 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
         </dl>
         <p className="mt-6 text-ink/60">
           {isInquiry
-            ? "Lukas kontakter dig om opstart af dit online forløb."
-            : "Tiden er ikke reserveret endnu — jeg bekræfter tidspunktet og sender betalingsinfo."}
+            ? "Jeg vender tilbage på mail eller telefon, så vi kan aftale opstart af dit online forløb."
+            : "Tiden er ikke reserveret endnu. Jeg bekræfter tidspunktet på mail eller telefon og sender betalingsinfo."}
         </p>
         <Button href="/" className="mt-8">
           Til forsiden
@@ -156,15 +166,20 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
   return (
     <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1fr_280px]">
       <div>
+        <p className="mb-3 text-sm text-ink/55">
+          Trin {step + 1} af {steps.length}: {stepCopy[currentStep]}
+        </p>
         <ol
           className={cn(
             "mb-8 grid gap-2",
             steps.length === 2 ? "grid-cols-2" : "grid-cols-4"
           )}
+          aria-label="Bookingtrin"
         >
           {steps.map((id, index) => (
             <li
               key={id}
+              aria-current={step === index ? "step" : undefined}
               className={cn(
                 "truncate rounded-full px-2 py-2 text-center text-[11px] font-medium sm:text-sm",
                 step === index
@@ -237,7 +252,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                 <div className="mt-6 flex items-center justify-between">
                   <button
                     type="button"
-                    className="min-h-11 rounded-xl px-3 hover:bg-sand"
+                    className="min-h-11 min-w-11 rounded-xl px-3 hover:bg-sand"
                     onClick={() =>
                       setCursor((prev) =>
                         prev.month === 0
@@ -252,7 +267,7 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                   <p className="font-medium capitalize">{monthTitle(cursor.year, cursor.month)}</p>
                   <button
                     type="button"
-                    className="min-h-11 rounded-xl px-3 hover:bg-sand"
+                    className="min-h-11 min-w-11 rounded-xl px-3 hover:bg-sand"
                     onClick={() =>
                       setCursor((prev) =>
                         prev.month === 11
@@ -275,11 +290,14 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                     if (!day) return <div key={`empty-${index}`} />;
                     const bookable = isBookableDate(day);
                     const selected = selectedDate && toIsoDate(day) === toIsoDate(selectedDate);
+                    const iso = toIsoDate(day);
                     return (
                       <button
-                        key={toIsoDate(day)}
+                        key={iso}
                         type="button"
                         disabled={!bookable}
+                        aria-label={`${day.getDate()}. ${monthTitle(cursor.year, cursor.month)}${bookable ? "" : ", ikke ledig"}`}
+                        aria-pressed={Boolean(selected)}
                         onClick={() => {
                           setSelectedDate(day);
                           setSelectedTime(null);
@@ -321,6 +339,8 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                         key={slot}
                         type="button"
                         disabled={taken}
+                        aria-pressed={selectedTime === slot}
+                        aria-label={taken ? `${slot}, optaget` : slot}
                         onClick={() => setSelectedTime(slot)}
                         className={cn(
                           "min-h-12 rounded-xl border text-sm font-medium",
@@ -358,11 +378,12 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                 {isInquiry && (
                   <p className="mt-2 text-sm leading-relaxed text-ink/55">
                     Online Coaching er et løbende program uden fast træningstid. Du booker ikke en
-                    tid i gymmet — Lukas kontakter dig om opstart.
+                    tid i gymmet — jeg kontakter dig om opstart.
                   </p>
                 )}
                 <form
                   className="relative mt-6 space-y-4"
+                  aria-busy={submitting}
                   onSubmit={(event) => {
                     event.preventDefault();
                     void submit();
@@ -418,7 +439,15 @@ export function BookingWizard({ initialProductId }: { initialProductId?: string 
                       placeholder="Skader, træningserfaring..."
                     />
                   </div>
-                  {error && <p className="text-sm text-red-700">{error}</p>}
+                  {error && (
+                    <p className="text-sm text-red-700" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <p className="text-sm text-ink/50">
+                    Når du sender, vender jeg tilbage med bekræftelse. Tiden er ikke reserveret, før
+                    jeg har svaret.
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     <Button variant="ghost" type="button" onClick={() => setStep(step - 1)}>
                       <ArrowLeft className="h-4 w-4" /> Tilbage

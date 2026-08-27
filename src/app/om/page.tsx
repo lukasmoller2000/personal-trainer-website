@@ -5,14 +5,15 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
 import { SiteVideo } from "@/components/ui/SiteVideo";
 import { CtaBanner } from "@/components/sections/CtaBanner";
+import { Journey } from "@/components/sections/Journey";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { siteConfig } from "@/lib/utils";
 import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = pageSeo("/om", {
-  title: "Om",
-  description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. Book PT til 350 kr. eller start Online Coaching fra 799 kr./md.`,
+  title: "Om Lukas Møller – personlig træner i Viborg",
+  description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. 1:1 PT til 350 kr., eller online coaching til 799 kr./md.`,
 });
 
 const philosophy = [
@@ -44,8 +45,9 @@ export default function AboutPage() {
               <span className="mt-2 block text-sage">skal til.</span>
             </h1>
             <p className="mt-10 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg md:mt-12 md:text-xl">
-              Jeg har selv brugt mange år på at lære, hvad der virker. Nu hjælper jeg dig med at
-              gøre det samme – med en klar plan, struktur og personlig opfølgning.
+              Ikke fordi der findes en genvej. Fordi jeg har prøvet det, der ikke virker — og det,
+              der gør. Nu hjælper jeg dig med en klar plan, struktur og opfølgning, der passer til
+              dit liv.
             </p>
           </div>
         </div>
@@ -58,6 +60,7 @@ export default function AboutPage() {
               src="/images/lukas-portrait.png"
               alt={`${siteConfig.trainer}, personlig træner i ${siteConfig.venue}`}
               fill
+              priority
               className="object-cover object-top"
               sizes="(min-width: 1024px) 50vw, 100vw"
             />
@@ -74,16 +77,21 @@ export default function AboutPage() {
               </span>
             </h2>
             <p className="mt-6 text-base leading-relaxed text-ink/65 md:text-lg">
-              Jeg arbejder med personlig træning og online coaching med fokus på styrke, fedttab og
-              en træningshverdag, der faktisk fungerer i praksis.
+              Jeg arbejder med personlig træning og online coaching. Fokus er styrke, fedttab og en
+              træningshverdag, der faktisk kan holdes — ikke et program, du dropper efter tre uger.
             </p>
             <p className="mt-4 text-base leading-relaxed text-ink/65 md:text-lg">
-              Uanset om du træner sammen med mig i Viborg Fitness Gym eller følger et online forløb,
-              får du en klar plan, løbende opfølgning og hjælp til at holde kursen.
+              Tilgangen er individuel. Vi tager udgangspunkt i dit niveau, din uge og det, du gerne
+              vil opnå. Progressionen er realistisk: teknik først, så belastning, så næste skridt.
+            </p>
+            <p className="mt-4 text-base leading-relaxed text-ink/65 md:text-lg">
+              Det er til dig, der vil træne seriøst uden at gøre det til et sideshow — uanset om du
+              er i gang, eller skal i gang. Personlig træning foregår 1:1 i Viborg Fitness Gym.
+              Online coaching er til dig, der træner selv.
             </p>
             <p className="mt-6 leading-relaxed text-ink/65">
               Du kan booke én personlig træning til 350 kr. eller få løbende hjælp gennem Online
-              Coaching.
+              Coaching til 799 kr./md.
             </p>
             <div className="mt-10 mb-6 flex items-center gap-3">
               <GymLogo size={56} />
@@ -102,6 +110,8 @@ export default function AboutPage() {
         </div>
       </AnimatedSection>
 
+      <Journey />
+
       <AnimatedSection className="bg-ink">
         <div className="container-custom">
           <SectionHeading
@@ -117,14 +127,6 @@ export default function AboutPage() {
             videoClassName="aspect-[9/16] object-cover object-center"
             playOnClick
             controls
-          />
-          <Image
-            src="/images/from-boy-to-beast.jpg"
-            alt={`${siteConfig.trainer}: From boy to beast — egen transformation`}
-            width={1600}
-            height={800}
-            className="mt-6 h-auto w-full rounded-2xl"
-            sizes="(min-width: 1024px) 72rem, 100vw"
           />
         </div>
       </AnimatedSection>
@@ -176,9 +178,14 @@ export default function AboutPage() {
               Du får en klar plan for din træning og ved, hvad du skal arbejde med. Vi følger din
               udvikling og justerer undervejs, så planen fortsat passer til dig og din hverdag.
             </p>
-            <Button href="/booking" className="mt-10">
-              Book personlig træning
-            </Button>
+            <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row">
+              <Button href="/booking?produkt=session" trackEvent="pt_cta_clicked">
+                Book personlig træning
+              </Button>
+              <Button href="/kontakt" variant="outline">
+                Tag en uforpligtende snak
+              </Button>
+            </div>
           </div>
         </div>
       </AnimatedSection>

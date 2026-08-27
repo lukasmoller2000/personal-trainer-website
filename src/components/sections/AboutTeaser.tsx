@@ -29,7 +29,8 @@ export function AboutTeaser() {
             description={`Jeg er personlig træner i ${siteConfig.venue}. Jeg har selv lært at komme hertil — og jeg kan vise dig vejen.`}
           />
           <p className="mb-4 leading-relaxed text-ink/65">
-            Book en personlig træning til 350 kr., eller få løbende hjælp gennem Online Coaching.
+            Book en personlig træning til 350 kr., eller få løbende hjælp gennem Online Coaching til
+            799 kr./md.
           </p>
           <div className="mb-6 flex items-center gap-3">
             <GymLogo size={56} />

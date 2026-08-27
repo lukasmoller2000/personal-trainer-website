@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 
@@ -23,18 +24,36 @@ export function CtaBanner() {
           Klar til at rykke dig?
         </h2>
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-cream/80 md:text-lg">
-          Uanset om du vil træne 1:1 eller have løbende online coaching, har jeg en løsning, der
-          passer til dine mål.
+          Book 1:1 i Viborg, start online coaching, eller skriv hvis du er i tvivl om hvad der
+          passer.
         </p>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           <Button
-            href="/booking"
+            href="/booking?produkt=session"
             size="lg"
+            trackEvent="pt_cta_clicked"
             className="uppercase tracking-[0.14em]"
           >
-            Book nu
+            Book personlig træning
+          </Button>
+          <Button
+            href="/booking?produkt=online"
+            variant="light"
+            size="lg"
+            trackEvent="coaching_cta_clicked"
+            className="uppercase tracking-[0.14em]"
+          >
+            Start online coaching
           </Button>
         </div>
+        <p className="mt-5">
+          <Link
+            href="/kontakt"
+            className="text-sm font-medium text-cream/70 underline decoration-sage/40 underline-offset-4 hover:text-sage"
+          >
+            Tag en uforpligtende snak
+          </Link>
+        </p>
       </div>
     </AnimatedSection>
   );

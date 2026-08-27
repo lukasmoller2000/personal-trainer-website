@@ -5,6 +5,7 @@ import { Values } from "@/components/sections/Values";
 import { ForWhom } from "@/components/sections/ForWhom";
 import { Offerings } from "@/components/sections/Offerings";
 import { HowItWorks } from "@/components/sections/HowItWorks";
+import { Testimonials } from "@/components/sections/Testimonials";
 import { AboutTeaser } from "@/components/sections/AboutTeaser";
 import { CtaBanner } from "@/components/sections/CtaBanner";
 import { pageSeo } from "@/lib/seo";
@@ -19,6 +20,7 @@ export default function HomePage() {
       <Values />
       <ForWhom />
       <Offerings />
+      <Testimonials />
       <HowItWorks />
       <AboutTeaser />
       <CtaBanner />

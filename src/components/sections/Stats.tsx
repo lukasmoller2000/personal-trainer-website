@@ -4,7 +4,7 @@ import { siteConfig } from "@/lib/utils";
 const stats = [
   { value: "1:1", label: "Personlig træning" },
   { value: "350 kr.", label: "Pr. PT" },
-  { value: "799 kr.", label: "Fra /md. online" },
+  { value: "799 kr.", label: "Pr. md. online" },
   { value: siteConfig.location, label: siteConfig.venue },
 ];
 

@@ -21,7 +21,7 @@ export const faqs = [
   {
     question: "Hvad er forskellen på PT og Online Coaching?",
     answer:
-      "En personlig træning er én session i gymmet til 350 kr. Online Coaching er et løbende månedligt forløb med program, kostplan og ugentlige check-ins — fra 799 kr./md.",
+      "En personlig træning er én session i gymmet til 350 kr. Online Coaching er et løbende månedligt forløb med program, kostplan og ugentlige check-ins — 799 kr./md.",
   },
   {
     question: "Hvordan fungerer Online Coaching?",

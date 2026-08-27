@@ -46,6 +46,7 @@ export function Field({
         autoComplete={
           type === "email" ? "email" : type === "tel" ? "tel" : inputId === "name" ? "name" : undefined
         }
+        aria-required={required}
         inputMode={type === "email" ? "email" : type === "tel" ? "tel" : undefined}
         autoCapitalize={type === "email" ? "none" : undefined}
         autoCorrect={type === "email" || type === "tel" ? "off" : undefined}

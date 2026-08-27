@@ -11,7 +11,7 @@ export function Offerings() {
           className="max-w-3xl"
           eyebrow="Ydelser"
           title="Vælg det, der passer til dig"
-          description="Uanset om du vil træne 1:1 i gymmet eller have løbende online coaching, har jeg en løsning, der passer til dig."
+          description="Uanset om du vil træne 1:1 i Viborg Fitness Gym eller have løbende online coaching, har jeg en løsning, der passer til dit mål."
         />
 
         <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">

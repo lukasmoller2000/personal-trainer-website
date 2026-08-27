@@ -5,9 +5,9 @@ import { CtaBanner } from "@/components/sections/CtaBanner";
 import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = pageSeo("/faq", {
-  title: "FAQ",
+  title: "FAQ – personlig træning og online coaching",
   description:
-    "Ofte stillede spørgsmål om personlig træning, Online Coaching og booking hos Lukas Møller.",
+    "Ofte stillede spørgsmål om personlig træning i Viborg, Online Coaching og booking hos Lukas Møller.",
 });
 
 export default function FAQPage() {

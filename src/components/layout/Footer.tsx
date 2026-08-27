@@ -37,7 +37,7 @@ export function Footer() {
               >
                 {siteConfig.venue}
               </a>
-              . Book en PT til 350 kr. eller start Online Coaching fra 799 kr./md.
+              . Book en PT til 350 kr. eller start Online Coaching til 799 kr./md.
             </p>
             <div className="mt-5">
               <SocialLinks inverted personalInstagram />
@@ -107,9 +107,20 @@ export function Footer() {
               Book
             </h2>
             <p className="mt-4 mb-5 text-sm leading-relaxed text-cream/70">
-              Book personlig træning eller start online coaching.
+              Book 1:1 i Viborg, eller start online coaching.
             </p>
-            <Button href="/booking">Book nu</Button>
+            <Button href="/booking?produkt=session" trackEvent="pt_cta_clicked">
+              Book personlig træning
+            </Button>
+            <p className="mt-4 text-sm text-cream/55">
+              <Link href="/booking?produkt=online" className="hover:text-cream">
+                Online coaching
+              </Link>
+              {" · "}
+              <Link href="/kontakt" className="hover:text-cream">
+                Tag en snak
+              </Link>
+            </p>
           </div>
         </div>
 

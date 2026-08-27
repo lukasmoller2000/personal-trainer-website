@@ -21,7 +21,7 @@ export default function TermsPage() {
               1. Ydelser
             </h2>
             <p>
-              Du kan booke én personlig træning til 350 kr. eller Online Coaching fra 799 kr./md.
+              Du kan booke én personlig træning til 350 kr. eller Online Coaching til 799 kr./md.
               Online Coaching opsiges måneden ud.
             </p>
           </section>

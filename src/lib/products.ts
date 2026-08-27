@@ -11,6 +11,7 @@ export type Product = {
   tagline: string;
   description: string;
   fits: string;
+  how: string[];
   sessions: number;
   weeks?: number;
   durationMinutes: number;
@@ -32,10 +33,16 @@ export const products: Product[] = [
     bookingType: "session",
     label: "PT",
     name: "Personlig træning",
-    tagline: "Det simple valg",
+    tagline: "1:1 i Viborg",
     description:
       "1:1 træning med mig i Viborg Fitness Gym. Vi arbejder med teknik, styrke, progression og dine konkrete mål.",
-    fits: "Til dig, der vil booke én PT, når det passer.",
+    fits: "Til dig, der vil træne sammen med mig i gymmet — én session ad gangen, uden binding.",
+    how: [
+      "Book en tid i Viborg Fitness Gym, Falkevej 16B",
+      "Sessionen varer 60 minutter og er 1:1",
+      "Vi træner teknik, styrke og det, du gerne vil opnå",
+      "Jeg bekræfter tiden og sender betalingsinfo",
+    ],
     sessions: 1,
     durationMinutes: 60,
     price: 350,
@@ -57,14 +64,18 @@ export const products: Product[] = [
     tagline: "Løbende månedligt forløb",
     description:
       "Et løbende online forløb med personligt træningsprogram, kostplan og opfølgning. Du træner selv — jeg sørger for planen, justeringerne og at det passer til din hverdag.",
-    fits: "Til dig, der vil have løbende hjælp og accountability.",
+    fits: "Til dig, der vil have løbende hjælp og accountability — uanset hvor du træner.",
+    how: [
+      "Send en forespørgsel — du vælger ikke tid i gymmet",
+      "Vi aftaler opstart",
+      "Du får program, kostplan og ugentlige check-ins",
+      "Forløbet kører måned for måned og opsiges måneden ud",
+    ],
     sessions: 1,
     durationMinutes: 45,
     price: 799,
-    pricePrefix: "Fra ",
     priceSuffix: "/md.",
     priceNote: "Opsiges måneden ud",
-    badge: "Mest populære",
     emphasis: "premium",
     cta: "Start online coaching",
     perks: [
@@ -84,4 +95,8 @@ export function getProduct(id: string) {
 
 export function requiresTimeslot(product: Product) {
   return product.bookingType === "session";
+}
+
+export function trackEventForProduct(productId: string) {
+  return productId === "online" ? "coaching_cta_clicked" : "pt_cta_clicked";
 }

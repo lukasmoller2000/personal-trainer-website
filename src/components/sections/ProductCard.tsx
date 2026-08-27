@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cn, formatPrice } from "@/lib/utils";
-import type { Product } from "@/lib/products";
+import { trackEventForProduct, type Product } from "@/lib/products";
 
 export function ProductCard({ product }: { product: Product }) {
   const price = formatPrice(product.price);
@@ -49,6 +49,9 @@ export function ProductCard({ product }: { product: Product }) {
       <p className={cn("mt-2 text-sm font-medium", premium ? "text-white/50" : "text-ink/50")}>
         {product.tagline}
       </p>
+      <p className={cn("mt-2 text-sm", premium ? "text-white/70" : "text-ink/65")}>
+        {product.fits}
+      </p>
 
       {price ? (
         <div className="mt-6">
@@ -93,6 +96,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Button
         href={`/booking?produkt=${product.id}`}
         variant={premium || featured ? "primary" : "secondary"}
+        trackEvent={trackEventForProduct(product.id)}
         size="lg"
         className="mt-8 w-full font-semibold tracking-[0.06em]"
       >

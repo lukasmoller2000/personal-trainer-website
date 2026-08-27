@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import { Check } from "lucide-react";
+import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
 import { Button } from "@/components/ui/Button";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { CtaBanner } from "@/components/sections/CtaBanner";
-import { products } from "@/lib/products";
+import { products, trackEventForProduct } from "@/lib/products";
 import { cn, priceLabel } from "@/lib/utils";
 import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = pageSeo("/ydelser", {
-  title: "Ydelser",
+  title: "Personlig træning og online coaching i Viborg",
   description:
-    "Personlig træning og Online Coaching hos Lukas Møller i Viborg.",
+    "PT i Viborg Fitness Gym til 350 kr. pr. session, eller online coaching til 799 kr./md. Se hvem det er til, hvad du får, og hvordan det foregår.",
 });
 
 export default function ServicesPage() {
@@ -19,8 +20,8 @@ export default function ServicesPage() {
     <>
       <PageHero
         eyebrow="Ydelser"
-        title="Vælg det, der passer til dig"
-        description="Uanset om du vil træne 1:1 i gymmet eller have løbende online coaching, har jeg en løsning, der passer til dig."
+        title="Personlig træning eller online coaching"
+        description="To veje. Samme ærlighed. PT er 1:1 med mig i Viborg Fitness Gym. Online coaching er til dig, der træner selv — med program, kostplan og opfølgning."
       />
 
       <section className="section-padding">
@@ -68,7 +69,15 @@ export default function ServicesPage() {
                 </p>
                 <p
                   className={cn(
-                    "mt-4 leading-relaxed",
+                    "mt-4 font-medium",
+                    product.emphasis === "premium" ? "text-white/80" : "text-ink/80"
+                  )}
+                >
+                  {product.fits}
+                </p>
+                <p
+                  className={cn(
+                    "mt-3 leading-relaxed",
                     product.emphasis === "premium" ? "text-white/70" : "text-ink/70"
                   )}
                 >
@@ -88,6 +97,32 @@ export default function ServicesPage() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-6">
+                  <h3
+                    className={cn(
+                      "text-xs font-semibold uppercase tracking-[0.16em]",
+                      product.emphasis === "premium" ? "text-sage" : "text-ink/40"
+                    )}
+                  >
+                    Sådan foregår det
+                  </h3>
+                  <ol className="mt-3 space-y-2">
+                    {product.how.map((step, index) => (
+                      <li
+                        key={step}
+                        className={cn(
+                          "flex gap-3 text-sm leading-relaxed",
+                          product.emphasis === "premium" ? "text-white/75" : "text-ink/70"
+                        )}
+                      >
+                        <span className="font-display w-6 shrink-0 font-semibold text-sage">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               </div>
               <div
                 className={cn(
@@ -95,17 +130,30 @@ export default function ServicesPage() {
                   product.emphasis === "premium" ? "border-white/10" : "border-sand"
                 )}
               >
-                <p
-                  className={cn(
-                    "font-display text-3xl font-extrabold italic tracking-tight",
-                    product.emphasis === "premium" ? "text-sage" : "text-ink"
+                <div>
+                  <p
+                    className={cn(
+                      "font-display text-3xl font-extrabold italic tracking-tight",
+                      product.emphasis === "premium" ? "text-sage" : "text-ink"
+                    )}
+                  >
+                    {priceLabel(product)}
+                  </p>
+                  {product.priceNote && (
+                    <p
+                      className={cn(
+                        "mt-1 text-sm",
+                        product.emphasis === "premium" ? "text-white/45" : "text-ink/50"
+                      )}
+                    >
+                      {product.priceNote}
+                    </p>
                   )}
-                >
-                  {priceLabel(product)}
-                </p>
+                </div>
                 <Button
                   href={`/booking?produkt=${product.id}`}
                   variant={product.emphasis === "simple" ? "secondary" : "primary"}
+                  trackEvent={trackEventForProduct(product.id)}
                   className="w-full"
                 >
                   {product.cta}
@@ -113,6 +161,16 @@ export default function ServicesPage() {
               </div>
             </article>
           ))}
+          <p className="pt-4 text-center text-sm text-ink/55">
+            Usikker på hvad der passer?{" "}
+            <Link
+              href="/kontakt"
+              className="font-medium text-ink underline decoration-sage/50 underline-offset-4 hover:text-sage"
+            >
+              Tag en uforpligtende snak
+            </Link>
+            .
+          </p>
         </div>
       </section>
 
