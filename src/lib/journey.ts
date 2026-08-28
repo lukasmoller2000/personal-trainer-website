@@ -18,6 +18,6 @@ export const journeyStages: JourneyStage[] = [
   {
     label: "I dag",
     src: "/images/journey-now.jpg",
-    alt: "Lukas Møller i dag, omklædningsrum i gymmet",
+    alt: "Lukas Møller i dag",
   },
 ];
