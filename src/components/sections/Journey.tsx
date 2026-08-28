@@ -21,7 +21,7 @@ export function Journey() {
                     src={stage.src}
                     alt={stage.alt}
                     fill
-                    className="object-cover object-top"
+                    className="object-cover object-center"
                     sizes="(min-width: 1024px) 20rem, (min-width: 640px) 30vw, 100vw"
                   />
                 </div>
