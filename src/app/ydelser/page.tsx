@@ -12,7 +12,7 @@ import { pageSeo } from "@/lib/seo";
 export const metadata: Metadata = pageSeo("/ydelser", {
   title: "Personlig træning og online coaching i Viborg",
   description:
-    "PT i Viborg Fitness Gym til 350 kr. pr. session, eller online coaching til 799 kr./md. Se hvem det er til, hvad du får, og hvordan det foregår.",
+    "PT i Viborg Fitness Gym til 300 kr. pr. session, klippekort til 5 træninger for 1.350 kr., eller online coaching til 799 kr./md.",
 });
 
 export default function ServicesPage() {
@@ -21,7 +21,7 @@ export default function ServicesPage() {
       <PageHero
         eyebrow="Ydelser"
         title="Personlig træning eller online coaching"
-        description="To veje. Samme ærlighed. PT er 1:1 med mig i Viborg Fitness Gym. Online coaching er til dig, der træner selv — med program, kostplan og opfølgning."
+        description="PT er 1:1 med mig i Viborg Fitness Gym — enkelt session eller klippekort. Online coaching er til dig, der træner selv — med program, kostplan og opfølgning."
       />
 
       <section className="section-padding">

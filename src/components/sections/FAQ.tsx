@@ -5,28 +5,33 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { sessionDuration } from "@/lib/commerce";
 import { cn } from "@/lib/utils";
 
 export const faqs = [
   {
     question: "Hvordan foregår personlig træning?",
-    answer:
-      "Sessionerne er 1:1 og varer 60 minutter. Vi starter med dine mål og dit niveau, og træner derefter med teknik, styrke og et klart næste skridt.",
+    answer: sessionDuration.copy,
   },
   {
     question: "Kan jeg booke bare én træning?",
     answer:
-      "Ja. Du kan booke en enkelt personlig træning til 350 kr. uden at binde dig til et forløb.",
+      "Ja. Du kan booke en enkelt personlig træning til 300 kr. uden at binde dig til et forløb. Du kan også købe 5 træninger til 1.350 kr. (270 kr. pr. træning — 150 kr. under 5 enkeltbookinger).",
   },
   {
     question: "Hvad er forskellen på PT og Online Coaching?",
     answer:
-      "En personlig træning er én session i gymmet til 350 kr. Online Coaching er et løbende månedligt forløb med program, kostplan og ugentlige check-ins — 799 kr./md.",
+      "En personlig træning er én session i gymmet til 300 kr. Du kan også købe 5 træninger til 1.350 kr. Online Coaching er et løbende månedligt forløb med program, kostplan og ugentlige check-ins — 799 kr./md.",
   },
   {
     question: "Hvordan fungerer Online Coaching?",
     answer:
       "Du får et personligt træningsprogram, kostplan og løbende justeringer. Vi tager ugentlige check-ins, og planen tilpasses dine resultater. Forløbet kører måned for måned og opsiges måneden ud.",
+  },
+  {
+    question: "Hvordan virker klippekort?",
+    answer:
+      "Du kan købe 5 træninger til 1.350 kr. Du vælger ikke tid ved henvendelsen. Når klippekortet er aktivt, booker du tider med dine klip og kan se, hvor mange træninger du har tilbage.",
   },
   {
     question: "Skal jeg være i god form inden?",
@@ -46,7 +51,7 @@ export const faqs = [
   {
     question: "Kan jeg ændre min booking?",
     answer:
-      "Enkelt PT: aflys senest 24 timer før. Online Coaching opsiges måneden ud.",
+      "Enkelt PT: aflys eller flyt senest 24 timer før. Senere afbud eller udeblivelse tæller som brugt træning. Online Coaching opsiges måneden ud.",
   },
   {
     question: "Hvordan starter jeg Online Coaching?",
@@ -56,7 +61,7 @@ export const faqs = [
   {
     question: "Hvordan betaler jeg?",
     answer:
-      "Efter du har sendt en booking eller forespørgsel, vender jeg tilbage med bekræftelse og betalingsinfo. Tiden er ikke reserveret, før jeg har bekræftet. Betaling kan ske via MobilePay, bankoverførsel eller kontant.",
+      "Når online betaling er slået til, betaler du med kort via Stripe, før tiden eller klippekortet gælder. Kortoplysninger gemmes hos Stripe — ikke på siden. Indtil betaling er slået til, sender du en forespørgsel, og jeg vender tilbage med bekræftelse og betalingsinfo (MobilePay, overførsel eller kontant).",
   },
 ];
 

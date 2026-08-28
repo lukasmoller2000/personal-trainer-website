@@ -95,11 +95,20 @@ export function siteJsonLd(siteUrl: string) {
           "1:1 personlig træning i Viborg Fitness Gym med Lukas Møller. Teknik, styrke og progression.",
         provider: { "@id": personId },
         areaServed: siteConfig.location,
-        offers: {
-          "@type": "Offer",
-          price: "350",
-          priceCurrency: "DKK",
-        },
+        offers: [
+          {
+            "@type": "Offer",
+            name: "1 session",
+            price: "300",
+            priceCurrency: "DKK",
+          },
+          {
+            "@type": "Offer",
+            name: "5 træninger",
+            price: "1350",
+            priceCurrency: "DKK",
+          },
+        ],
       },
       {
         "@type": "Service",

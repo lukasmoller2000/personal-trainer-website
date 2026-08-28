@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { checkoutHoldMinutes } from "@/lib/commerce";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
@@ -26,6 +27,10 @@ export async function persistBooking(booking: {
   goal: string;
   notes?: string;
   createdAt: string;
+  status?: string;
+  orderId?: string;
+  clipCardId?: string;
+  holdUntil?: Date | null;
 }) {
   const prisma = getPrisma();
   if (!prisma) return;
@@ -43,6 +48,10 @@ export async function persistBooking(booking: {
       goal: booking.goal,
       notes: booking.notes ?? null,
       createdAt: new Date(booking.createdAt),
+      status: booking.status ?? "inquiry",
+      orderId: booking.orderId ?? null,
+      clipCardId: booking.clipCardId ?? null,
+      holdUntil: booking.holdUntil ?? null,
     },
   });
 }
@@ -63,10 +72,22 @@ export async function getTakenTimes(date: string): Promise<string[]> {
   const prisma = getPrisma();
   if (!prisma) return [];
 
+  const now = new Date();
   const rows = await prisma.booking.findMany({
-    where: { date, time: { not: null } },
+    where: {
+      date,
+      time: { not: null },
+      OR: [
+        { status: { in: ["inquiry", "confirmed"] } },
+        { status: "hold", holdUntil: { gt: now } },
+      ],
+    },
     select: { time: true },
   });
 
   return rows.flatMap((row) => (row.time ? [row.time] : []));
+}
+
+export function holdUntilFromNow(minutes = checkoutHoldMinutes) {
+  return new Date(Date.now() + minutes * 60 * 1000);
 }

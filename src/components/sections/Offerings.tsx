@@ -1,7 +1,7 @@
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ProductCard } from "@/components/sections/ProductCard";
-import { products } from "@/lib/products";
+import { programProducts, sessionProducts } from "@/lib/products";
 
 export function Offerings() {
   return (
@@ -15,7 +15,12 @@ export function Offerings() {
         />
 
         <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">
-          {products.map((product) => (
+          {sessionProducts().map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+        <div className="mt-5 grid grid-cols-1 items-stretch gap-5">
+          {programProducts().map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

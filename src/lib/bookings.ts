@@ -31,11 +31,14 @@ export async function createBooking(
   const product = getProduct(input.productId);
   const productName = product?.name ?? input.productId;
   const isInquiry = input.type === "inquiry";
+  const isPack = input.type === "pack";
 
   const lines = [
     isInquiry
       ? "Ny forespørgsel om online coaching."
-      : "Ny forespørgsel om personlig træning.",
+      : isPack
+        ? "Ny forespørgsel om klippekort."
+        : "Ny forespørgsel om personlig træning.",
     "",
     `Ydelse: ${productName}`,
     `Navn: ${input.name}`,
@@ -60,9 +63,11 @@ export async function createBooking(
   await sendNotification({
     subject: isInquiry
       ? `Ny online coaching-forespørgsel: ${input.name}`
-      : `Ny PT-forespørgsel: ${input.name}${
-          input.date && input.time ? ` · ${input.date} ${input.time}` : ""
-        }`,
+      : isPack
+        ? `Ny klippekort-forespørgsel: ${input.name}`
+        : `Ny PT-forespørgsel: ${input.name}${
+            input.date && input.time ? ` · ${input.date} ${input.time}` : ""
+          }`,
     text: lines.join("\n"),
     replyTo: input.email,
   });

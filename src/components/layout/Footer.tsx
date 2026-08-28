@@ -5,6 +5,7 @@ import { SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { Button } from "@/components/ui/Button";
 import { siteConfig } from "@/lib/utils";
+import { getCompanyConfig } from "@/lib/commerce";
 
 const footerLinks = [
   { label: "Forside", href: "/" },
@@ -21,6 +22,8 @@ const legal = [
 ];
 
 export function Footer() {
+  const company = getCompanyConfig();
+
   return (
     <footer className="bg-ink text-cream">
       <div className="container-custom pt-16 pb-8 md:pt-20">
@@ -28,7 +31,7 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Logo inverted />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-cream/55">
-              Personlig træning med {siteConfig.trainer} i{" "}
+              {company.name} · {company.tradeName}. Personlig træning i{" "}
               <a
                 href={siteConfig.gymUrl}
                 target="_blank"
@@ -37,8 +40,11 @@ export function Footer() {
               >
                 {siteConfig.venue}
               </a>
-              . Book en PT til 350 kr. eller start Online Coaching til 799 kr./md.
+              . Enkelt PT 300 kr., 5 træninger 1.350 kr. Online Coaching 799 kr./md.
             </p>
+            {company.cvr ? (
+              <p className="mt-2 text-sm text-cream/45">CVR {company.cvr}</p>
+            ) : null}
             <div className="mt-5">
               <SocialLinks inverted personalInstagram />
             </div>

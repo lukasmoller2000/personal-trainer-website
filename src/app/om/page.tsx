@@ -13,7 +13,7 @@ import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = pageSeo("/om", {
   title: "Om Lukas Møller – personlig træner i Viborg",
-  description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. 1:1 PT til 350 kr., eller online coaching til 799 kr./md.`,
+  description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. 1:1 PT til 300 kr., eller online coaching til 799 kr./md.`,
 });
 
 const philosophy = [
@@ -90,8 +90,8 @@ export default function AboutPage() {
               Online coaching er til dig, der træner selv.
             </p>
             <p className="mt-6 leading-relaxed text-ink/65">
-              Du kan booke én personlig træning til 350 kr. eller få løbende hjælp gennem Online
-              Coaching til 799 kr./md.
+              Du kan booke én personlig træning til 300 kr., købe 5 træninger til 1.350 kr., eller få
+              løbende hjælp gennem Online Coaching til 799 kr./md.
             </p>
             <div className="mt-10 mb-6 flex items-center gap-3">
               <GymLogo size={56} />

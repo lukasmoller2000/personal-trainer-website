@@ -8,20 +8,85 @@ datasource db {
 }
 
 model Booking {
-  id        String   @id @default(cuid())
-  productId String
-  type      String
-  date      String?
-  time      String?
-  name      String
-  email     String
-  phone     String
-  goal      String
-  notes     String?
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  productId  String
+  type       String
+  date       String?
+  time       String?
+  name       String
+  email      String
+  phone      String
+  goal       String
+  notes      String?
+  status     String    @default("inquiry")
+  holdUntil  DateTime?
+  orderId    String?
+  clipCardId String?
+  cancelledAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  order    Order?    @relation(fields: [orderId], references: [id])
+  clipCard ClipCard? @relation(fields: [clipCardId], references: [id])
 
   @@index([date])
   @@index([createdAt])
+  @@index([status])
+  @@index([email])
+}
+
+model Order {
+  id                      String    @id @default(cuid())
+  productId               String
+  status                  String    @default("pending")
+  amountOre               Int
+  currency                String    @default("dkk")
+  vatRegistered           Boolean   @default(false)
+  vatRatePercent          Int       @default(0)
+  vatAmountOre            Int       @default(0)
+  customerName            String
+  customerEmail           String
+  customerPhone           String
+  goal                    String
+  notes                   String?
+  date                    String?
+  time                    String?
+  birthYear               Int?
+  stripeCheckoutSessionId String?   @unique
+  stripePaymentIntentId   String?
+  paidAt                  DateTime?
+  createdAt               DateTime  @default(now())
+
+  bookings Booking[]
+  clipCard ClipCard?
+
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ClipCard {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  email         String
+  name          String
+  phone         String
+  productId     String
+  totalSessions Int
+  remaining     Int
+  status        String   @default("active")
+  accessToken   String   @unique
+  createdAt     DateTime @default(now())
+
+  order    Order     @relation(fields: [orderId], references: [id])
+  bookings Booking[]
+
+  @@index([email])
+}
+
+model StripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
 }
 
 model ContactMessage {

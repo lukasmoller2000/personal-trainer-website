@@ -102,6 +102,10 @@ export async function POST(request: NextRequest) {
     if (!isBookableDate(parsed) || !getSlotsForDate(parsed).includes(time)) {
       return NextResponse.json({ error: "Tidspunktet er ikke ledigt" }, { status: 400 });
     }
+    const taken = await getTakenTimes(date);
+    if (taken.includes(time)) {
+      return NextResponse.json({ error: "Tidspunktet er ikke ledigt" }, { status: 400 });
+    }
   }
 
   try {
