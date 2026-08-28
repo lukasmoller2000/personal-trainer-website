@@ -17,7 +17,7 @@ const audiences = [
   {
     number: "03",
     title: "Teknik",
-    text: "Vi retrækker bevægelserne, så du træner rigtigt — ikke bare hårdt — og kan holde det uden unødige skader.",
+    text: "Vi går bevægelserne igennem, så du træner rigtigt — ikke bare hårdt — og kan holde det uden unødige skader.",
   },
   {
     number: "04",

@@ -120,7 +120,7 @@ export function Footer() {
             </Button>
             <p className="mt-4 text-sm text-cream/55">
               <Link href="/booking?produkt=online" className="hover:text-cream">
-                Online coaching
+                Start online coaching
               </Link>
               {" · "}
               <Link href="/kontakt" className="hover:text-cream">

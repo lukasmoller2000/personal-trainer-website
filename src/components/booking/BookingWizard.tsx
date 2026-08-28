@@ -111,6 +111,7 @@ export function BookingWizard({
   const isInquiry = product?.bookingType === "inquiry";
   const payNow = Boolean(paymentsEnabled && product && isPaidProduct(product) && !clipMode);
   const isPackInquiry = Boolean(product?.bookingType === "pack" && !payNow && !clipMode);
+  const sendInquiry = !payNow && !clipMode;
 
   const days = useMemo(
     () => getCalendarDays(cursor.year, cursor.month),
@@ -236,7 +237,7 @@ export function BookingWizard({
         <h2 className="font-display text-3xl font-semibold tracking-tight text-ink">
           {clipMode
             ? "Din træning er booket"
-            : isInquiry || isPackInquiry
+            : sendInquiry
               ? "Din forespørgsel er sendt"
               : "Din booking er sendt"}
         </h2>
@@ -522,6 +523,12 @@ export function BookingWizard({
                     bookes, når klippekortet er aktivt.
                   </p>
                 )}
+                {sendInquiry && product?.bookingType === "session" && (
+                  <p className="mt-2 text-sm leading-relaxed text-ink/55">
+                    Du sender en forespørgsel med dato og tid. Tiden er ikke reserveret, før jeg har
+                    svaret — jeg vender tilbage med bekræftelse og betalingsinfo.
+                  </p>
+                )}
                 {clipMode && (
                   <p className="mt-2 text-sm leading-relaxed text-ink/55">
                     Vi trækker ét klip, når du bekræfter.{" "}
@@ -623,14 +630,14 @@ export function BookingWizard({
                           ? "Går til betaling..."
                           : clipMode
                             ? "Booker..."
-                            : isInquiry || isPackInquiry
+                            : sendInquiry
                               ? "Sender..."
                               : "Booker..."
                         : payNow
                           ? "Gå til betaling"
                           : clipMode
                             ? "Bekræft med klip"
-                            : isInquiry || isPackInquiry
+                            : sendInquiry
                               ? "Send forespørgsel"
                               : "Bekræft booking"}
                     </Button>
