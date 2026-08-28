@@ -40,9 +40,9 @@ export const metadata: Metadata = {
     "personlig træner Viborg",
     "PT Viborg",
     "personlig træning Viborg",
+    "styrketræning Viborg",
     "online coaching",
-    "styrketræning",
-    "book personlig træning",
+    "online coaching Viborg",
   ],
   openGraph: {
     type: "website",

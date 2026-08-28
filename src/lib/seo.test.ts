@@ -24,6 +24,9 @@ describe("seo", () => {
     assert.ok(types.includes("LocalBusiness"));
     assert.equal(json.includes("aggregateRating"), false);
     assert.equal(json.includes("reviewRating"), false);
+    assert.ok(json.includes("300"));
+    assert.ok(json.includes("1350"));
+    assert.ok(json.includes("799"));
     assert.ok(json.includes("Falkevej 16B"));
     assert.ok(json.includes("lukasvmj"));
   });

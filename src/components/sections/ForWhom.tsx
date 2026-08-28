@@ -6,23 +6,23 @@ import { AnimatedSection } from "@/components/ui/AnimatedSection";
 const audiences = [
   {
     number: "01",
-    title: "Byg muskler",
-    text: "Få et struktureret program med progression, god teknik og fokus på resultater.",
+    title: "Styrke",
+    text: "Byg reelle kg på øvelser, du kan stole på — med teknik først og en belastning, der kan øges over tid.",
   },
   {
     number: "02",
-    title: "Tab fedt",
-    text: "Få en realistisk plan, der hjælper dig med at tabe fedt uden ekstreme løsninger.",
+    title: "Muskelmasse",
+    text: "Et program med nok volumen, progression og kontinuitet til, at træningen faktisk bygger noget.",
   },
   {
     number: "03",
-    title: "Kom i bedre form",
-    text: "Bliv stærkere, få mere energi og byg en krop, du er stolt af.",
+    title: "Teknik",
+    text: "Vi retrækker bevægelserne, så du træner rigtigt — ikke bare hårdt — og kan holde det uden unødige skader.",
   },
   {
     number: "04",
-    title: "Få struktur",
-    text: "Slip for at gætte dig frem. Du får en klar plan og en træner, der holder dig på sporet.",
+    title: "Struktur",
+    text: "Du får en individuel plan og ved, hvad næste skridt er. Mindre gætværk. Mere langsigtet fremgang.",
   },
 ];
 
@@ -32,14 +32,14 @@ export function ForWhom() {
       <div className="container-custom">
         <div className="mx-auto mb-8 max-w-2xl text-center md:mb-10">
           <span className="mb-4 inline-block text-xs font-semibold uppercase tracking-[0.22em] text-sage">
-            Målgruppe
+            Hvad kan jeg hjælpe med
           </span>
           <h2 className="font-display text-4xl font-extrabold italic tracking-tight text-white text-balance sm:text-5xl md:text-6xl">
-            Hvad vil du opnå?
+            Styrke, muskelmasse og en træning, der hænger sammen
           </h2>
           <p className="mt-5 text-base leading-relaxed text-white/70 md:text-lg">
-            Uanset om du vil bygge muskler, tabe fedt eller bare komme i bedre form, laver vi en
-            plan, der passer til dig og din hverdag.
+            Jeg arbejder med personlig træning og online coaching. Fokus er teknik, struktur,
+            progression og en plan, der passer til dig — ikke generel fitness-hype.
           </p>
         </div>
 

@@ -21,7 +21,7 @@ export default function ServicesPage() {
       <PageHero
         eyebrow="Ydelser"
         title="Personlig træning eller online coaching"
-        description="PT er 1:1 med mig i Viborg Fitness Gym — enkelt session eller klippekort. Online coaching er til dig, der træner selv — med program, kostplan og opfølgning."
+        description="PT er 1:1 med mig i Viborg Fitness Gym — teknik, styrke og progression. Enkelt session eller 5 træninger. Online coaching er til dig, der træner selv — med program, kostplan og opfølgning."
       />
 
       <section className="section-padding">
@@ -29,8 +29,15 @@ export default function ServicesPage() {
           {products.map((product) => (
             <article
               key={product.id}
+              id={
+                product.id === "online"
+                  ? "online"
+                  : product.id === "session"
+                    ? "personlig-traening"
+                    : undefined
+              }
               className={cn(
-                "grid gap-8 rounded-[1.75rem] border border-sand bg-white p-6 md:grid-cols-[1fr_220px] md:p-8",
+                "scroll-mt-28 grid gap-8 rounded-[1.75rem] border border-sand bg-white p-6 md:grid-cols-[1fr_220px] md:p-8",
                 product.emphasis === "featured" && "border-sage ring-1 ring-sage",
                 product.emphasis === "premium" && "border-sage/40 bg-ink text-cream"
               )}
@@ -167,7 +174,7 @@ export default function ServicesPage() {
               href="/kontakt"
               className="font-medium text-ink underline decoration-sage/50 underline-offset-4 hover:text-sage"
             >
-              Tag en uforpligtende snak
+              Kontakt mig
             </Link>
             .
           </p>

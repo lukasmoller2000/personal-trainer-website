@@ -45,7 +45,7 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
         {showHeading && (
           <SectionHeading
             eyebrow="Kontakt"
-            title="Tag en uforpligtende snak"
+            title="Kontakt mig"
             description="Vil du spørge, før du booker PT eller starter online coaching? Skriv om dit mål, og hvilket program du overvejer."
           />
         )}

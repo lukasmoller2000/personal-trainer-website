@@ -92,7 +92,7 @@ export function siteJsonLd(siteUrl: string) {
         name: "Personlig træning",
         serviceType: "Personlig træning",
         description:
-          "1:1 personlig træning i Viborg Fitness Gym med Lukas Møller. Teknik, styrke og progression.",
+          "1:1 personlig træning i Viborg Fitness Gym med Lukas Møller. Styrke, teknik, muskelmasse og progression.",
         provider: { "@id": personId },
         areaServed: siteConfig.location,
         offers: [
@@ -116,7 +116,7 @@ export function siteJsonLd(siteUrl: string) {
         name: "Online Coaching",
         serviceType: "Online coaching",
         description:
-          "Løbende online coaching med træningsprogram, kostplan og opfølgning.",
+          "Løbende online coaching med personligt træningsprogram, kostplan og ugentlige check-ins.",
         provider: { "@id": personId },
         areaServed: "DK",
         offers: {

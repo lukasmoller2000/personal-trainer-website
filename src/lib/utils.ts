@@ -45,7 +45,7 @@ export const siteConfig = {
   trainer: "Lukas Møller",
   role: "Personlig træner",
   description:
-    "Personlig træner i Viborg. 1:1 PT i Viborg Fitness Gym til 300 kr., eller online coaching til 799 kr./md. Styrke, fedttab og en hverdag der holder.",
+    "Personlig træner i Viborg. 1:1 PT i Viborg Fitness Gym til 300 kr., eller online coaching til 799 kr./md. Styrketræning, muskelmasse og en plan, der passer til dig.",
   location: "Viborg",
   postalCode: "8800",
   venue: "Viborg Fitness Gym",
