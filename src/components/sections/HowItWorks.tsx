@@ -9,7 +9,7 @@ export function HowItWorks() {
         <SectionHeading
           light
           eyebrow="Sådan arbejder jeg"
-          title="Mål, plan, træning, opfølgning, resultater"
+          title="Mål, plan, træning, opfølgning"
           description="En enkel ramme — tilpasset dig. Ingen hemmelig metode. Bare struktur, der kan holdes."
         />
 
@@ -22,11 +22,11 @@ export function HowItWorks() {
                 {!isLast && (
                   <span
                     aria-hidden
-                    className="absolute bottom-0 left-[1.15rem] top-11 w-px bg-sage/30 sm:hidden"
+                    className="absolute bottom-0 left-[1.15rem] top-11 w-px bg-[#b4dc24]/30 sm:hidden"
                   />
                 )}
 
-                <p className="relative z-[1] shrink-0 font-display text-4xl font-semibold tracking-tight text-sage md:text-5xl">
+                <p className="relative z-[1] shrink-0 font-display text-4xl font-semibold tracking-tight text-[#b4dc24] md:text-5xl">
                   {step.number}
                 </p>
 

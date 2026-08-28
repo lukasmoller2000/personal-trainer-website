@@ -40,10 +40,10 @@ export const products: Product[] = [
       "1:1 træning med mig i Viborg Fitness Gym. Vi arbejder med teknik, styrke, progression og dine konkrete mål.",
     fits: "Til dig, der vil træne sammen med mig i gymmet — én session ad gangen, uden binding.",
     how: [
-      "Send en forespørgsel med dato og tid i Viborg Fitness Gym, Falkevej 16B",
+      "Book en tid i Viborg Fitness Gym, Falkevej 16B",
       `Sessionen varer som udgangspunkt ca. ${sessionDuration.minutes} minutter og er 1:1`,
       "Vi træner teknik, styrke og det, du gerne vil opnå",
-      "Jeg vender tilbage med bekræftelse og betalingsinfo — tiden gælder, når den er bekræftet",
+      "Betaling bekræftes, før tiden gælder — eller jeg vender tilbage, hvis betaling ikke er slået til",
     ],
     sessions: 1,
     durationMinutes: sessionDuration.minutes,
