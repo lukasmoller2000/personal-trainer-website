@@ -7,13 +7,9 @@ export function Testimonials() {
   if (!hasTestimonials()) return null;
 
   return (
-    <AnimatedSection id="kunder">
+    <AnimatedSection>
       <div className="container-custom">
-        <SectionHeading
-          eyebrow="Kunder og resultater"
-          title="Forløb, der er rigtige"
-          description="Kun historier fra kunder, der har givet lov. Ingen opdigtede anmeldelser."
-        />
+        <SectionHeading eyebrow="Forløb" title="Det, folk kommer for" />
         <ul className="grid gap-5 md:grid-cols-2">
           {testimonials.map((item) => (
             <li

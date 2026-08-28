@@ -77,9 +77,8 @@ export default function AboutPage() {
               </span>
             </h2>
             <p className="mt-6 text-base leading-relaxed text-ink/65 md:text-lg">
-              Jeg arbejder med personlig træning og online coaching. Fokus er styrke, muskelmasse,
-              teknik og en træningshverdag, der faktisk kan holdes — ikke et program, du dropper
-              efter tre uger.
+              Jeg arbejder med personlig træning og online coaching. Fokus er styrke, fedttab og en
+              træningshverdag, der faktisk kan holdes — ikke et program, du dropper efter tre uger.
             </p>
             <p className="mt-4 text-base leading-relaxed text-ink/65 md:text-lg">
               Tilgangen er individuel. Vi tager udgangspunkt i dit niveau, din uge og det, du gerne
@@ -184,7 +183,7 @@ export default function AboutPage() {
                 Book personlig træning
               </Button>
               <Button href="/kontakt" variant="outline">
-                Kontakt mig
+                Tag en uforpligtende snak
               </Button>
             </div>
           </div>

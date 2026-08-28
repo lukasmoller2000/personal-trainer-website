@@ -66,8 +66,8 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <SocialLinks inverted compact personalInstagram />
-          <Button href="/booking?produkt=session" size="sm" trackEvent="pt_cta_clicked" className="px-4 text-[13px]">
-            Book personlig træning
+          <Button href="/booking" size="sm">
+            Book nu
           </Button>
         </div>
 
@@ -105,8 +105,8 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
-              <Button href="/booking?produkt=session" className="mt-3 w-full" trackEvent="pt_cta_clicked">
-                Book personlig træning
+              <Button href="/booking" className="mt-3 w-full">
+                Book nu
               </Button>
               <div className="mt-4">
                 <SocialLinks inverted personalInstagram />

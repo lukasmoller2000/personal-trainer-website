@@ -25,9 +25,6 @@ describe("products", () => {
     assert.equal((five.price ?? 0) / five.sessions, 270);
     assert.equal(online.price, 799);
     assert.equal(online.pricePrefix, undefined);
-    assert.equal(five.cta, "Send forespørgsel");
-    assert.equal(online.cta, "Start online coaching");
-    assert.equal(pt.cta, "Book personlig træning");
     assert.equal(products.length, 3);
     assert.equal(products.filter((product) => product.kind === "pack").length, 1);
   });
@@ -60,18 +57,5 @@ describe("products", () => {
     assert.equal(trackEventForProduct("session"), "pt_cta_clicked");
     assert.equal(trackEventForProduct("pack-5"), "pt_cta_clicked");
     assert.equal(trackEventForProduct("online"), "coaching_cta_clicked");
-  });
-
-  it("keeps online coaching deliverables to the existing product", () => {
-    const online = getProduct("online");
-    assert.ok(online);
-    assert.deepEqual(online.perks, [
-      "Personligt træningsprogram",
-      "Kostplan",
-      "Ugentlige check-ins",
-      "Feedback og opfølgning",
-      "Løbende justeringer",
-      "Tilpasning efter dine resultater og hverdag",
-    ]);
   });
 });

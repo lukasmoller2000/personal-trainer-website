@@ -24,13 +24,13 @@ export function AboutTeaser() {
         <div>
           <SectionHeading
             align="left"
-            eyebrow="Min rejse"
+            eyebrow="Om træneren"
             title={siteConfig.trainer}
-            description="År i gymmet har lært mig, at struktur, teknik, progression og kontinuitet er det, der flytter noget. Det er det, jeg tager med ind i arbejdet med dig — ikke et løfte om, at din krop kommer til at ligne min."
+            description={`Jeg er personlig træner i ${siteConfig.venue}. Jeg har selv lært at komme hertil — og jeg kan vise dig vejen.`}
           />
           <p className="mb-4 leading-relaxed text-ink/65">
-            Personlig træning i {siteConfig.venue}: 300 kr. for én session, eller 1.350 kr. for 5
-            træninger (270 kr. pr. træning). Online Coaching: 799 kr./md.
+            Book en personlig træning til 300 kr., køb 5 træninger til 1.350 kr., eller få løbende
+            hjælp gennem Online Coaching til 799 kr./md.
           </p>
           <div className="mb-6 flex items-center gap-3">
             <GymLogo size={56} />
@@ -42,14 +42,9 @@ export function AboutTeaser() {
           <div className="mb-8">
             <SocialLinks />
           </div>
-          <div className="flex flex-col items-start gap-3 sm:flex-row">
-            <Button href="/om" variant="outline">
-              Læs mere
-            </Button>
-            <Button href="/booking?produkt=session" trackEvent="pt_cta_clicked">
-              Book personlig træning
-            </Button>
-          </div>
+          <Button href="/om" variant="outline">
+            Læs mere
+          </Button>
         </div>
       </div>
     </AnimatedSection>

@@ -10,7 +10,7 @@ export function Journey() {
         <SectionHeading
           eyebrow="Min træning"
           title="Jeg startede ikke her."
-          description="Det, du ser i dag, er træning over tid — fejl, justeringer og uger, der blev holdt. Den erfaring tager jeg med ind i arbejdet med dig. Ikke som et løfte om, at din krop kommer til at ligne min. Som et ærligt udgangspunkt: struktur, teknik, progression og kontinuitet er det, der virker."
+          description="Det, du ser i dag, er træning over tid — fejl, justeringer og uger, der blev holdt. Den erfaring tager jeg med ind i arbejdet med dig. Ikke som et løfte om, at din krop kommer til at ligne min. Som et ærligt udgangspunkt: vi bygger det, der kan holde."
         />
         <ul className="grid gap-5 sm:grid-cols-3">
           {journeyStages.map((stage) => (

@@ -51,7 +51,7 @@ export function CtaBanner() {
             href="/kontakt"
             className="text-sm font-medium text-cream/70 underline decoration-sage/40 underline-offset-4 hover:text-sage"
           >
-            Kontakt mig
+            Tag en uforpligtende snak
           </Link>
         </p>
       </div>

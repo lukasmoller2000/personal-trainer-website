@@ -29,28 +29,24 @@ export function Hero() {
           <motion.div variants={fadeUp} className="mb-8 flex items-center gap-4">
             <GymLogo size={56} />
             <p className="text-[11px] font-semibold tracking-[0.22em] text-white/45 uppercase">
-              Personlig træning i Viborg
-              <span className="mt-1 block text-sage">
-                {siteConfig.trainer} · {siteConfig.role}
-              </span>
+              {siteConfig.trainer}
+              <span className="mt-1 block text-sage">Personlig træner · Viborg</span>
             </p>
           </motion.div>
 
           <motion.h1
             variants={fadeUp}
-            className="font-display text-[2.35rem] font-extrabold italic uppercase leading-[0.92] tracking-tight sm:text-5xl md:text-6xl lg:text-[4.6rem] xl:text-[5.1rem]"
+            className="font-display text-[2.55rem] font-extrabold italic uppercase leading-[0.92] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.1rem] xl:text-[5.5rem]"
           >
-            Bliv stærkere.
-            <span className="mt-2 block">Byg muskelmasse.</span>
-            <span className="mt-2 block text-sage">Få styr på din træning.</span>
+            Styrke, fedttab
+            <span className="mt-2 block text-sage">og en hverdag der holder</span>
           </motion.h1>
 
           <motion.p
             variants={fadeUp}
             className="mt-8 max-w-lg text-base leading-relaxed text-white/70 sm:text-lg md:mt-10 md:text-xl md:leading-relaxed"
           >
-            Personlig træning og online coaching med fokus på styrke, muskelmasse og en plan, der
-            passer til dig. 1:1 i{" "}
+            Jeg hjælper dig med at træne målrettet — 1:1 i{" "}
             <a
               href={siteConfig.gymUrl}
               target="_blank"
@@ -59,7 +55,7 @@ export function Hero() {
             >
               {siteConfig.venue}
             </a>
-            , eller online hvis du træner selv.
+            , eller med online coaching hvis du træner selv. Klar plan, ærlig opfølgning. Ingen hype.
           </motion.p>
 
           <motion.div
@@ -76,13 +72,12 @@ export function Hero() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
             <Button
-              href="#online"
+              href="/kontakt"
               variant="light"
               size="lg"
-              trackEvent="coaching_cta_clicked"
               className="min-h-12 px-7 text-[13px] font-semibold tracking-[0.14em] uppercase"
             >
-              Se online coaching
+              Tag en uforpligtende snak
             </Button>
           </motion.div>
         </motion.div>

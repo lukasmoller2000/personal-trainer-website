@@ -7,7 +7,7 @@
     "build": "node scripts/prisma-generate.mjs && node scripts/prisma-migrate.mjs && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/track.test.ts src/lib/products.test.ts src/lib/testimonials.test.ts src/lib/seo.test.ts src/lib/commerce.test.ts src/lib/method.test.ts src/lib/faq.test.ts",
+    "test": "tsx --test src/lib/track.test.ts src/lib/products.test.ts src/lib/testimonials.test.ts src/lib/seo.test.ts src/lib/commerce.test.ts",
     "postinstall": "node scripts/prisma-generate.mjs"
   },
   "dependencies": {

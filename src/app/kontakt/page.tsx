@@ -11,7 +11,7 @@ import { pageSeo } from "@/lib/seo";
 export const metadata: Metadata = pageSeo("/kontakt", {
   title: "Kontakt – personlig træner i Viborg",
   description:
-    "Skriv til Lukas Møller om personlig træning i Viborg, online coaching, eller hvilket program der passer.",
+    "Tag en uforpligtende snak med Lukas Møller om personlig træning i Viborg, online coaching, eller hvilket program der passer.",
 });
 
 const info = [
@@ -46,7 +46,7 @@ export default function ContactPage() {
     <>
       <PageHero
         eyebrow="Kontakt"
-        title="Kontakt mig"
+        title="Tag en uforpligtende snak"
         description="Usikker på om personlig træning i Viborg eller online coaching passer? Skriv, så tager vi en snak om dit mål og hvilket program der giver mening."
       />
 

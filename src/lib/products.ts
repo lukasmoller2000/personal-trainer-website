@@ -55,7 +55,6 @@ export const products: Product[] = [
       "1:1 personlig træning",
       `Ca. ${sessionDuration.minutes} minutter`,
       "Fokus på teknik, styrke og progression",
-      "Gennemgang, så du ved, hvad næste skridt er",
       "Kan bookes enkeltvis",
     ],
   },
@@ -82,7 +81,7 @@ export const products: Product[] = [
     badge: "Spar 150 kr.",
     popular: true,
     emphasis: "featured",
-    cta: "Send forespørgsel",
+    cta: "Vælg 5 træninger",
     perks: [
       "5 × 1:1 personlig træning",
       "270 kr. pr. træning",

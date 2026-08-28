@@ -124,7 +124,7 @@ export function Footer() {
               </Link>
               {" · "}
               <Link href="/kontakt" className="hover:text-cream">
-                Kontakt mig
+                Tag en snak
               </Link>
             </p>
           </div>
