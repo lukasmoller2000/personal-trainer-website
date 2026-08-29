@@ -5,23 +5,23 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 const values = [
   {
     icon: LayoutList,
-    title: "Individuel plan",
-    text: "Træningen bygges op efter dine mål, dit niveau og den uge, du faktisk har.",
+    title: "Træning tilpasset dig",
+    text: "Dit program tager udgangspunkt i dit niveau, dine mål og den tid, du faktisk har til træning.",
   },
   {
     icon: MessageSquare,
-    title: "Professionel vejledning",
-    text: "1:1-sessioner med teknik, tempo og feedback — uden hold og uden støj.",
+    title: "Personlig coaching",
+    text: "Vi træner 1:1 med fokus på teknik, udførelse og at få mest muligt ud af din træning.",
   },
   {
     icon: Target,
-    title: "Struktur og progression",
-    text: "Du ved, hvad I træner, hvorfor I træner det, og hvad næste skridt er.",
+    title: "En plan du kan følge",
+    text: "Du ved præcis, hvad du skal træne, hvordan du skal gøre det, og hvornår vi justerer.",
   },
   {
     icon: TrendingUp,
-    title: "Fokus på resultater",
-    text: "Planen justeres løbende, så arbejdet bliver ved med at flytte noget.",
+    title: "Målbar fremgang",
+    text: "Vi følger din udvikling og justerer løbende, så du bliver stærkere og bevæger dig mod dit mål.",
   },
 ];
 
