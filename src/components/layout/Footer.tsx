@@ -17,8 +17,9 @@ const footerLinks = [
 ];
 
 const legal = [
-  { label: "Privatlivspolitik", href: "/privatliv" },
-  { label: "Handelsbetingelser", href: "/vilkaar" },
+  { label: "Vilkår", href: "/vilkaar" },
+  { label: "Privatliv", href: "/privatliv" },
+  { label: "Kontakt", href: "/kontakt" },
 ];
 
 export function Footer() {
@@ -62,6 +63,20 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+            </ul>
+            <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-cream/40">
+              Jura
+            </h2>
+            <ul className="mt-4 space-y-2.5">
+              {legal
+                .filter((link) => link.href !== "/kontakt")
+                .map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className="text-cream/70 transition-colors hover:text-cream">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </div>
 
@@ -132,17 +147,21 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-sm text-cream/40 md:flex-row md:items-center">
-          <p>
+        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-sm md:flex-row md:items-center">
+          <p className="text-cream/40">
             © {new Date().getFullYear()} {siteConfig.name}. Alle rettigheder forbeholdes.
           </p>
-          <div className="flex gap-5">
+          <nav aria-label="Juridiske links" className="flex flex-wrap gap-x-6 gap-y-2">
             {legal.map((link) => (
-              <Link key={link.href} href={link.href} className="hover:text-cream">
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-cream/80 underline-offset-4 hover:text-cream hover:underline"
+              >
                 {link.label}
               </Link>
             ))}
-          </div>
+          </nav>
         </div>
       </div>
     </footer>
