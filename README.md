@@ -44,9 +44,11 @@ Alle navne står i `.env.example`.
 | `BOOKINGS_NOTIFY_EMAIL` | Nej | TO-adresse (default: `lukasmoller2000@gmail.com`) |
 | `RESEND_FROM_EMAIL` | Nej | FROM-adresse (default: Resend test-afsender) |
 | `PAYMENTS_ENABLED` | Nej | Default `false`. Live Stripe slår **ikke** til uden denne + nøgler |
+| `STRIPE_MODE` | Nej | Default `test`. `live` kun i produktion + `sk_live_` / `pk_live_` |
 | `STRIPE_SECRET_KEY` | Nej | Checkout. Dormant — sæt ikke rigtige nøgler uden godkendelse |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Nej | Stripe.js / Checkout (dormant) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Nej | Mode-validering. Hosted Checkout behøver den ikke i browseren |
 | `STRIPE_WEBHOOK_SECRET` | Nej | Webhook-signatur (dormant) |
+| `STRIPE_PRICE_PT_SINGLE` / `STRIPE_PRICE_PT_5_CLIP` | Nej | Stripe Price IDs. Server-pris er stadig 300 / 1350 kr. |
 | `ADMIN_PASSWORD` | Nej | `/admin`. Min. 8 tegn. Uden kode: 404 |
 | `COMPANY_CVR` / `COMPANY_ADDRESS` | Nej | Vises kun hvis udfyldt |
 | `VAT_REGISTERED` | Nej | Default `false` — ingen moms på prisen |

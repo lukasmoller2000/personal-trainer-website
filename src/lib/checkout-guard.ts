@@ -1,6 +1,7 @@
 /**
  * Server-side checkout gate. Price always comes from the product catalog.
- * Client amounts are ignored. Only Stripe TEST keys are accepted.
+ * Client amounts are ignored. Keys must match STRIPE_MODE (default test).
+ * Development never accepts live keys. PAYMENTS_ENABLED=false always 503s.
  *
  * Withdrawal: starting a service does not automatically waive the 14-day right.
  * If the customer wants delivery to begin before that period ends, collect an
@@ -37,6 +38,7 @@ export type CheckoutStartBlocked = {
   reason:
     | "payments_disabled"
     | "live_keys"
+    | "test_keys"
     | "invalid_keys"
     | "unknown_product"
     | "payments_unavailable"
@@ -64,20 +66,12 @@ export function evaluateCheckoutStart(input: {
   }
 
   const blocker = stripeConfigBlocker();
-  if (blocker?.reason === "live_keys") {
+  if (blocker) {
     return {
       ok: false,
       status: 503,
       error: blocker.error,
-      reason: "live_keys",
-    };
-  }
-  if (blocker?.reason === "invalid_keys") {
-    return {
-      ok: false,
-      status: 503,
-      error: blocker.error,
-      reason: "invalid_keys",
+      reason: blocker.reason,
     };
   }
 

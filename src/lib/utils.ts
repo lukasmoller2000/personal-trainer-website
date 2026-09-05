@@ -39,7 +39,7 @@ export function getSiteUrl() {
   const onVercel = Boolean(process.env.VERCEL);
   const production = isProductionRuntime();
 
-  // Never ship localhost as the canonical URL in production or on Vercel.
+  // Never ship localhost as success/cancel or canonical URL in production or on Vercel.
   if (explicit && !(isLocalhostUrl(explicit) && (onVercel || production))) {
     return stripTrailingSlash(explicit);
   }

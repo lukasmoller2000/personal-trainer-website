@@ -3,6 +3,7 @@ import { isPaymentsEnabledByFlag, isPaymentsReady } from "@/lib/commerce";
 import {
   classifyStripePublishableKey,
   classifyStripeSecretKey,
+  getStripeMode,
   getStripePriceEnvName,
   isStripeDevEndpointAllowed,
   readStripePriceId,
@@ -21,6 +22,7 @@ export async function GET() {
   const products = ["session", "pack-5", "online"] as const;
   return NextResponse.json({
     testModeOnly: true,
+    stripeMode: getStripeMode(),
     paymentsEnabled: isPaymentsEnabledByFlag(),
     paymentsReady: isPaymentsReady(),
     secretKey: classifyStripeSecretKey(process.env.STRIPE_SECRET_KEY),

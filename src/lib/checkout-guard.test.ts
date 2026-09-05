@@ -12,26 +12,30 @@ const PAYMENT_ENV = [
   "STRIPE_SECRET_KEY",
   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
   "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_MODE",
   "DATABASE_URL",
   "STRIPE_PRICE_PT_SINGLE",
   "STRIPE_PRICE_PT_5_CLIP",
   "STRIPE_PRICE_ONLINE_COACHING",
+  "NODE_ENV",
+  "VERCEL_ENV",
 ] as const;
 
 function withPaymentEnv(values: Partial<Record<(typeof PAYMENT_ENV)[number], string>>, run: () => void) {
-  const previous = Object.fromEntries(PAYMENT_ENV.map((key) => [key, process.env[key]]));
+  const env = process.env as Record<string, string | undefined>;
+  const previous = Object.fromEntries(PAYMENT_ENV.map((key) => [key, env[key]]));
   try {
     for (const key of PAYMENT_ENV) {
       const value = values[key];
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
+      if (value === undefined) delete env[key];
+      else env[key] = value;
     }
     run();
   } finally {
     for (const key of PAYMENT_ENV) {
       const value = previous[key];
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
+      if (value === undefined) delete env[key];
+      else env[key] = value;
     }
   }
 }
@@ -207,6 +211,73 @@ describe("checkout guard", () => {
       if (missing.ok) return;
       assert.equal(missing.reason, "early_performance_required");
     });
+  });
+
+  it("rejects live keys in development even if STRIPE_MODE=live", () => {
+    withPaymentEnv(
+      {
+        ...validTestEnv,
+        NODE_ENV: "development",
+        STRIPE_MODE: "live",
+        STRIPE_SECRET_KEY: "sk_live_should_never_work",
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_live_should_never_work",
+      },
+      () => {
+        const result = evaluateCheckoutStart({
+          productId: "session",
+          earlyPerformanceRequested: true,
+        });
+        assert.equal(result.ok, false);
+        if (result.ok) return;
+        assert.equal(result.status, 503);
+        assert.equal(result.reason, "live_keys");
+      }
+    );
+  });
+
+  it("rejects test keys in production when STRIPE_MODE=live", () => {
+    withPaymentEnv(
+      {
+        ...validTestEnv,
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        STRIPE_MODE: "live",
+      },
+      () => {
+        const result = evaluateCheckoutStart({
+          productId: "session",
+          earlyPerformanceRequested: true,
+        });
+        assert.equal(result.ok, false);
+        if (result.ok) return;
+        assert.equal(result.status, 503);
+        assert.equal(result.reason, "test_keys");
+      }
+    );
+  });
+
+  it("blocks checkout in production when PAYMENTS_ENABLED is false even with live keys", () => {
+    withPaymentEnv(
+      {
+        ...validTestEnv,
+        PAYMENTS_ENABLED: "false",
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        STRIPE_MODE: "live",
+        STRIPE_SECRET_KEY: "sk_live_should_not_reach_checkout",
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_live_should_not_reach_checkout",
+      },
+      () => {
+        const result = evaluateCheckoutStart({
+          productId: "session",
+          earlyPerformanceRequested: true,
+        });
+        assert.equal(result.ok, false);
+        if (result.ok) return;
+        assert.equal(result.status, 503);
+        assert.equal(result.reason, "payments_disabled");
+      }
+    );
   });
 
   it("documents 14-day withdrawal without auto-waiver", () => {

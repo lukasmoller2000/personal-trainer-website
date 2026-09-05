@@ -61,6 +61,25 @@ describe("getSiteUrl", () => {
     assert.equal(getSiteUrl(), "https://lukasmoller.dk");
   });
 
+  it("ignores localhost APP_URL on Vercel production", () => {
+    setEnv({
+      APP_URL: "http://127.0.0.1:3000",
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3001",
+      VERCEL: "1",
+      VERCEL_ENV: "production",
+      NODE_ENV: "production",
+    });
+    assert.equal(getSiteUrl(), "https://lukasmoller.dk");
+  });
+
+  it("keeps an explicit public APP_URL in production", () => {
+    setEnv({
+      APP_URL: "https://www.lukasmoller.dk",
+      NODE_ENV: "production",
+    });
+    assert.equal(getSiteUrl(), "https://www.lukasmoller.dk");
+  });
+
   it("falls back to localhost:3000 in development when unset", () => {
     setEnv({ NODE_ENV: "development" });
     assert.equal(getSiteUrl(), "http://localhost:3000");

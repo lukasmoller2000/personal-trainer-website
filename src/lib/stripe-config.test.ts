@@ -4,7 +4,9 @@ import { middleware } from "../middleware";
 import {
   classifyStripePublishableKey,
   classifyStripeSecretKey,
+  evaluateStripeConfig,
   evaluateStripeTestConfig,
+  getStripeMode,
   hasLiveStripeKeys,
   isStripeDevCheckoutTestAllowed,
   isStripeDevEndpointAllowed,
@@ -12,12 +14,17 @@ import {
   readStripePriceId,
   STRIPE_CHECKOUT_MODE,
   STRIPE_LIVE_KEYS_REJECTED,
+  STRIPE_PRODUCTION_WEBHOOK_URL,
+  STRIPE_TEST_KEYS_IN_LIVE_MODE,
 } from "./stripe-config";
 
 const KEY_ENV = [
   "STRIPE_SECRET_KEY",
   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
   "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_MODE",
+  "STRIPE_PRICE_PT_SINGLE",
+  "STRIPE_PRICE_LIVE_PT_SINGLE",
   "NODE_ENV",
   "VERCEL_ENV",
 ] as const;
@@ -110,6 +117,7 @@ describe("Stripe test-key guards", () => {
 
   it("never uses subscription mode", () => {
     assert.equal(STRIPE_CHECKOUT_MODE, "payment");
+    assert.equal(STRIPE_PRODUCTION_WEBHOOK_URL, "https://www.lukasmoller.dk/api/stripe/webhook");
   });
 
   it("blocks the dev endpoint in production and with live keys", () => {
@@ -165,15 +173,102 @@ describe("Stripe test-key guards", () => {
   });
 
   it("reads Price IDs only from env", () => {
-    const previous = process.env.STRIPE_PRICE_PT_SINGLE;
-    try {
-      delete process.env.STRIPE_PRICE_PT_SINGLE;
+    withEnv({}, () => {
       assert.equal(readStripePriceId("session"), null);
-      process.env.STRIPE_PRICE_PT_SINGLE = "price_test_session";
+    });
+    withEnv({ STRIPE_PRICE_PT_SINGLE: "price_test_session" }, () => {
       assert.equal(readStripePriceId("session"), "price_test_session");
-    } finally {
-      if (previous === undefined) delete process.env.STRIPE_PRICE_PT_SINGLE;
-      else process.env.STRIPE_PRICE_PT_SINGLE = previous;
-    }
+    });
+  });
+
+  it("rejects live keys in development even if STRIPE_MODE=live", () => {
+    withEnv(
+      {
+        NODE_ENV: "development",
+        STRIPE_MODE: "live",
+        STRIPE_SECRET_KEY: "sk_live_abc123",
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_live_abc123",
+        STRIPE_WEBHOOK_SECRET: "whsec_live",
+      },
+      () => {
+        assert.equal(getStripeMode(), "test");
+        const config = evaluateStripeConfig();
+        assert.equal(config.ok, false);
+        if (config.ok) return;
+        assert.equal(config.reason, "live_keys");
+        assert.equal(config.error, STRIPE_LIVE_KEYS_REJECTED);
+      }
+    );
+  });
+
+  it("rejects test keys in production when STRIPE_MODE=live", () => {
+    withEnv(
+      {
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        STRIPE_MODE: "live",
+        STRIPE_SECRET_KEY: "sk_test_abc123",
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_abc123",
+        STRIPE_WEBHOOK_SECRET: "whsec_test",
+      },
+      () => {
+        assert.equal(getStripeMode(), "live");
+        const config = evaluateStripeConfig();
+        assert.equal(config.ok, false);
+        if (config.ok) return;
+        assert.equal(config.reason, "test_keys");
+        assert.equal(config.error, STRIPE_TEST_KEYS_IN_LIVE_MODE);
+      }
+    );
+  });
+
+  it("accepts live keys only in production when STRIPE_MODE=live", () => {
+    withEnv(
+      {
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        STRIPE_MODE: "live",
+        STRIPE_SECRET_KEY: "sk_live_abc123",
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_live_abc123",
+        STRIPE_WEBHOOK_SECRET: "whsec_live",
+      },
+      () => {
+        const config = evaluateStripeConfig();
+        assert.equal(config.ok, true);
+        if (!config.ok) return;
+        assert.equal(config.mode, "live");
+        assert.equal(config.secretKey.startsWith("sk_live_"), true);
+        assert.equal(config.publishableKey.startsWith("pk_live_"), true);
+      }
+    );
+  });
+
+  it("defaults STRIPE_MODE to test and prefers live Price ID aliases in live mode", () => {
+    withEnv({ NODE_ENV: "development" }, () => {
+      assert.equal(getStripeMode(), "test");
+    });
+    withEnv(
+      {
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        STRIPE_MODE: "live",
+        STRIPE_PRICE_PT_SINGLE: "price_test_session",
+        STRIPE_PRICE_LIVE_PT_SINGLE: "price_live_session",
+      },
+      () => {
+        assert.equal(readStripePriceId("session"), "price_live_session");
+      }
+    );
+    withEnv(
+      {
+        NODE_ENV: "development",
+        STRIPE_MODE: "live",
+        STRIPE_PRICE_PT_SINGLE: "price_test_session",
+        STRIPE_PRICE_LIVE_PT_SINGLE: "price_live_session",
+      },
+      () => {
+        assert.equal(readStripePriceId("session"), "price_test_session");
+      }
+    );
   });
 });

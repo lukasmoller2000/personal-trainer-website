@@ -11,7 +11,7 @@
  */
 
 import {
-  evaluateStripeTestConfig,
+  evaluateStripeConfig,
   STRIPE_LIVE_KEYS_REJECTED,
 } from "@/lib/stripe-config";
 import { siteConfig } from "@/lib/utils";
@@ -202,16 +202,23 @@ export function getCompanyConfig() {
 }
 
 export function missingPaymentEnv(): string[] {
-  const stripe = evaluateStripeTestConfig();
+  const stripe = evaluateStripeConfig();
   const missing: string[] = stripe.ok ? [] : [...stripe.missing];
   if (!process.env.DATABASE_URL?.trim()) missing.push("DATABASE_URL");
   return missing;
 }
 
-export function stripeConfigBlocker(): { reason: "live_keys" | "invalid_keys"; error: string } | null {
-  const stripe = evaluateStripeTestConfig();
+export function stripeConfigBlocker(): {
+  reason: "live_keys" | "test_keys" | "invalid_keys";
+  error: string;
+} | null {
+  const stripe = evaluateStripeConfig();
   if (stripe.ok) return null;
-  if (stripe.reason === "live_keys" || stripe.reason === "invalid_keys") {
+  if (
+    stripe.reason === "live_keys" ||
+    stripe.reason === "test_keys" ||
+    stripe.reason === "invalid_keys"
+  ) {
     return { reason: stripe.reason, error: stripe.error };
   }
   return null;
@@ -241,7 +248,9 @@ export function paymentsNotConfiguredMessage(missing = missingPaymentEnv()) {
   if (!isPaymentsEnabledByFlag()) return PAYMENTS_NOT_CONFIGURED;
   const blocker = stripeConfigBlocker();
   if (blocker?.reason === "live_keys") return STRIPE_LIVE_KEYS_REJECTED;
-  if (blocker?.reason === "invalid_keys") return blocker.error;
+  if (blocker?.reason === "test_keys" || blocker?.reason === "invalid_keys") {
+    return blocker.error;
+  }
   if (missing.length === 0) return PAYMENTS_NOT_CONFIGURED;
   return `${PAYMENTS_NOT_CONFIGURED}. Mangler: ${missing.join(", ")}`;
 }

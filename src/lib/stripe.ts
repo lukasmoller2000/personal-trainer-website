@@ -1,32 +1,35 @@
 import Stripe from "stripe";
 import { missingPaymentEnv } from "@/lib/commerce";
-import { evaluateStripeTestConfig, parseStripeSecretKey } from "@/lib/stripe-config";
+import { evaluateStripeConfig } from "@/lib/stripe-config";
 
 let client: Stripe | null = null;
 let clientKey: string | null = null;
 
-/** Only constructs a client from an accepted sk_test_ key. Live keys never reach Stripe. */
+/**
+ * Constructs a Stripe client only after evaluateStripeConfig() accepts the key.
+ * Development never accepts sk_live_. Production live-mode never accepts sk_test_.
+ */
 export function getStripe(): Stripe | null {
-  const parsed = parseStripeSecretKey(process.env.STRIPE_SECRET_KEY);
-  if (parsed.kind !== "test") {
+  const config = evaluateStripeConfig();
+  if (!config.ok) {
     client = null;
     clientKey = null;
     return null;
   }
-  if (!client || clientKey !== parsed.key) {
-    client = new Stripe(parsed.key);
-    clientKey = parsed.key;
+  if (!client || clientKey !== config.secretKey) {
+    client = new Stripe(config.secretKey);
+    clientKey = config.secretKey;
   }
   return client;
 }
 
 export function getStripePublishableKey() {
-  const config = evaluateStripeTestConfig();
+  const config = evaluateStripeConfig();
   return config.ok ? config.publishableKey : "";
 }
 
 export function getStripeWebhookSecret() {
-  const config = evaluateStripeTestConfig();
+  const config = evaluateStripeConfig();
   return config.ok ? config.webhookSecret : "";
 }
 
