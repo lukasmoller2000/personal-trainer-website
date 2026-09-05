@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { middleware } from "../middleware";
 import {
   classifyStripePublishableKey,
   classifyStripeSecretKey,
@@ -114,6 +115,7 @@ describe("Stripe test-key guards", () => {
   it("blocks the dev endpoint in production and with live keys", () => {
     withEnv({ NODE_ENV: "production", VERCEL_ENV: "production" }, () => {
       assert.equal(isStripeDevEndpointAllowed(), false);
+      assert.equal(middleware().status, 404);
     });
     withEnv(
       {
