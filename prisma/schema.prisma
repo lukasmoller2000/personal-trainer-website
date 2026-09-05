@@ -37,7 +37,9 @@ model Booking {
 model Order {
   id                      String    @id @default(cuid())
   productId               String
+  /// Payment status: pending | paid | cancelled | refunded | failed
   status                  String    @default("pending")
+  /// Charge amount in øre from the server catalog — never from the client
   amountOre               Int
   currency                String    @default("dkk")
   vatRegistered           Boolean   @default(false)
@@ -54,6 +56,10 @@ model Order {
   stripeCheckoutSessionId String?   @unique
   stripePaymentIntentId   String?
   paidAt                  DateTime?
+  /// Explicit request that delivery may begin before the 14-day period ends.
+  /// Must not be pre-checked. Not a waiver of withdrawal rights.
+  earlyPerformanceRequested   Boolean   @default(false)
+  earlyPerformanceRequestedAt DateTime?
   createdAt               DateTime  @default(now())
 
   bookings Booking[]

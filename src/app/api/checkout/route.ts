@@ -1,23 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  isPaymentsReady,
-  missingPaymentEnv,
-  paymentsNotConfiguredMessage,
-  sessionDuration,
-  cancellationConfig,
-  getVatSettings,
-} from "@/lib/commerce";
+import { evaluateCheckoutStart } from "@/lib/checkout-guard";
+import { getVatSettings, paymentsNotConfiguredMessage } from "@/lib/commerce";
 import { createPendingOrder, attachStripeSession } from "@/lib/orders";
-import {
-  getCheckoutAmountOre,
-  getProduct,
-  isPaidProduct,
-  requiresTimeslot,
-} from "@/lib/products";
+import { getProduct, requiresTimeslot } from "@/lib/products";
 import { getTakenTimes } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
+import { STRIPE_CHECKOUT_MODE } from "@/lib/stripe-config";
+import { safeCheckoutMetadata } from "@/lib/stripe-fulfillment";
 import { getSlotsForDate, isBookableDate } from "@/lib/availability";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
+import { bookingCancelQuery } from "@/lib/payment-result";
 import { getSiteUrl } from "@/lib/utils";
 import {
   honeypotFilled,
@@ -42,13 +34,6 @@ export async function POST(request: NextRequest) {
   const blocked = limited(request);
   if (blocked) return blocked;
 
-  if (!isPaymentsReady()) {
-    return NextResponse.json(
-      { error: paymentsNotConfiguredMessage(), missing: missingPaymentEnv() },
-      { status: 503 }
-    );
-  }
-
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -61,6 +46,7 @@ export async function POST(request: NextRequest) {
   }
 
   const productId = readString(body, "productId").trim();
+  console.info("[checkout] request received", { method: "POST", path: "/api/checkout", productId });
   const date = readString(body, "date").trim();
   const time = readString(body, "time").trim();
   const name = readString(body, "name");
@@ -69,6 +55,19 @@ export async function POST(request: NextRequest) {
   const goal = readString(body, "goal");
   const notes = readString(body, "notes");
   const birthYearRaw = body.birthYear;
+  const earlyPerformanceRequested = body.earlyPerformanceRequested === true;
+
+  const checkout = evaluateCheckoutStart({
+    productId,
+    clientAmount: typeof body.amount === "number" ? body.amount : undefined,
+    earlyPerformanceRequested,
+  });
+  if (!checkout.ok) {
+    return NextResponse.json(
+      { error: checkout.error, reason: checkout.reason },
+      { status: checkout.status }
+    );
+  }
 
   if (!productId || !isFilled(name, 80) || !isFilled(goal, 200)) {
     return NextResponse.json({ error: "Udfyld alle påkrævede felter" }, { status: 400 });
@@ -84,12 +83,7 @@ export async function POST(request: NextRequest) {
   }
 
   const product = getProduct(productId);
-  if (!product || !isPaidProduct(product)) {
-    return NextResponse.json({ error: "Ukendt ydelse" }, { status: 400 });
-  }
-
-  const amountOre = getCheckoutAmountOre(productId);
-  if (amountOre == null) {
+  if (!product) {
     return NextResponse.json({ error: "Ukendt ydelse" }, { status: 400 });
   }
 
@@ -129,8 +123,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const order = await createPendingOrder({
+    const { order, bookingId } = await createPendingOrder({
       productId,
+      earlyPerformanceRequested: true,
       customer: {
         name: name.trim(),
         email: email.trim(),
@@ -145,46 +140,38 @@ export async function POST(request: NextRequest) {
 
     const siteUrl = getSiteUrl();
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+      mode: STRIPE_CHECKOUT_MODE,
       customer_email: email.trim(),
       client_reference_id: order.id,
       success_url: `${siteUrl}/booking/bekraeftelse?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/booking?produkt=${encodeURIComponent(productId)}`,
+      cancel_url: `${siteUrl}${bookingCancelQuery(productId)}`,
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-      metadata: {
-        orderId: order.id,
+      metadata: safeCheckoutMetadata({
         productId,
-      },
+        orderId: order.id,
+        bookingId,
+      }),
       line_items: [
         {
           quantity: 1,
-          price_data: {
-            currency: "dkk",
-            unit_amount: order.amountOre,
-            product_data: {
-              name: product.name,
-              description: [
-                product.priceNote,
-                `Ca. ${sessionDuration.minutes} min. pr. træning.`,
-                `Gratis aflysning indtil ${cancellationConfig.freeCancelHours} timer før.`,
-              ]
-                .filter(Boolean)
-                .join(" "),
-            },
-          },
+          price: checkout.stripePriceId,
         },
       ],
     });
 
     if (!session.url) {
+      console.info("[checkout] no checkout url", { productId, status: 502 });
       return NextResponse.json({ error: "Kunne ikke starte betaling" }, { status: 502 });
     }
 
     await attachStripeSession(order.id, session.id);
 
+    console.info("[checkout] checkout url received", { productId, status: 200, hasCheckoutUrl: true });
     return NextResponse.json({ url: session.url, orderId: order.id });
   } catch (error) {
-    console.error("Checkout fejlede", error instanceof Error ? error.name : "unknown");
+    const name = error instanceof Error ? error.name : "unknown";
+    console.error("Checkout fejlede", name);
+    console.info("[checkout] error", { productId, status: 500, error: name });
     return NextResponse.json({ error: "Kunne ikke starte betaling. Prøv igen." }, { status: 500 });
   }
 }

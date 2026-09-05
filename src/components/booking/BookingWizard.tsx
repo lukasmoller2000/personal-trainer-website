@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -18,11 +19,12 @@ import {
   cancellationConfig,
   sessionDuration,
 } from "@/lib/commerce";
+import { EARLY_PERFORMANCE_CONSENT } from "@/lib/early-performance";
 import {
   getProduct,
-  isPaidProduct,
   products,
   requiresTimeslot,
+  startsCheckoutFromPublicForm,
   type Product,
 } from "@/lib/products";
 import { track } from "@/lib/track";
@@ -103,14 +105,21 @@ export function BookingWizard({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [doneRemaining, setDoneRemaining] = useState<number | null>(null);
+  const [earlyPerformanceRequested, setEarlyPerformanceRequested] = useState<boolean>(
+    EARLY_PERFORMANCE_CONSENT.defaultChecked
+  );
   const submitLock = useRef(false);
 
   const steps = stepsForProduct(product, clipMode);
   const currentStep = steps[step] ?? (clipMode ? "date" : "product");
   const needsTimeslot = clipMode || (product ? requiresTimeslot(product) : true);
-  const isInquiry = product?.bookingType === "inquiry";
-  const payNow = Boolean(paymentsEnabled && product && isPaidProduct(product) && !clipMode);
+  const payNow = Boolean(
+    paymentsEnabled && product && startsCheckoutFromPublicForm(product) && !clipMode
+  );
+  const isInquiry = Boolean(product?.bookingType === "inquiry" && !payNow);
   const isPackInquiry = Boolean(product?.bookingType === "pack" && !payNow && !clipMode);
+  const isSessionInquiry = Boolean(product?.bookingType === "session" && !payNow && !clipMode);
+  const isOpenInquiry = isInquiry || isPackInquiry || isSessionInquiry;
 
   const days = useMemo(
     () => getCalendarDays(cursor.year, cursor.month),
@@ -150,6 +159,10 @@ export function BookingWizard({
     if (submitLock.current) return;
     if (needsTimeslot && (!selectedDate || !selectedTime)) return;
     if (!clipMode && !product) return;
+    if (payNow && !earlyPerformanceRequested) {
+      setError("Bekræft, at du ønsker at ydelsen kan begynde, før fortrydelsesfristen er udløbet.");
+      return;
+    }
     submitLock.current = true;
     setSubmitting(true);
     setError(null);
@@ -185,6 +198,7 @@ export function BookingWizard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productId: product?.id,
+          earlyPerformanceRequested: payNow ? earlyPerformanceRequested : undefined,
           ...form,
           birthYear: collectBirthYear && form.birthYear ? Number(form.birthYear) : undefined,
           ...(needsTimeslot && selectedDate && selectedTime
@@ -236,7 +250,7 @@ export function BookingWizard({
         <h2 className="font-display text-3xl font-semibold tracking-tight text-ink">
           {clipMode
             ? "Din træning er booket"
-            : isInquiry || isPackInquiry
+            : isOpenInquiry
               ? "Din forespørgsel er sendt"
               : "Din booking er sendt"}
         </h2>
@@ -267,7 +281,7 @@ export function BookingWizard({
               ? "Jeg vender tilbage på mail eller telefon, så vi kan aftale opstart af dit online forløb."
               : isPackInquiry
                 ? "Jeg vender tilbage med bekræftelse og betalingsinfo. Tider bookes, når klippekortet er aktivt."
-                : "Tiden er ikke reserveret endnu. Jeg bekræfter tidspunktet på mail eller telefon og sender betalingsinfo."}
+                : "Dette er en forespørgsel. Tiden er ikke reserveret eller bekræftet endnu. Jeg vender tilbage på mail eller telefon og sender betalingsinfo."}
         </p>
         <Button href="/" className="mt-8">
           Til forsiden
@@ -337,6 +351,7 @@ export function BookingWizard({
                         setProduct(item);
                         setSelectedDate(null);
                         setSelectedTime(null);
+                        setEarlyPerformanceRequested(EARLY_PERFORMANCE_CONSENT.defaultChecked);
                         setError(null);
                         setStep(1);
                       }}
@@ -512,14 +527,23 @@ export function BookingWizard({
                 </h3>
                 {isInquiry && (
                   <p className="mt-2 text-sm leading-relaxed text-ink/55">
-                    Online Coaching er et løbende program uden fast træningstid. Du booker ikke en
-                    tid i gymmet — jeg kontakter dig om opstart.
+                    Dette er en forespørgsel — ikke en bekræftet tid. Online Coaching er et løbende
+                    program uden fast træningstid. Du booker ikke en tid i gymmet — jeg kontakter
+                    dig om opstart.
                   </p>
                 )}
                 {isPackInquiry && (
                   <p className="mt-2 text-sm leading-relaxed text-ink/55">
-                    Du vælger ikke tid nu. Jeg vender tilbage med bekræftelse og betalingsinfo. Tider
-                    bookes, når klippekortet er aktivt.
+                    Dette er en forespørgsel — ikke en bekræftet tid. Du vælger ikke tid nu. Jeg
+                    vender tilbage med bekræftelse og betalingsinfo. Tider bookes, når klippekortet
+                    er aktivt.
+                  </p>
+                )}
+                {isSessionInquiry && (
+                  <p className="mt-2 text-sm leading-relaxed text-ink/55">
+                    Dette er en forespørgsel. Den valgte tid er et ønske — den er ikke reserveret
+                    eller bekræftet, før jeg har svaret. Afbudsreglen på{" "}
+                    {cancellationConfig.freeCancelHours} timer gælder for bekræftede tider.
                   </p>
                 )}
                 {clipMode && (
@@ -596,7 +620,7 @@ export function BookingWizard({
                         setForm((prev) => ({ ...prev, notes: event.target.value }))
                       }
                       className="w-full resize-none rounded-xl border border-sand px-4 py-3 outline-none ring-sage/40 focus:ring-2"
-                      placeholder="Skader, træningserfaring..."
+                      placeholder="Er der noget praktisk, jeg bør vide inden træningen?"
                     />
                   </div>
                   {error && (
@@ -604,14 +628,21 @@ export function BookingWizard({
                       {error}
                     </p>
                   )}
+                  {payNow ? (
+                    <EarlyPerformanceConsent
+                      checked={earlyPerformanceRequested}
+                      onChange={setEarlyPerformanceRequested}
+                    />
+                  ) : null}
                   {payNow || clipMode ? (
                     <PolicyNote />
                   ) : (
                     <p className="text-sm text-ink/50">
-                      Når du sender, vender jeg tilbage med bekræftelse. Tiden er ikke reserveret, før
-                      jeg har svaret.
+                      Når du sender, er det en forespørgsel. Jeg vender tilbage med bekræftelse.
+                      Tiden er ikke reserveret, før jeg har svaret.
                     </p>
                   )}
+                  <LegalLinks />
                   <div className="flex flex-wrap gap-3">
                     <Button variant="ghost" type="button" onClick={() => setStep(step - 1)}>
                       <ArrowLeft className="h-4 w-4" /> Tilbage
@@ -623,14 +654,14 @@ export function BookingWizard({
                           ? "Går til betaling..."
                           : clipMode
                             ? "Booker..."
-                            : isInquiry || isPackInquiry
+                            : isOpenInquiry
                               ? "Sender..."
                               : "Booker..."
                         : payNow
                           ? "Gå til betaling"
                           : clipMode
                             ? "Bekræft med klip"
-                            : isInquiry || isPackInquiry
+                            : isOpenInquiry
                               ? "Send forespørgsel"
                               : "Bekræft booking"}
                     </Button>
@@ -644,7 +675,13 @@ export function BookingWizard({
 
       <aside className="h-fit rounded-2xl border border-sand bg-white p-5 lg:sticky lg:top-24">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink/40">
-          {clipMode || isPackInquiry ? "Klippekort" : isInquiry ? "Din opstart" : "Din booking"}
+          {clipMode || isPackInquiry
+            ? "Klippekort"
+            : isInquiry
+              ? "Din opstart"
+              : isSessionInquiry
+                ? "Din forespørgsel"
+                : "Din booking"}
         </p>
         <dl className="mt-4 space-y-3 text-sm">
           <SummaryRow
@@ -679,14 +716,59 @@ export function BookingWizard({
   );
 }
 
+function LegalLinks() {
+  return (
+    <p className="text-sm text-ink/50">
+      Læs{" "}
+      <Link href="/privatliv" className="underline underline-offset-2 hover:text-ink">
+        privatlivspolitik
+      </Link>{" "}
+      og{" "}
+      <Link href="/vilkaar" className="underline underline-offset-2 hover:text-ink">
+        handelsbetingelser
+      </Link>
+      .
+    </p>
+  );
+}
+
+function EarlyPerformanceConsent({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-sand bg-sand/40 p-4">
+      <label className="flex items-start gap-3 text-sm text-ink/80">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+          className="mt-1 h-4 w-4 shrink-0 rounded border-sand"
+          data-testid="early-performance-consent"
+        />
+        <span>
+          <span className="font-medium text-ink">{EARLY_PERFORMANCE_CONSENT.checkboxLabel}</span>
+          <span className="mt-1 block text-ink/55">{EARLY_PERFORMANCE_CONSENT.help}</span>
+        </span>
+      </label>
+    </div>
+  );
+}
+
 function PolicyNote() {
   return (
     <div className="space-y-2 text-sm text-ink/55">
       <p>{sessionDuration.copy}</p>
       <p>{sessionDuration.notAPromise}</p>
       <p>
-        Du kan aflyse eller flytte gratis indtil {cancellationConfig.freeCancelHours} timer før
-        træningen. Senere afbud eller udeblivelse tæller som brugt træning.
+        Afbudsreglen på {cancellationConfig.freeCancelHours} timer gælder for bekræftede
+        tider. Du kan aflyse eller flytte gratis indtil {cancellationConfig.freeCancelHours}{" "}
+        timer før træningen. Ved senere afbud eller udeblivelse fra en bekræftet session
+        betragtes tiden som udgangspunkt som brugt (ét klip / betalingen refunderes som
+        udgangspunkt ikke). Det berører ikke dine ufravigelige forbrugerrettigheder.
       </p>
     </div>
   );

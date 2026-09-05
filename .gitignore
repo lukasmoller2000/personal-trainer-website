@@ -48,3 +48,8 @@ next-env.d.ts
 
 # bookings
 /data/bookings.json
+
+# local-only Postgres / verify scratch (never commit)
+/tmp-local-pg/
+/tmp-verify-live/
+scripts/_verify-pack5-tmp.mjs

@@ -72,11 +72,11 @@ export function Footer() {
             <ul className="mt-4 space-y-3 text-cream/70">
               <li>
                 <a
-                  href={`mailto:${siteConfig.links.email}`}
+                  href={`mailto:${company.email}`}
                   className="flex items-center gap-2.5 hover:text-cream"
                 >
                   <Mail className="h-4 w-4 shrink-0" />
-                  {siteConfig.links.email}
+                  {company.email}
                 </a>
               </li>
               <li>
@@ -99,6 +99,8 @@ export function Footer() {
                   >
                     {siteConfig.venue}
                   </a>
+                  <br />
+                  <span className="text-cream/45">Træningssted</span>
                   <br />
                   {siteConfig.address}
                   <br />

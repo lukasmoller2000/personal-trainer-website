@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { CheckCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -127,6 +128,13 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
               {error}
             </p>
           )}
+          <p className="text-sm text-ink/50">
+            Når du sender, behandles beskeden efter{" "}
+            <Link href="/privatliv" className="underline underline-offset-2 hover:text-ink">
+              privatlivspolitikken
+            </Link>
+            .
+          </p>
           <Button type="submit" size="lg" disabled={submitting}>
             <Send className="h-4 w-4" />
             {submitting ? "Sender..." : "Send besked"}

@@ -36,7 +36,7 @@ export function AboutTeaser() {
             <GymLogo size={56} />
             <a href={siteConfig.gymUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-ink hover:text-sage">
               {siteConfig.venue}
-              <span className="block text-ink/50">{siteConfig.address}</span>
+              <span className="block text-ink/50">Træningssted: {siteConfig.address}</span>
             </a>
           </div>
           <div className="mb-8">

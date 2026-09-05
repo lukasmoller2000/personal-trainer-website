@@ -5,10 +5,26 @@ import {
   canConsumeClip,
   canRefundUnusedClipCard,
   canTransitionOrder,
+  clipExpiresAt,
   clipStatusAfterConsume,
+  COMMERCE_DEFAULTS,
+  DEFAULT_REFUND_POLICY,
+  FUTURE_PAYMENT_FLOW,
+  getCancellationHours,
+  getClipExpiryMonths,
+  getCompanyConfig,
+  getRefundPolicy,
   getVatSettings,
+  getWithdrawalPeriodDays,
+  isClipCardExpired,
+  isPaymentsEnabledByFlag,
   isPaymentsReady,
+  isStripeEnabled,
   isUniqueConstraintError,
+  LEGAL_PENDING,
+  ONLINE_CANCEL_REQUIRED_IF_SUBSCRIPTION,
+  PAYMENTS_NOT_CONFIGURED,
+  paymentsNotConfiguredMessage,
   remainingAfterConsume,
   rememberEventId,
   sessionDuration,
@@ -73,6 +89,17 @@ describe("clip consume", () => {
     assert.equal(clipStatusAfterConsume(0), "exhausted");
     assert.equal(canConsumeClip({ status: "active", remaining: 0, totalSessions: 5 }).ok, false);
     assert.equal(canConsumeClip({ status: "cancelled", remaining: 3, totalSessions: 5 }).ok, false);
+    const expired = new Date();
+    expired.setMonth(expired.getMonth() - 13);
+    assert.equal(
+      canConsumeClip({
+        status: "active",
+        remaining: 5,
+        totalSessions: 5,
+        createdAt: expired,
+      }).ok,
+      false
+    );
   });
 
   it("only refunds unused packs", () => {
@@ -118,6 +145,79 @@ describe("session duration", () => {
 
 describe("payments", () => {
   it("stays dormant unless PAYMENTS_ENABLED is set", () => {
+    assert.equal(isPaymentsEnabledByFlag(), false);
+    assert.equal(isStripeEnabled(), false);
+    assert.equal(isStripeEnabled(), isPaymentsEnabledByFlag());
     assert.equal(isPaymentsReady(), false);
+    assert.match(paymentsNotConfiguredMessage(), /ikke aktiveret/);
+    assert.equal(PAYMENTS_NOT_CONFIGURED.includes("ikke aktiveret"), true);
+  });
+
+  it("documents the future pay-after-confirm flow without enabling it", () => {
+    assert.deepEqual(FUTURE_PAYMENT_FLOW, [
+      "choose_product",
+      "request_time",
+      "time_confirmed",
+      "customer_pays",
+      "stripe_checkout",
+      "webhook_confirms",
+      "booking_marked_paid",
+    ]);
+  });
+});
+
+describe("company and legal config", () => {
+  it("hides empty CVR and address and keeps payments off", () => {
+    const company = getCompanyConfig();
+    assert.equal(company.name, "Lukas Møller");
+    assert.equal(company.cvr, "");
+    assert.equal(company.address, "");
+    assert.ok(company.email.includes("@"));
+    assert.equal(LEGAL_PENDING.COMPANY_CVR, "");
+    assert.equal(LEGAL_PENDING.COMPANY_ADDRESS, "");
+    assert.doesNotMatch(company.cvr, /TODO/i);
+    assert.doesNotMatch(company.address, /TODO/i);
+    assert.equal(isPaymentsEnabledByFlag(), false);
+    assert.equal(isStripeEnabled(), false);
+  });
+
+  it("computes 12-month clip expiry from activation", () => {
+    const activated = new Date("2026-01-15T10:00:00.000Z");
+    const expires = clipExpiresAt(activated, 12);
+    assert.equal(expires.getUTCFullYear(), 2027);
+    assert.equal(expires.getUTCMonth(), 0);
+    assert.equal(isClipCardExpired(activated, new Date("2026-06-01T00:00:00.000Z")), false);
+    assert.equal(isClipCardExpired(activated, new Date("2027-01-15T10:00:00.000Z")), true);
+  });
+
+  it("uses 12-month clip expiry and 24-hour cancellation", () => {
+    assert.equal(COMMERCE_DEFAULTS.CLIP_EXPIRY_MONTHS, 12);
+    assert.equal(COMMERCE_DEFAULTS.CANCELLATION_HOURS, 24);
+    assert.equal(getClipExpiryMonths(), 12);
+    assert.equal(getCancellationHours(), 24);
+    assert.equal(getWithdrawalPeriodDays(), 14);
+    assert.equal(ONLINE_CANCEL_REQUIRED_IF_SUBSCRIPTION, true);
+  });
+
+  it("assesses refunds from statutory rights and agreed terms, not a blanket ban", () => {
+    const policy = getRefundPolicy();
+    assert.equal(policy, DEFAULT_REFUND_POLICY);
+    assert.match(policy, /lovbestemte rettigheder/);
+    assert.match(policy, /afbuds- og klipvilkår/);
+    assert.doesNotMatch(policy, /ingen refundering/i);
+    assert.doesNotMatch(policy, /under no circumstances/i);
+  });
+});
+
+describe("clip expiry env", () => {
+  it("shows 12 months when CLIP_EXPIRY_MONTHS is set", () => {
+    const previous = process.env.CLIP_EXPIRY_MONTHS;
+    try {
+      process.env.CLIP_EXPIRY_MONTHS = "12";
+      assert.equal(getClipExpiryMonths(), 12);
+    } finally {
+      if (previous === undefined) delete process.env.CLIP_EXPIRY_MONTHS;
+      else process.env.CLIP_EXPIRY_MONTHS = previous;
+    }
   });
 });

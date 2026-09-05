@@ -5,6 +5,7 @@ import { PageHero } from "@/components/ui/PageHero";
 import { Button } from "@/components/ui/Button";
 import { SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
+import { getCompanyConfig } from "@/lib/commerce";
 import { siteConfig } from "@/lib/utils";
 import { pageSeo } from "@/lib/seo";
 
@@ -14,12 +15,14 @@ export const metadata: Metadata = pageSeo("/kontakt", {
     "Tag en uforpligtende snak med Lukas Møller om personlig træning i Viborg, online coaching, eller hvilket program der passer.",
 });
 
+const company = getCompanyConfig();
+
 const info = [
   {
     icon: Mail,
     label: "Email",
-    value: siteConfig.links.email,
-    href: `mailto:${siteConfig.links.email}`,
+    value: company.email,
+    href: `mailto:${company.email}`,
   },
   {
     icon: Phone,
@@ -29,7 +32,7 @@ const info = [
   },
   {
     icon: MapPin,
-    label: "Adresse",
+    label: "Træningssted",
     value: `${siteConfig.venue}, ${siteConfig.address}`,
     href: siteConfig.gymUrl,
   },
@@ -63,7 +66,7 @@ export default function ContactPage() {
               >
                 {siteConfig.venue}
               </a>
-              , {siteConfig.address}. {siteConfig.hours}.
+              , træningssted {siteConfig.address}. {siteConfig.hours}.
             </p>
           </div>
           <div className="flex flex-col items-start gap-4 sm:items-end">

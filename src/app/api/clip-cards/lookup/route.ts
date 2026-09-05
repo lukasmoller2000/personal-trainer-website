@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isClipCardExpired } from "@/lib/commerce";
 import { getPrisma } from "@/lib/db";
 import { isMailConfigured, trySendCustomerEmail } from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  if (card) {
+  if (card && !isClipCardExpired(card.createdAt)) {
     const siteUrl = getSiteUrl();
     await trySendCustomerEmail({
       to: email,

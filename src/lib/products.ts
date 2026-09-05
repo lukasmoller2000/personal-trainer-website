@@ -1,4 +1,5 @@
 import { sessionDuration } from "@/lib/commerce";
+import { readStripePriceId } from "@/lib/stripe-config";
 
 export type ProductKind = "session" | "pack" | "program";
 export type ProductEmphasis = "simple" | "featured" | "premium";
@@ -26,6 +27,17 @@ export type Product = {
   badge?: string;
   emphasis?: ProductEmphasis;
   cta: string;
+  /**
+   * Stripe Price ID is read from env (STRIPE_PRICE_*), never hardcoded here.
+   * Leave unset on the product object.
+   */
+  stripePriceId?: string;
+  /**
+   * When false, the public site never starts Stripe Checkout for this product.
+   * Inquiry/booking still works. Online coaching stays off until one-time vs
+   * subscription is decided — do not build Subscriptions for it.
+   */
+  paymentsAvailable?: boolean;
 };
 
 export const products: Product[] = [
@@ -40,7 +52,7 @@ export const products: Product[] = [
       "1:1 træning med mig i Viborg Fitness Gym. Vi arbejder med teknik, styrke, progression og dine konkrete mål.",
     fits: "Til dig, der vil træne sammen med mig i gymmet — én session ad gangen, uden binding.",
     how: [
-      "Book en tid i Viborg Fitness Gym, Falkevej 16B",
+      "Vælg en ønsket tid i Viborg Fitness Gym (træningssted: Falkevej 16B)",
       `Sessionen varer som udgangspunkt ca. ${sessionDuration.minutes} minutter og er 1:1`,
       "Vi træner teknik, styrke og det, du gerne vil opnå",
       "Betaling bekræftes, før tiden gælder — eller jeg vender tilbage, hvis betaling ikke er slået til",
@@ -108,6 +120,9 @@ export const products: Product[] = [
     sessions: 1,
     durationMinutes: 45,
     price: 799,
+    // Copy says monthly/ongoing, but Checkout is a one-time Payment.
+    // Do not start Stripe for this product until one-time vs subscription is decided.
+    paymentsAvailable: false,
     priceSuffix: "/md.",
     priceNote: "Opsiges måneden ud",
     emphasis: "premium",
@@ -135,6 +150,21 @@ export function isPaidProduct(product: Product) {
   return product.bookingType === "session" || product.bookingType === "pack";
 }
 
+/** Products that can go through Stripe Checkout (one-time Payment, never Subscription). */
+export function isCheckoutProduct(product: Product) {
+  if (product.paymentsAvailable === false) return false;
+  return product.id === "session" || product.id === "pack-5";
+}
+
+/**
+ * Public booking form: regular PT is always an inquiry.
+ * Checkout is started later (after Lukas confirms) or from /dev/stripe-test.
+ * Pack-5 may go to Checkout when payments are on.
+ */
+export function startsCheckoutFromPublicForm(product: Product) {
+  return isCheckoutProduct(product) && product.bookingType !== "session";
+}
+
 export function sessionProducts() {
   return products.filter((product) => product.kind !== "program");
 }
@@ -150,11 +180,16 @@ export function trackEventForProduct(productId: string) {
 /** Server-side price in øre. Never accept an amount from the client. */
 export function getCheckoutAmountOre(productId: string) {
   const product = getProduct(productId);
-  if (!product || !isPaidProduct(product) || product.price == null) return null;
+  if (!product || !isCheckoutProduct(product) || product.price == null) return null;
   return Math.round(product.price * 100);
 }
 
 export function resolveCheckoutAmountOre(productId: string, _clientAmount?: number) {
   void _clientAmount;
   return getCheckoutAmountOre(productId);
+}
+
+/** Env-mapped Price ID. Never invent or hardcode an ID. Missing ID fails checkout. */
+export function getStripePriceId(productId: string) {
+  return readStripePriceId(productId);
 }

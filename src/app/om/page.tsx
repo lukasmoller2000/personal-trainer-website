@@ -102,7 +102,7 @@ export default function AboutPage() {
                 className="text-sm font-medium text-ink hover:text-sage"
               >
                 {siteConfig.venue}
-                <span className="block text-ink/50">{siteConfig.address}</span>
+                <span className="block text-ink/50">Træningssted: {siteConfig.address}</span>
               </a>
             </div>
             <SocialLinks />
@@ -165,7 +165,7 @@ export default function AboutPage() {
                 >
                   Viborg Fitness Gym
                 </a>
-                , Falkevej 16B. Træningen foregår 1:1 og tager udgangspunkt i dine mål, dit niveau og
+                , træningssted Falkevej 16B. Træningen foregår 1:1 og tager udgangspunkt i dine mål, dit niveau og
                 det, du gerne vil opnå.
               </p>
             </div>

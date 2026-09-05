@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
-import { sessionDuration } from "@/lib/commerce";
+import { cancellationConfig, clipCardValidity, sessionDuration } from "@/lib/commerce";
 import { cn } from "@/lib/utils";
 
 export const faqs = [
@@ -31,7 +31,7 @@ export const faqs = [
   {
     question: "Hvordan virker klippekort?",
     answer:
-      "Du kan købe 5 træninger til 1.350 kr. Du vælger ikke tid ved henvendelsen. Når klippekortet er aktivt, booker du tider med dine klip og kan se, hvor mange træninger du har tilbage.",
+      `Du kan købe 5 træninger til 1.350 kr. Du vælger ikke tid ved henvendelsen. Når klippekortet er aktivt, booker du tider med dine klip og kan se, hvor mange træninger du har tilbage. Klippekortet gælder ${clipCardValidity.months} måneder fra køb.`,
   },
   {
     question: "Skal jeg være i god form inden?",
@@ -41,17 +41,17 @@ export const faqs = [
   {
     question: "Hvor foregår træningen?",
     answer:
-      "Personlig træning foregår i Viborg Fitness Gym, Falkevej 16B, 8800 Viborg.",
+      "Personlig træning foregår i Viborg Fitness Gym (træningssted: Falkevej 16B, 8800 Viborg).",
   },
   {
     question: "Hvad skal jeg have med?",
     answer:
-      "Træningstøj, indendørssko og en vandflaske. Sig til, hvis du har skader eller begrænsninger.",
+      "Træningstøj, indendørssko og en vandflaske. Er der noget praktisk, jeg bør vide inden træningen, så skriv det i din henvendelse.",
   },
   {
     question: "Kan jeg ændre min booking?",
     answer:
-      "Enkelt PT: aflys eller flyt senest 24 timer før. Senere afbud eller udeblivelse tæller som brugt træning. Online Coaching opsiges måneden ud.",
+      `Afbudsreglen på ${cancellationConfig.freeCancelHours} timer gælder for bekræftede tider. Når en tid er bekræftet, kan du aflyse eller flytte senest ${cancellationConfig.freeCancelHours} timer før. Ved senere afbud eller udeblivelse betragtes sessionen som udgangspunkt som brugt — ét klip trækkes, eller betalingen for en enkelt session refunderes som udgangspunkt ikke. En forespørgsel er ikke en bekræftet tid. Online Coaching opsiges måneden ud — skriv eller ring.`,
   },
   {
     question: "Hvordan starter jeg Online Coaching?",

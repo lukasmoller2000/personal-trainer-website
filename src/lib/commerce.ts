@@ -1,29 +1,62 @@
 /**
- * Commerce rules for PT booking, clip cards, VAT and cancellation.
- * Change constants/env here rather than rewriting the booking UI.
+ * Central commerce / legal config for lukasmoller.dk.
+ * Change constants and env here — do not scatter prices, flags or legal numbers in the UI.
+ *
+ * Intended future payment flow (NOT enabled):
+ *   choose product → request time → time confirmed → customer can pay
+ *   → Stripe Checkout (server amount from productId) → webhook confirms
+ *   → booking marked paid (Order.status=paid, paidAt, stripe ids).
+ * Order already has productId, amountOre, currency, status, stripeCheckoutSessionId,
+ * stripePaymentIntentId and paidAt. No second payment-status field.
  */
 
-export const PAYMENTS_NOT_CONFIGURED = "Betaling er ikke konfigureret";
+import {
+  evaluateStripeTestConfig,
+  STRIPE_LIVE_KEYS_REJECTED,
+} from "@/lib/stripe-config";
+import { siteConfig } from "@/lib/utils";
 
-/** LEGAL_PENDING: 24h rule is the intended policy; confirm before live payments. */
-export const cancellationConfig = {
-  freeCancelHours: 24,
+export const PAYMENTS_NOT_CONFIGURED = "Betaling er ikke aktiveret endnu";
+
+/**
+ * LEGAL_PENDING — CVR and address stay empty until Lukas fills them.
+ * Never render placeholder / TODO values publicly.
+ */
+export const LEGAL_PENDING = {
+  COMPANY_CVR: "",
+  COMPANY_ADDRESS: "",
 } as const;
 
-export const sessionDuration = {
-  minutes: 60,
-  copy:
-    "Sessionerne er 1:1 og varer som udgangspunkt ca. 60 minutter. Vi tager udgangspunkt i dine mål og dit niveau og arbejder med teknik, styrke og en klar plan fremadrettet. Jeg arbejder ikke med stopuret i hånden – hvis vi er midt i en vigtig øvelse eller gennemgang, afslutter vi den ordentligt, selvom vi går lidt over tiden.",
-  notAPromise:
-    "Det er ikke et løfte om 75, 90 minutter eller anden gratis ekstra træning.",
+/** Decided commercial defaults. Env can override the numbers. */
+export const COMMERCE_DEFAULTS = {
+  CLIP_EXPIRY_MONTHS: 12,
+  CANCELLATION_HOURS: 24,
+  WITHDRAWAL_DAYS: 14,
 } as const;
 
-export const checkoutHoldMinutes = 30;
+/**
+ * Refunds are assessed from statutory consumer rights and the agreed
+ * cancellation / clip terms. Not a general "ingen refundering" rule.
+ */
+export const DEFAULT_REFUND_POLICY =
+  "Refundering vurderes ud fra kundens lovbestemte rettigheder og de aftalte afbuds- og klipvilkår.";
 
-export const clipCardValidity = {
-  /** LEGAL_PENDING: no expiry until Lukas sets one. 0 = no time limit. */
-  months: 0,
-} as const;
+/**
+ * If a recurring subscription is later sold online, the customer must have a
+ * real online way to cancel. No subscription is sold now — do not build one,
+ * and do not write terms that block that later path.
+ */
+export const ONLINE_CANCEL_REQUIRED_IF_SUBSCRIPTION = true;
+
+export const FUTURE_PAYMENT_FLOW = [
+  "choose_product",
+  "request_time",
+  "time_confirmed",
+  "customer_pays",
+  "stripe_checkout",
+  "webhook_confirms",
+  "booking_marked_paid",
+] as const;
 
 function envFlag(name: string, fallback = false) {
   const raw = process.env[name]?.trim().toLowerCase();
@@ -37,6 +70,53 @@ function envInt(name: string, fallback: number) {
   if (!raw) return fallback;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function envOptionalPositiveInt(name: string): number | null {
+  const raw = process.env[name]?.trim();
+  if (!raw) return null;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+export function getCancellationHours() {
+  return Math.max(1, envInt("CANCELLATION_HOURS", COMMERCE_DEFAULTS.CANCELLATION_HOURS));
+}
+
+export const cancellationConfig = {
+  get freeCancelHours() {
+    return getCancellationHours();
+  },
+};
+
+export const sessionDuration = {
+  minutes: 60,
+  copy:
+    "Sessionerne er 1:1 og varer som udgangspunkt ca. 60 minutter. Vi tager udgangspunkt i dine mål og dit niveau og arbejder med teknik, styrke og en klar plan fremadrettet. Jeg arbejder ikke med stopuret i hånden – hvis vi er midt i en vigtig øvelse eller gennemgang, afslutter vi den ordentligt, selvom vi går lidt over tiden.",
+  notAPromise:
+    "Det er ikke et løfte om 75, 90 minutter eller anden gratis ekstra træning.",
+} as const;
+
+export const checkoutHoldMinutes = 30;
+
+export function getClipExpiryMonths(): number {
+  return envOptionalPositiveInt("CLIP_EXPIRY_MONTHS") ?? COMMERCE_DEFAULTS.CLIP_EXPIRY_MONTHS;
+}
+
+export const clipCardValidity = {
+  get months() {
+    return getClipExpiryMonths();
+  },
+};
+
+export function getRefundPolicy(): string {
+  const raw = process.env.REFUND_POLICY?.trim();
+  return raw || DEFAULT_REFUND_POLICY;
+}
+
+export function getWithdrawalPeriodDays() {
+  return COMMERCE_DEFAULTS.WITHDRAWAL_DAYS;
 }
 
 export type VatSettings = {
@@ -110,34 +190,58 @@ export function calculateVat(
 
 export function getCompanyConfig() {
   return {
-    name: "Lukas Møller",
+    name: process.env.COMPANY_NAME?.trim() || "Lukas Møller",
     tradeName: "Personlig træning",
-    cvr: process.env.COMPANY_CVR?.trim() ?? "",
-    address: process.env.COMPANY_ADDRESS?.trim() ?? "",
+    /** Legal CVR — leave empty until Lukas fills COMPANY_CVR. Do not invent a value. */
+    cvr: process.env.COMPANY_CVR?.trim() || LEGAL_PENDING.COMPANY_CVR,
+    /** Legal business address — leave empty until Lukas fills COMPANY_ADDRESS. Falkevej is the training location, not this field. */
+    address: process.env.COMPANY_ADDRESS?.trim() || LEGAL_PENDING.COMPANY_ADDRESS,
+    email: process.env.CONTACT_EMAIL?.trim() || siteConfig.links.email,
+    phone: siteConfig.links.phone,
   };
 }
 
 export function missingPaymentEnv(): string[] {
-  const missing: string[] = [];
-  if (!process.env.STRIPE_SECRET_KEY?.trim()) missing.push("STRIPE_SECRET_KEY");
-  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim()) {
-    missing.push("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY");
-  }
-  if (!process.env.STRIPE_WEBHOOK_SECRET?.trim()) missing.push("STRIPE_WEBHOOK_SECRET");
+  const stripe = evaluateStripeTestConfig();
+  const missing: string[] = stripe.ok ? [] : [...stripe.missing];
   if (!process.env.DATABASE_URL?.trim()) missing.push("DATABASE_URL");
   return missing;
 }
 
-/** Live Stripe stays off until PAYMENTS_ENABLED=true is set after explicit approval. */
+export function stripeConfigBlocker(): { reason: "live_keys" | "invalid_keys"; error: string } | null {
+  const stripe = evaluateStripeTestConfig();
+  if (stripe.ok) return null;
+  if (stripe.reason === "live_keys" || stripe.reason === "invalid_keys") {
+    return { reason: stripe.reason, error: stripe.error };
+  }
+  return null;
+}
+
+/**
+ * One source of truth for live payments.
+ * PAYMENTS_ENABLED is canonical. STRIPE_ENABLED is the same flag — we do not
+ * read a second env, so the two cannot disagree.
+ */
 export function isPaymentsEnabledByFlag() {
   return envFlag("PAYMENTS_ENABLED", false);
 }
 
+/** Alias of isPaymentsEnabledByFlag — not a second switch. */
+export function isStripeEnabled() {
+  return isPaymentsEnabledByFlag();
+}
+
 export function isPaymentsReady() {
-  return isPaymentsEnabledByFlag() && missingPaymentEnv().length === 0;
+  if (!isPaymentsEnabledByFlag()) return false;
+  if (stripeConfigBlocker()) return false;
+  return missingPaymentEnv().length === 0;
 }
 
 export function paymentsNotConfiguredMessage(missing = missingPaymentEnv()) {
+  if (!isPaymentsEnabledByFlag()) return PAYMENTS_NOT_CONFIGURED;
+  const blocker = stripeConfigBlocker();
+  if (blocker?.reason === "live_keys") return STRIPE_LIVE_KEYS_REJECTED;
+  if (blocker?.reason === "invalid_keys") return blocker.error;
   if (missing.length === 0) return PAYMENTS_NOT_CONFIGURED;
   return `${PAYMENTS_NOT_CONFIGURED}. Mangler: ${missing.join(", ")}`;
 }
@@ -162,7 +266,7 @@ export function canTransitionOrder(from: string, to: OrderStatus) {
 }
 
 export function canCancelFree(sessionStart: Date, now = new Date()) {
-  const ms = cancellationConfig.freeCancelHours * 60 * 60 * 1000;
+  const ms = getCancellationHours() * 60 * 60 * 1000;
   return sessionStart.getTime() - now.getTime() >= ms;
 }
 
@@ -188,11 +292,15 @@ export type ClipCardSnapshot = {
   status: string;
   remaining: number;
   totalSessions: number;
+  createdAt?: Date;
 };
 
-export function canConsumeClip(card: ClipCardSnapshot | null) {
+export function canConsumeClip(card: ClipCardSnapshot | null, now = new Date()) {
   if (!card) return { ok: false as const, error: "Klippekortet blev ikke fundet" };
   if (card.status !== "active") return { ok: false as const, error: "Klippekortet er ikke aktivt" };
+  if (card.createdAt && isClipCardExpired(card.createdAt, now)) {
+    return { ok: false as const, error: "Klippekortet er udløbet" };
+  }
   if (card.remaining < 1) return { ok: false as const, error: "Ingen træninger tilbage" };
   return { ok: true as const };
 }
@@ -203,6 +311,16 @@ export function remainingAfterConsume(remaining: number) {
 
 export function clipStatusAfterConsume(remainingAfter: number) {
   return remainingAfter <= 0 ? "exhausted" : "active";
+}
+
+export function clipExpiresAt(activatedAt: Date, months = getClipExpiryMonths()) {
+  const expires = new Date(activatedAt);
+  expires.setMonth(expires.getMonth() + months);
+  return expires;
+}
+
+export function isClipCardExpired(activatedAt: Date, now = new Date()) {
+  return now.getTime() >= clipExpiresAt(activatedAt).getTime();
 }
 
 /** Unused pack only: remaining must equal total. Used clips are not auto-refunded. */

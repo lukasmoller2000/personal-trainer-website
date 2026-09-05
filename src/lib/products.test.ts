@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   getProduct,
+  getStripePriceId,
+  isCheckoutProduct,
   products,
   resolveCheckoutAmountOre,
+  startsCheckoutFromPublicForm,
   trackEventForProduct,
 } from "./products";
 import { priceLabel } from "./utils";
@@ -33,8 +36,19 @@ describe("products", () => {
     assert.equal(resolveCheckoutAmountOre("session", 1), 30000);
     assert.equal(resolveCheckoutAmountOre("pack-5", 999999), 135000);
     assert.equal(resolveCheckoutAmountOre("pack-10"), null);
-    assert.equal(resolveCheckoutAmountOre("online", 799), null);
+    assert.equal(resolveCheckoutAmountOre("online", 1), null);
     assert.equal(resolveCheckoutAmountOre("unknown", 300), null);
+  });
+
+  it("has no Stripe Price IDs until they are provided for real", () => {
+    assert.equal(getStripePriceId("session"), null);
+    assert.equal(getStripePriceId("pack-5"), null);
+    assert.equal(getStripePriceId("online"), null);
+    assert.equal(getStripePriceId("unknown"), null);
+    assert.equal(
+      products.every((product) => !product.stripePriceId),
+      true
+    );
   });
 
   it("formats exact prices without Fra", () => {
@@ -57,5 +71,22 @@ describe("products", () => {
     assert.equal(trackEventForProduct("session"), "pt_cta_clicked");
     assert.equal(trackEventForProduct("pack-5"), "pt_cta_clicked");
     assert.equal(trackEventForProduct("online"), "coaching_cta_clicked");
+  });
+
+  it("keeps online coaching as inquiry-only until payment model is decided", () => {
+    const session = getProduct("session");
+    const pack = getProduct("pack-5");
+    const online = getProduct("online");
+    assert.ok(session);
+    assert.ok(pack);
+    assert.ok(online);
+    assert.equal(online.paymentsAvailable, false);
+    assert.equal(online.bookingType, "inquiry");
+    assert.equal(isCheckoutProduct(online), false);
+    assert.equal(startsCheckoutFromPublicForm(online), false);
+    assert.equal(isCheckoutProduct(session), true);
+    assert.equal(startsCheckoutFromPublicForm(session), false);
+    assert.equal(isCheckoutProduct(pack), true);
+    assert.equal(startsCheckoutFromPublicForm(pack), true);
   });
 });

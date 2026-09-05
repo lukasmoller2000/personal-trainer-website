@@ -15,16 +15,32 @@ function asHttpsUrl(hostOrUrl: string) {
   return `https://${value}`;
 }
 
+const PRODUCTION_SITE_URL = "https://lukasmoller.dk";
+const LOCAL_FALLBACK_URL = "http://localhost:3000";
+
 function isLocalhostUrl(value: string) {
   return /localhost|127\.0\.0\.1/i.test(value);
 }
 
-export function getSiteUrl() {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  const onVercel = Boolean(process.env.VERCEL);
+function isProductionRuntime() {
+  const vercelEnv = process.env.VERCEL_ENV?.trim();
+  if (vercelEnv === "production") return true;
+  if (vercelEnv === "preview" || vercelEnv === "development") return false;
+  return process.env.NODE_ENV === "production";
+}
 
-  // Never ship localhost as the canonical URL on Vercel.
-  if (explicit && !(onVercel && isLocalhostUrl(explicit))) {
+/** APP_URL first, then NEXT_PUBLIC_SITE_URL. One helper for checkout, SEO and mail. */
+function readConfiguredSiteUrl() {
+  return process.env.APP_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim() || "";
+}
+
+export function getSiteUrl() {
+  const explicit = readConfiguredSiteUrl();
+  const onVercel = Boolean(process.env.VERCEL);
+  const production = isProductionRuntime();
+
+  // Never ship localhost as the canonical URL in production or on Vercel.
+  if (explicit && !(isLocalhostUrl(explicit) && (onVercel || production))) {
     return stripTrailingSlash(explicit);
   }
 
@@ -32,12 +48,18 @@ export function getSiteUrl() {
     const productionHost =
       process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() || process.env.VERCEL_URL?.trim();
     if (productionHost) return asHttpsUrl(productionHost);
+    return PRODUCTION_SITE_URL;
   }
 
   const vercelUrl = process.env.VERCEL_URL?.trim();
-  if (vercelUrl) return asHttpsUrl(vercelUrl);
+  if (vercelUrl && !production) return asHttpsUrl(vercelUrl);
 
-  return "http://localhost:3000";
+  if (production) {
+    if (vercelUrl) return asHttpsUrl(vercelUrl);
+    return PRODUCTION_SITE_URL;
+  }
+
+  return LOCAL_FALLBACK_URL;
 }
 
 export const siteConfig = {
@@ -50,6 +72,7 @@ export const siteConfig = {
   postalCode: "8800",
   venue: "Viborg Fitness Gym",
   gymUrl: "https://viborgfitnessgym.dk/",
+  /** Training location at Viborg Fitness Gym — not the legal business address. */
   address: "Falkevej 16B, 8800 Viborg",
   links: {
     email: "lukasmoller2000@gmail.com",

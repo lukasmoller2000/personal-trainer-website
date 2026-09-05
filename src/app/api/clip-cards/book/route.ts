@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSlotsForDate, isBookableDate } from "@/lib/availability";
 import { ClipConsumeError, consumeClipAtomically } from "@/lib/clip-cards";
+import { isClipCardExpired } from "@/lib/commerce";
 import { getTakenTimes, getPrisma } from "@/lib/db";
 import { trySendCustomerEmail, trySendNotification } from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
@@ -31,10 +32,11 @@ export async function GET(request: NextRequest) {
       status: true,
       name: true,
       productId: true,
+      createdAt: true,
     },
   });
 
-  if (!card || card.status === "cancelled") {
+  if (!card || card.status === "cancelled" || isClipCardExpired(card.createdAt)) {
     return NextResponse.json({ error: "Klippekortet blev ikke fundet" }, { status: 404 });
   }
 
@@ -101,7 +103,7 @@ export async function POST(request: NextRequest) {
   }
 
   const card = await prisma.clipCard.findUnique({ where: { accessToken: token } });
-  if (!card) {
+  if (!card || isClipCardExpired(card.createdAt)) {
     return NextResponse.json({ error: "Klippekortet blev ikke fundet" }, { status: 404 });
   }
 

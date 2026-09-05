@@ -9,6 +9,7 @@ import {
 import { getPrisma, holdUntilFromNow } from "@/lib/db";
 import { trySendCustomerEmail, trySendNotification } from "@/lib/mail";
 import { getCheckoutAmountOre, getProduct } from "@/lib/products";
+import { planClipCardActivation } from "@/lib/stripe-fulfillment";
 import { formatDate, getSiteUrl, priceLabel } from "@/lib/utils";
 
 export type CheckoutCustomer = {
@@ -25,6 +26,7 @@ export type CheckoutCustomer = {
 export async function createPendingOrder(input: {
   productId: string;
   customer: CheckoutCustomer;
+  earlyPerformanceRequested?: boolean;
 }) {
   const prisma = getPrisma();
   if (!prisma) throw new Error("DATABASE_URL mangler");
@@ -59,11 +61,14 @@ export async function createPendingOrder(input: {
       date: input.customer.date ?? null,
       time: input.customer.time ?? null,
       birthYear: input.customer.birthYear ?? null,
+      earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
+      earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
     },
   });
 
+  let bookingId: string | null = null;
   if (product.bookingType === "session" && input.customer.date && input.customer.time) {
-    await prisma.booking.create({
+    const booking = await prisma.booking.create({
       data: {
         id: randomUUID(),
         productId: input.productId,
@@ -80,9 +85,10 @@ export async function createPendingOrder(input: {
         orderId: order.id,
       },
     });
+    bookingId = booking.id;
   }
 
-  return order;
+  return { order, bookingId };
 }
 
 export async function attachStripeSession(orderId: string, stripeCheckoutSessionId: string) {
@@ -147,7 +153,12 @@ export async function fulfillPaidOrder(input: {
   let accessToken: string | null = existing.clipCard?.accessToken ?? null;
   let createdCard = false;
 
-  if (product?.bookingType === "pack" && !existing.clipCard) {
+  const clipPlan = planClipCardActivation({
+    productId: existing.productId,
+    alreadyHasCard: Boolean(existing.clipCard),
+  });
+
+  if (clipPlan.action === "create") {
     try {
       const card = await prisma.clipCard.create({
         data: {
@@ -156,8 +167,8 @@ export async function fulfillPaidOrder(input: {
           name: existing.customerName,
           phone: existing.customerPhone,
           productId: existing.productId,
-          totalSessions: product.sessions,
-          remaining: product.sessions,
+          totalSessions: clipPlan.totalSessions,
+          remaining: clipPlan.remaining,
           status: "active",
           accessToken: randomUUID(),
         },

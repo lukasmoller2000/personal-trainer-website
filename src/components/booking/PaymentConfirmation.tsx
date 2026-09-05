@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import {
+  customerOrderStatusLabel,
+  paymentSuccessNextStep,
+} from "@/lib/payment-result";
 import { formatDate } from "@/lib/utils";
 
 type OrderView = {
   status: string;
   productName: string;
+  productId?: string;
   amountLabel: string | null;
   date?: string | null;
   time?: string | null;
@@ -38,7 +43,11 @@ export function PaymentConfirmation({ sessionId }: { sessionId: string }) {
         const json = (await response.json()) as OrderView & { error?: string };
         if (cancelled) return;
         if (!response.ok) {
-          setError(json.error ?? "Kunne ikke hente status");
+          setError(
+            json.error && !/session|stripe|order|id/i.test(json.error)
+              ? json.error
+              : "Kunne ikke hente betalingsstatus. Prøv igen om et øjeblik."
+          );
           return;
         }
         setData(json);
@@ -53,7 +62,7 @@ export function PaymentConfirmation({ sessionId }: { sessionId: string }) {
           );
         }
       } catch {
-        if (!cancelled) setError("Kunne ikke hente status");
+        if (!cancelled) setError("Kunne ikke hente betalingsstatus. Prøv igen om et øjeblik.");
       }
     };
 
@@ -70,6 +79,9 @@ export function PaymentConfirmation({ sessionId }: { sessionId: string }) {
           Vi kunne ikke bekræfte betalingen
         </h1>
         <p className="mt-4 text-ink/60">{error}</p>
+        <p className="mt-3 text-sm text-ink/50">
+          Intet vises som betalt, før betalingen er bekræftet.
+        </p>
         <Button href="/booking" className="mt-8">
           Tilbage til booking
         </Button>
@@ -84,7 +96,7 @@ export function PaymentConfirmation({ sessionId }: { sessionId: string }) {
           Bekræfter betaling...
         </h1>
         <p className="mt-4 text-ink/60">
-          Vi venter på bekræftelse fra betalingen. Luk ikke siden.
+          Vi venter på bekræftelse. Luk ikke siden.
         </p>
       </div>
     );
@@ -96,40 +108,55 @@ export function PaymentConfirmation({ sessionId }: { sessionId: string }) {
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           Betalingen gik ikke igennem
         </h1>
-        <p className="mt-4 text-ink/60">Der blev ikke trukket penge. Prøv igen, eller skriv til mig.</p>
-        <Button href="/booking" className="mt-8">
-          Prøv igen
-        </Button>
+        <p className="mt-4 text-ink/60">
+          Der blev ikke trukket penge, og intet er markeret som betalt. Prøv igen, eller skriv til
+          mig.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Button href="/booking">Prøv igen</Button>
+          <Button href="/" variant="ghost">
+            Til forsiden
+          </Button>
+        </div>
       </div>
     );
   }
+
+  const hasClipCard = Boolean(data.totalSessions != null && data.totalSessions > 1);
+  const nextStep = paymentSuccessNextStep({
+    productId: data.productId,
+    hasClipCard,
+    hasTimeslot: Boolean(data.date && data.time),
+  });
 
   return (
     <div className="mx-auto max-w-xl rounded-2xl border border-sand bg-white p-8 text-center md:p-12">
       <CheckCircle className="mx-auto mb-5 h-12 w-12 text-sage" />
       <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
-        Betalingen er bekræftet
+        Betalingen er modtaget
       </h1>
+      <p className="mt-3 text-ink/60">Tak — betalingen er bekræftet.</p>
       <dl className="mt-8 space-y-3 text-left text-sm">
         <Row label="Ydelse" value={data.productName} />
         {data.amountLabel ? <Row label="Pris" value={data.amountLabel} /> : null}
-        <Row label="Betaling" value="Betalt" />
+        <Row label="Status" value={customerOrderStatusLabel(data.status)} />
         {data.date && data.time ? (
           <>
             <Row label="Dato" value={formatDate(data.date)} />
             <Row label="Tidspunkt" value={data.time} />
           </>
         ) : null}
-        {data.totalSessions != null && data.totalSessions > 1 ? (
+        {hasClipCard ? (
           <>
             <Row label="Pakke" value={`${data.totalSessions} træninger`} />
             <Row
-              label="Saldo"
-              value={`${data.remaining ?? data.totalSessions} træninger tilbage`}
+              label="Klip tilbage"
+              value={`${data.remaining ?? data.totalSessions} træninger`}
             />
           </>
         ) : null}
       </dl>
+      <p className="mt-6 text-left text-sm text-ink/65">{nextStep}</p>
       {data.accessToken ? (
         <Button href={`/booking?klip=${data.accessToken}`} className="mt-8">
           Book en træning

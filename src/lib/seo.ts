@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getCompanyConfig } from "@/lib/commerce";
 import { siteConfig } from "@/lib/utils";
 
 export function pageSeo(path: string, meta: Metadata = {}): Metadata {
@@ -20,7 +21,8 @@ export function pageSeo(path: string, meta: Metadata = {}): Metadata {
   };
 }
 
-function postalAddress() {
+/** Gym / training location. Not the legal business address. */
+function trainingPostalAddress() {
   return {
     "@type": "PostalAddress" as const,
     streetAddress: siteConfig.address.split(",")[0].trim(),
@@ -31,6 +33,7 @@ function postalAddress() {
 }
 
 export function siteJsonLd(siteUrl: string) {
+  const company = getCompanyConfig();
   const personId = `${siteUrl}/#person`;
   const businessId = `${siteUrl}/#business`;
   const gymId = `${siteUrl}/#gym`;
@@ -43,6 +46,13 @@ export function siteJsonLd(siteUrl: string) {
     siteConfig.links.tiktok,
   ];
   const image = `${siteUrl}/images/lukas-portrait.png`;
+  const legalAddress = company.address
+    ? {
+        "@type": "PostalAddress" as const,
+        streetAddress: company.address,
+        addressCountry: "DK",
+      }
+    : undefined;
 
   return {
     "@context": "https://schema.org",
@@ -56,8 +66,7 @@ export function siteJsonLd(siteUrl: string) {
         image,
         email: siteConfig.links.email,
         telephone: siteConfig.links.phone,
-        address: postalAddress(),
-        worksFor: { "@id": gymId },
+        workLocation: { "@id": gymId },
         sameAs,
       },
       {
@@ -69,10 +78,10 @@ export function siteJsonLd(siteUrl: string) {
         image,
         email: siteConfig.links.email,
         telephone: siteConfig.links.phone,
-        address: postalAddress(),
+        ...(legalAddress ? { address: legalAddress } : {}),
+        location: { "@id": gymId },
         areaServed: siteConfig.location,
         founder: { "@id": personId },
-        parentOrganization: { "@id": gymId },
         sameAs,
         makesOffer: [
           { "@type": "Offer", itemOffered: { "@id": ptId } },
@@ -84,7 +93,7 @@ export function siteJsonLd(siteUrl: string) {
         "@id": gymId,
         name: siteConfig.venue,
         url: siteConfig.gymUrl,
-        address: postalAddress(),
+        address: trainingPostalAddress(),
       },
       {
         "@type": "Service",
