@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { SiteVideo } from "@/components/ui/SiteVideo";
 import { CtaBanner } from "@/components/sections/CtaBanner";
 import { Journey } from "@/components/sections/Journey";
-import { SocialLinks } from "@/components/layout/SocialLinks";
+import { GymInstagramLink, SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { siteConfig } from "@/lib/utils";
 import { pageSeo } from "@/lib/seo";
@@ -95,15 +95,18 @@ export default function AboutPage() {
             </p>
             <div className="mt-10 mb-6 flex items-center gap-3">
               <GymLogo size={56} />
-              <a
-                href={siteConfig.gymUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm font-medium text-ink hover:text-sage"
-              >
-                {siteConfig.venue}
-                <span className="block text-ink/50">Træningssted: {siteConfig.address}</span>
-              </a>
+              <div>
+                <a
+                  href={siteConfig.gymUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-medium text-ink hover:text-sage"
+                >
+                  {siteConfig.venue}
+                  <span className="block text-ink/50">Træningssted: {siteConfig.address}</span>
+                </a>
+                <GymInstagramLink className="mt-1 block text-sm text-ink/50 hover:text-sage" />
+              </div>
             </div>
             <SocialLinks />
           </div>

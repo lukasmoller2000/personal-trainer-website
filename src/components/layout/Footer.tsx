@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
-import { SocialLinks } from "@/components/layout/SocialLinks";
+import { GymInstagramLink, SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { Button } from "@/components/ui/Button";
 import { siteConfig } from "@/lib/utils";
@@ -120,6 +120,8 @@ export function Footer() {
                   {siteConfig.address}
                   <br />
                   {siteConfig.hours}
+                  <br />
+                  <GymInstagramLink className="text-cream/55 hover:text-sage" />
                 </span>
               </li>
             </ul>

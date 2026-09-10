@@ -222,6 +222,28 @@ describe("Stripe test-key guards", () => {
     );
   });
 
+  it("rejects mk_ and other non-Stripe publishable prefixes as invalid", () => {
+    assert.equal(classifyStripePublishableKey("mk_1Rf6Splaceholder_not_a_key"), "invalid");
+    assert.equal(classifyStripePublishableKey("pk_live_abc123"), "live");
+    assert.equal(classifyStripeSecretKey("sk_live_abc123"), "live");
+    withEnv(
+      {
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        STRIPE_MODE: "live",
+        STRIPE_SECRET_KEY: "sk_live_abc123",
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "mk_1Rf6Splaceholder_not_a_key",
+        STRIPE_WEBHOOK_SECRET: "whsec_live",
+      },
+      () => {
+        const config = evaluateStripeConfig();
+        assert.equal(config.ok, false);
+        if (config.ok) return;
+        assert.equal(config.reason, "invalid_keys");
+      }
+    );
+  });
+
   it("accepts live keys only in production when STRIPE_MODE=live", () => {
     withEnv(
       {

@@ -8,6 +8,7 @@ import { Field } from "@/components/ui/Field";
 import { Honeypot } from "@/components/ui/Honeypot";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { contactFormShowsSuccess } from "@/lib/contact-ui";
 import { track } from "@/lib/track";
 import { readErrorMessage } from "@/lib/validation";
 
@@ -65,7 +66,7 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
               });
-              if (!response.ok) {
+              if (!contactFormShowsSuccess(response.ok)) {
                 submitLock.current = false;
                 throw new Error(await readErrorMessage(response, "Beskeden kunne ikke sendes"));
               }

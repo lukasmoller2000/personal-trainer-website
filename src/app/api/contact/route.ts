@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { persistContactMessage } from "@/lib/db";
+import { deliverContactMessage } from "@/lib/contact";
 import {
   formUnavailableMessage,
   MailNotConfiguredError,
   MailSendError,
-  sendNotification,
 } from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
 import {
@@ -53,19 +52,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await sendNotification({
-      subject: `Ny besked fra ${name.trim()}`,
-      text: [
-        "Ny besked fra kontaktformularen.",
-        "",
-        `Navn: ${name.trim()}`,
-        `Email: ${email.trim()}`,
-        `Telefon: ${phone.trim()}`,
-        "",
-        "Besked:",
-        message.trim(),
-      ].join("\n"),
-      replyTo: email.trim(),
+    await deliverContactMessage({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      message: message.trim(),
     });
   } catch (error) {
     if (error instanceof MailNotConfiguredError) {
@@ -74,22 +65,11 @@ export async function POST(request: NextRequest) {
     if (error instanceof MailSendError) {
       return NextResponse.json({ error: formUnavailableMessage() }, { status: 502 });
     }
-    console.error("Kunne ikke sende kontaktbesked", error);
+    console.error("Kunne ikke sende kontaktbesked", error instanceof Error ? error.name : "unknown");
     return NextResponse.json(
       { error: "Kunne ikke sende. Prøv igen, eller skriv direkte." },
       { status: 500 }
     );
-  }
-
-  try {
-    await persistContactMessage({
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      message: message.trim(),
-    });
-  } catch (error) {
-    console.error("Kontakt-email blev sendt, men kunne ikke gemmes i databasen", error);
   }
 
   return NextResponse.json({ ok: true });

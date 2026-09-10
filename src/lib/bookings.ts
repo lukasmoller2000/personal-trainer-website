@@ -3,7 +3,7 @@ import type { BookingType } from "@/lib/products";
 import { getProduct } from "@/lib/products";
 import { persistBooking } from "@/lib/db";
 import { sendNotification } from "@/lib/mail";
-import { formatDate } from "@/lib/utils";
+import { formatDate, isProductionRuntime } from "@/lib/utils";
 
 export type Booking = {
   id: string;
@@ -72,11 +72,19 @@ export async function createBooking(
     replyTo: input.email,
   });
 
+  await persistCreatedBooking(booking);
+
+  return booking;
+}
+
+export async function persistCreatedBooking(booking: Booking) {
   try {
     await persistBooking(booking);
   } catch (error) {
-    console.error("Booking-email blev sendt, men kunne ikke gemmes i databasen", error);
+    if (isProductionRuntime()) throw error;
+    console.error(
+      "Booking-email blev sendt, men kunne ikke gemmes i databasen",
+      error instanceof Error ? error.name : "unknown"
+    );
   }
-
-  return booking;
 }

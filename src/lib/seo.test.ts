@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import robots from "../app/robots";
 import { pageSeo, siteJsonLd } from "./seo";
+import { siteConfig, socialInstagramHref } from "./utils";
 
 describe("seo", () => {
   it("sets canonical and Open Graph url", () => {
@@ -27,6 +28,8 @@ describe("seo", () => {
     assert.equal(json.includes("reviewRating"), false);
     assert.ok(json.includes("Falkevej 16B"));
     assert.ok(json.includes("lukasvmj"));
+    assert.equal(socialInstagramHref(), siteConfig.links.instagramPersonal);
+    assert.equal(socialInstagramHref(false), siteConfig.links.instagram);
     assert.ok(json.includes("workLocation"));
     assert.equal(json.includes("parentOrganization"), false);
     assert.equal(json.includes("worksFor"), false);

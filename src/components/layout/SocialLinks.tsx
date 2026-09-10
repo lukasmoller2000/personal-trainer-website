@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn, siteConfig } from "@/lib/utils";
+import { cn, siteConfig, socialInstagramHref } from "@/lib/utils";
 
 const instagramIcon = (
   <svg viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="2">
@@ -52,26 +52,39 @@ const gymSocial: SocialItem[] = [
   },
 ];
 
+export function GymInstagramLink({ className }: { className?: string }) {
+  return (
+    <a
+      href={siteConfig.links.instagram}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+    >
+      Instagram · Viborg Fitness Gym
+    </a>
+  );
+}
+
 export function SocialLinks({
   inverted = false,
   compact = false,
-  personalInstagram = false,
+  personalInstagram = true,
 }: {
   inverted?: boolean;
   compact?: boolean;
   personalInstagram?: boolean;
 }) {
-  const social = personalInstagram
-    ? gymSocial.map((item) =>
-        item.label === "Instagram"
-          ? {
-              ...item,
-              href: siteConfig.links.instagramPersonal,
-              ariaLabel: "Instagram — Lukas Møller",
-            }
-          : item
-      )
-    : gymSocial;
+  const social = gymSocial.map((item) =>
+    item.label === "Instagram"
+      ? {
+          ...item,
+          href: socialInstagramHref(personalInstagram),
+          ariaLabel: personalInstagram
+            ? "Instagram — Lukas Møller"
+            : "Instagram — Viborg Fitness Gym",
+        }
+      : item
+  );
 
   return (
     <div className="flex flex-wrap gap-2">

@@ -3,7 +3,7 @@ import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { ContactForm } from "@/components/sections/ContactForm";
 import { PageHero } from "@/components/ui/PageHero";
 import { Button } from "@/components/ui/Button";
-import { SocialLinks } from "@/components/layout/SocialLinks";
+import { GymInstagramLink, SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { getCompanyConfig } from "@/lib/commerce";
 import { siteConfig } from "@/lib/utils";
@@ -66,7 +66,8 @@ export default function ContactPage() {
               >
                 {siteConfig.venue}
               </a>
-              , træningssted {siteConfig.address}. {siteConfig.hours}.
+              , træningssted {siteConfig.address}. {siteConfig.hours}.{" "}
+              <GymInstagramLink className="underline decoration-sage/50 underline-offset-4 hover:text-sage" />
             </p>
           </div>
           <div className="flex flex-col items-start gap-4 sm:items-end">

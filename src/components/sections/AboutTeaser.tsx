@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
-import { SocialLinks } from "@/components/layout/SocialLinks";
+import { GymInstagramLink, SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { siteConfig } from "@/lib/utils";
 
@@ -34,10 +34,13 @@ export function AboutTeaser() {
           </p>
           <div className="mb-6 flex items-center gap-3">
             <GymLogo size={56} />
-            <a href={siteConfig.gymUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-ink hover:text-sage">
-              {siteConfig.venue}
-              <span className="block text-ink/50">Træningssted: {siteConfig.address}</span>
-            </a>
+            <div>
+              <a href={siteConfig.gymUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-ink hover:text-sage">
+                {siteConfig.venue}
+                <span className="block text-ink/50">Træningssted: {siteConfig.address}</span>
+              </a>
+              <GymInstagramLink className="mt-1 block text-sm text-ink/50 hover:text-sage" />
+            </div>
           </div>
           <div className="mb-8">
             <SocialLinks />

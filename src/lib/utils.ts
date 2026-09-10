@@ -22,7 +22,7 @@ function isLocalhostUrl(value: string) {
   return /localhost|127\.0\.0\.1/i.test(value);
 }
 
-function isProductionRuntime() {
+export function isProductionRuntime() {
   const vercelEnv = process.env.VERCEL_ENV?.trim();
   if (vercelEnv === "production") return true;
   if (vercelEnv === "preview" || vercelEnv === "development") return false;
@@ -77,9 +77,9 @@ export const siteConfig = {
   links: {
     email: "lukasmoller2000@gmail.com",
     phone: "+45 25 89 04 53",
-    /** Viborg Fitness Gym — HVEM / About / gym clusters */
+    /** Viborg Fitness Gym — only next to VFG mentions */
     instagram: "https://www.instagram.com/viborgfitnessgym_falkevej/",
-    /** @lukasvmj — header/navigation */
+    /** @lukasvmj — header, footer, about, contact */
     instagramPersonal: "https://www.instagram.com/lukasvmj/",
     facebook: "https://www.facebook.com/viborgfitnessgym/",
     tiktok: "https://www.tiktok.com/@viborgfitnessgym",
@@ -95,6 +95,10 @@ export const siteConfig = {
     { label: "Kontakt", href: "/kontakt" },
   ],
 };
+
+export function socialInstagramHref(personal = true) {
+  return personal ? siteConfig.links.instagramPersonal : siteConfig.links.instagram;
+}
 
 export function formatPrice(amount?: number) {
   if (amount == null) return null;
