@@ -2,12 +2,13 @@
  * Central commerce / legal config for lukasmoller.dk.
  * Change constants and env here — do not scatter prices, flags or legal numbers in the UI.
  *
- * Intended future payment flow (NOT enabled):
+ * PT session payment flow (gated by PAYMENTS_ENABLED):
  *   choose product → request time → time confirmed → customer can pay
  *   → Stripe Checkout (server amount from productId) → webhook confirms
  *   → booking marked paid (Order.status=paid, paidAt, stripe ids).
  * Order already has productId, amountOre, currency, status, stripeCheckoutSessionId,
  * stripePaymentIntentId and paidAt. No second payment-status field.
+ * Public PT form never starts Checkout; pack-5 may when payments are ready.
  */
 
 import {
@@ -258,7 +259,15 @@ export function paymentsNotConfiguredMessage(missing = missingPaymentEnv()) {
 export const orderStatuses = ["pending", "paid", "cancelled", "refunded", "failed"] as const;
 export type OrderStatus = (typeof orderStatuses)[number];
 
-export const bookingStatuses = ["inquiry", "hold", "confirmed", "cancelled", "no_show"] as const;
+export const bookingStatuses = [
+  "inquiry",
+  "awaiting_payment",
+  "hold",
+  "confirmed",
+  "cancelled",
+  "rejected",
+  "no_show",
+] as const;
 export type BookingStatus = (typeof bookingStatuses)[number];
 
 export const clipCardStatuses = ["active", "exhausted", "cancelled"] as const;

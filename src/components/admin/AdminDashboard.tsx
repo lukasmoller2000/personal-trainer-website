@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 
 type BookingRow = {
@@ -76,6 +77,7 @@ export function AdminDashboard({
                 <th className="px-4 py-3 font-medium">Kontakt</th>
                 <th className="px-4 py-3 font-medium">Tid</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Handling</th>
               </tr>
             </thead>
             <tbody>
@@ -93,11 +95,14 @@ export function AdminDashboard({
                     <span className="text-ink/45">{row.productId}</span>
                   </td>
                   <td className="px-4 py-3">{statusLabel(row.status)}</td>
+                  <td className="px-4 py-3">
+                    <BookingActions row={row} />
+                  </td>
                 </tr>
               ))}
               {bookings.length === 0 && (
                 <tr>
-                  <td className="px-4 py-6 text-ink/50" colSpan={4}>
+                  <td className="px-4 py-6 text-ink/50" colSpan={5}>
                     Ingen bookinger.
                   </td>
                 </tr>
@@ -202,6 +207,54 @@ export function AdminDashboard({
   );
 }
 
+function BookingActions({ row }: { row: BookingRow }) {
+  const [busy, setBusy] = useState(false);
+  const sessionInquiry = row.productId === "session" && row.status === "inquiry" && row.date && row.time;
+  const awaitingPay = row.productId === "session" && row.status === "awaiting_payment";
+  if (!sessionInquiry && !awaitingPay) return "—";
+
+  const act = async (action: "confirm" | "reject" | "resend") => {
+    if (action === "reject") {
+      const confirmed = window.confirm("Afvis denne forespørgsel? Kunden får en besked.");
+      if (!confirmed) return;
+    }
+    setBusy(true);
+    const response = await fetch("/api/admin/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: row.id, action }),
+    });
+    const data = (await response.json()) as { error?: string; paymentUrl?: string | null };
+    if (!response.ok) {
+      window.alert(data.error ?? "Kunne ikke opdatere bookingen");
+      setBusy(false);
+      return;
+    }
+    if (data.paymentUrl && (action === "confirm" || action === "resend")) {
+      window.prompt("Betalingslink til kunden:", data.paymentUrl);
+    }
+    window.location.reload();
+  };
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      {sessionInquiry ? (
+        <Button size="sm" disabled={busy} onClick={() => void act("confirm")}>
+          Bekræft tid
+        </Button>
+      ) : null}
+      {awaitingPay ? (
+        <Button size="sm" disabled={busy} onClick={() => void act("resend")}>
+          Send betalingslink
+        </Button>
+      ) : null}
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => void act("reject")}>
+        Afvis
+      </Button>
+    </div>
+  );
+}
+
 function RefundButton({ orderId }: { orderId: string }) {
   return (
     <Button
@@ -233,9 +286,11 @@ function RefundButton({ orderId }: { orderId: string }) {
 function statusLabel(status: string) {
   const labels: Record<string, string> = {
     inquiry: "Forespørgsel",
-    hold: "Afventer betaling",
-    confirmed: "Aktiv",
+    awaiting_payment: "Bekræftet — afventer betaling",
+    hold: "Betaling i gang",
+    confirmed: "Betalt",
     cancelled: "Aflyst",
+    rejected: "Afvist",
     no_show: "Udeblevet",
     active: "Aktiv",
     exhausted: "Brugt op",

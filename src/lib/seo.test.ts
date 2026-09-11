@@ -50,5 +50,6 @@ describe("seo", () => {
     assert.ok(disallow.includes("/dev"));
     assert.ok(disallow.includes("/api/"));
     assert.ok(disallow.includes("/admin"));
+    assert.ok(disallow.includes("/booking/betaling"));
   });
 });

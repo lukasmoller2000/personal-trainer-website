@@ -16,6 +16,7 @@ export type Booking = {
   phone: string;
   goal: string;
   notes?: string;
+  status?: string;
   createdAt: string;
 };
 
@@ -25,6 +26,7 @@ export async function createBooking(
   const booking: Booking = {
     ...input,
     id: randomUUID(),
+    status: input.status ?? "inquiry",
     createdAt: new Date().toISOString(),
   };
 

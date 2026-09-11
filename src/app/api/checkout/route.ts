@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  bookingPaymentCancelPath,
+  evaluateSessionCheckoutBinding,
+} from "@/lib/booking-payment";
 import { evaluateCheckoutStart } from "@/lib/checkout-guard";
 import { getVatSettings, paymentsNotConfiguredMessage } from "@/lib/commerce";
-import { createPendingOrder, attachStripeSession } from "@/lib/orders";
+import {
+  attachStripeSession,
+  createPendingOrder,
+  createPendingOrderForExistingBooking,
+} from "@/lib/orders";
 import { getProduct, requiresTimeslot } from "@/lib/products";
 import { getTakenTimes } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
@@ -54,12 +62,14 @@ export async function POST(request: NextRequest) {
   const phone = readString(body, "phone");
   const goal = readString(body, "goal");
   const notes = readString(body, "notes");
+  const paymentToken = readString(body, "paymentToken").trim();
   const birthYearRaw = body.birthYear;
   const earlyPerformanceRequested = body.earlyPerformanceRequested === true;
+  const clientAmount = typeof body.amount === "number" ? body.amount : undefined;
 
   const checkout = evaluateCheckoutStart({
     productId,
-    clientAmount: typeof body.amount === "number" ? body.amount : undefined,
+    clientAmount,
     earlyPerformanceRequested,
   });
   if (!checkout.ok) {
@@ -67,6 +77,94 @@ export async function POST(request: NextRequest) {
       { error: checkout.error, reason: checkout.reason },
       { status: checkout.status }
     );
+  }
+
+  const product = getProduct(productId);
+  if (!product) {
+    return NextResponse.json({ error: "Ukendt ydelse" }, { status: 400 });
+  }
+
+  const vat = getVatSettings();
+  let birthYear: number | null = null;
+  if (vat.collectBirthYear) {
+    const parsed =
+      typeof birthYearRaw === "number" ? birthYearRaw : Number(readString(body, "birthYear"));
+    const current = new Date().getFullYear();
+    if (!Number.isInteger(parsed) || parsed < 1920 || parsed > current) {
+      return NextResponse.json({ error: "Angiv fødselsår" }, { status: 400 });
+    }
+    birthYear = parsed;
+  }
+
+  const stripe = getStripe();
+  if (!stripe) {
+    return NextResponse.json({ error: paymentsNotConfiguredMessage() }, { status: 503 });
+  }
+
+  const sessionCheckout = product.id === "session";
+  if (sessionCheckout) {
+    const binding = evaluateSessionCheckoutBinding({
+      paymentToken,
+      productId,
+      clientAmount,
+    });
+    if (!binding.ok) {
+      return NextResponse.json(
+        { error: binding.error, reason: binding.reason },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const { order, bookingId } = await createPendingOrderForExistingBooking({
+        bookingId: binding.bookingId,
+        earlyPerformanceRequested: true,
+        birthYear,
+      });
+
+      const siteUrl = getSiteUrl();
+      const session = await stripe.checkout.sessions.create({
+        mode: STRIPE_CHECKOUT_MODE,
+        customer_email: order.customerEmail,
+        client_reference_id: order.id,
+        success_url: `${siteUrl}/booking/bekraeftelse?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}${bookingPaymentCancelPath(paymentToken)}`,
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+        metadata: safeCheckoutMetadata({
+          productId: order.productId,
+          orderId: order.id,
+          bookingId,
+        }),
+        line_items: [
+          {
+            quantity: 1,
+            price: checkout.stripePriceId,
+          },
+        ],
+      });
+
+      if (!session.url) {
+        console.info("[checkout] no checkout url", { productId, status: 502 });
+        return NextResponse.json({ error: "Kunne ikke starte betaling" }, { status: 502 });
+      }
+
+      await attachStripeSession(order.id, session.id);
+
+      console.info("[checkout] checkout url received", { productId, status: 200, hasCheckoutUrl: true });
+      return NextResponse.json({ url: session.url, orderId: order.id });
+    } catch (error) {
+      const errorName = error instanceof Error ? error.name : "unknown";
+      const message = error instanceof Error ? error.message : "";
+      console.error("Checkout fejlede", errorName);
+      console.info("[checkout] error", { productId, status: 500, error: errorName });
+      if (/DATABASE_URL|ikke konfigureret/i.test(message)) {
+        return NextResponse.json({ error: "Betaling er ikke aktiveret endnu" }, { status: 503 });
+      }
+      if (message && /ikke|mangler|status|fundet|booking/i.test(message)) {
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+      return NextResponse.json({ error: "Kunne ikke starte betaling. Prøv igen." }, { status: 500 });
+    }
   }
 
   if (!productId || !isFilled(name, 80) || !isFilled(goal, 200)) {
@@ -80,11 +178,6 @@ export async function POST(request: NextRequest) {
   }
   if (notes.trim().length > 2000) {
     return NextResponse.json({ error: "Bemærkningen er for lang" }, { status: 400 });
-  }
-
-  const product = getProduct(productId);
-  if (!product) {
-    return NextResponse.json({ error: "Ukendt ydelse" }, { status: 400 });
   }
 
   const needsTimeslot = requiresTimeslot(product);
@@ -103,23 +196,6 @@ export async function POST(request: NextRequest) {
     if (taken.includes(time)) {
       return NextResponse.json({ error: "Tidspunktet er ikke ledigt" }, { status: 400 });
     }
-  }
-
-  const vat = getVatSettings();
-  let birthYear: number | null = null;
-  if (vat.collectBirthYear) {
-    const parsed =
-      typeof birthYearRaw === "number" ? birthYearRaw : Number(readString(body, "birthYear"));
-    const current = new Date().getFullYear();
-    if (!Number.isInteger(parsed) || parsed < 1920 || parsed > current) {
-      return NextResponse.json({ error: "Angiv fødselsår" }, { status: 400 });
-    }
-    birthYear = parsed;
-  }
-
-  const stripe = getStripe();
-  if (!stripe) {
-    return NextResponse.json({ error: paymentsNotConfiguredMessage() }, { status: 503 });
   }
 
   try {

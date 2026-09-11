@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { blocksTimeslot } from "@/lib/booking-payment";
 import { checkoutHoldMinutes } from "@/lib/commerce";
 import { isProductionRuntime } from "@/lib/utils";
 
@@ -110,15 +111,14 @@ export async function getTakenTimes(date: string): Promise<string[]> {
     where: {
       date,
       time: { not: null },
-      OR: [
-        { status: { in: ["inquiry", "confirmed"] } },
-        { status: "hold", holdUntil: { gt: now } },
-      ],
+      status: { in: ["inquiry", "awaiting_payment", "hold", "confirmed"] },
     },
-    select: { time: true },
+    select: { time: true, status: true, holdUntil: true },
   });
 
-  return rows.flatMap((row) => (row.time ? [row.time] : []));
+  return rows.flatMap((row) =>
+    row.time && blocksTimeslot(row.status, row.holdUntil, now) ? [row.time] : []
+  );
 }
 
 export function holdUntilFromNow(minutes = checkoutHoldMinutes) {

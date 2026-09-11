@@ -54,7 +54,7 @@ export default async function StripeTestPage() {
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
           Stripe TEST
         </h1>
-        <p className="mt-3 text-ink/60">Kun lokal testbetaling</p>
+        <p className="mt-3 text-ink/60">Kun lokal testbetaling. PT-session i produktion betales via bekræftet betalingslink — ikke herfra.</p>
         <dl className="mt-8 space-y-3 border-t border-sand pt-6">
           <div className="flex items-baseline justify-between gap-4">
             <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-ink/40">

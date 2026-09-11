@@ -1,5 +1,10 @@
 import { randomUUID } from "crypto";
 import {
+  BOOKING_STATUS,
+  bookingStatusAfterCheckoutExpired,
+  evaluateSessionPayment,
+} from "@/lib/booking-payment";
+import {
   calculateVat,
   canTransitionOrder,
   getVatSettings,
@@ -36,6 +41,9 @@ export async function createPendingOrder(input: {
   if (amountOre == null || !product) {
     throw new Error("Ukendt ydelse");
   }
+  if (product.bookingType === "session") {
+    throw new Error("PT-session kræver en bekræftet booking");
+  }
 
   const vat = calculateVat(
     amountOre,
@@ -66,29 +74,98 @@ export async function createPendingOrder(input: {
     },
   });
 
-  let bookingId: string | null = null;
-  if (product.bookingType === "session" && input.customer.date && input.customer.time) {
-    const booking = await prisma.booking.create({
-      data: {
-        id: randomUUID(),
-        productId: input.productId,
-        type: "session",
-        date: input.customer.date,
-        time: input.customer.time,
-        name: input.customer.name,
-        email: input.customer.email.toLowerCase(),
-        phone: input.customer.phone,
-        goal: input.customer.goal,
-        notes: input.customer.notes ?? null,
-        status: "hold",
-        holdUntil: holdUntilFromNow(),
-        orderId: order.id,
-      },
-    });
-    bookingId = booking.id;
+  return { order, bookingId: null as string | null };
+}
+
+export async function createPendingOrderForExistingBooking(input: {
+  bookingId: string;
+  earlyPerformanceRequested?: boolean;
+  birthYear?: number | null;
+}) {
+  const prisma = getPrisma();
+  if (!prisma) throw new Error("DATABASE_URL mangler");
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: input.bookingId },
+    include: { order: true },
+  });
+  if (!booking) {
+    throw new Error("Bookingen blev ikke fundet");
   }
 
-  return { order, bookingId };
+  const payable = evaluateSessionPayment({
+    id: booking.id,
+    productId: booking.productId,
+    status: booking.status,
+    date: booking.date,
+    time: booking.time,
+    holdUntil: booking.holdUntil,
+    orderStatus: booking.order?.status ?? null,
+  });
+  if (!payable.ok) {
+    throw new Error(payable.error);
+  }
+
+  const amountOre = getCheckoutAmountOre(booking.productId);
+  const product = getProduct(booking.productId);
+  if (amountOre == null || !product || product.id !== "session") {
+    throw new Error("Ukendt ydelse");
+  }
+
+  const vat = calculateVat(
+    amountOre,
+    getVatSettings(),
+    booking.productId,
+    input.birthYear
+  );
+
+  const order = await prisma.order.create({
+    data: {
+      productId: booking.productId,
+      status: "pending",
+      amountOre: vat.chargeOre,
+      currency: "dkk",
+      vatRegistered: vat.vatApplied,
+      vatRatePercent: vat.vatRatePercent,
+      vatAmountOre: vat.vatAmountOre,
+      customerName: booking.name,
+      customerEmail: booking.email.toLowerCase(),
+      customerPhone: booking.phone,
+      goal: booking.goal,
+      notes: booking.notes,
+      date: booking.date,
+      time: booking.time,
+      birthYear: input.birthYear ?? null,
+      earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
+      earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
+    },
+  });
+
+  const now = new Date();
+  const attached = await prisma.booking.updateMany({
+    where: {
+      id: booking.id,
+      OR: [
+        { status: BOOKING_STATUS.awaitingPayment },
+        { status: BOOKING_STATUS.hold, holdUntil: { lte: now } },
+        { status: BOOKING_STATUS.hold, holdUntil: null },
+      ],
+    },
+    data: {
+      orderId: order.id,
+      status: BOOKING_STATUS.hold,
+      holdUntil: holdUntilFromNow(),
+    },
+  });
+  if (attached.count !== 1) {
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "cancelled" },
+    });
+    throw new Error("Bookingen kan ikke betales i denne status");
+  }
+
+  return { order, bookingId: booking.id };
 }
 
 export async function attachStripeSession(orderId: string, stripeCheckoutSessionId: string) {
@@ -186,8 +263,11 @@ export async function fulfillPaidOrder(input: {
 
   if (product?.bookingType === "session") {
     await prisma.booking.updateMany({
-      where: { orderId: existing.id, status: "hold" },
-      data: { status: "confirmed", holdUntil: null },
+      where: {
+        orderId: existing.id,
+        status: { in: [BOOKING_STATUS.hold, BOOKING_STATUS.awaitingPayment] },
+      },
+      data: { status: BOOKING_STATUS.confirmed, holdUntil: null },
     });
   }
 
@@ -292,8 +372,18 @@ export async function failPendingOrder(orderId: string) {
   await markOrderStatus(orderId, "failed");
   const prisma = getPrisma();
   if (!prisma) return;
-  await prisma.booking.updateMany({
-    where: { orderId, status: "hold" },
-    data: { status: "cancelled", cancelledAt: new Date(), holdUntil: null },
+  const held = await prisma.booking.findMany({
+    where: { orderId, status: BOOKING_STATUS.hold },
   });
+  for (const row of held) {
+    const next = bookingStatusAfterCheckoutExpired(row.status);
+    await prisma.booking.update({
+      where: { id: row.id },
+      data: {
+        status: next,
+        holdUntil: null,
+        ...(next === BOOKING_STATUS.cancelled ? { cancelledAt: new Date() } : {}),
+      },
+    });
+  }
 }

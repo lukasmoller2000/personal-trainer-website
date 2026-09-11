@@ -69,6 +69,8 @@ describe("booking persistence", () => {
       assert.equal(result.target, "prisma");
       assert.equal(created.length, 1);
       assert.equal((created[0] as { id: string }).id, "booking_test");
+      assert.equal((created[0] as { status: string }).status, "inquiry");
+      assert.equal((created[0] as { orderId: string | null }).orderId, null);
     });
   });
 

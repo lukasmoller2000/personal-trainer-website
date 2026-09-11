@@ -55,7 +55,7 @@ export function getTermsCopy() {
       `Enkelt personlig træning koster ${session?.price ?? 300} kr. Fem træninger koster ${pack?.price ?? 1350} kr. (${pack?.price != null && pack.sessions ? pack.price / pack.sessions : 270} kr. pr. træning). Online Coaching koster ${online?.price ?? 799} kr. pr. måned. Den pris, du ser, er den pris, der gælder for ydelsen.`,
     payment:
       isPaymentsEnabledByFlag()
-        ? "Kortbetaling sker via Stripe, før en bekræftet tid eller et klippekort aktiveres. Vi gemmer ikke dit kortnummer."
+        ? "Kortbetaling for en enkelt PT-session sker via Stripe, efter jeg har bekræftet tiden. Klippekort kan betales direkte. Vi gemmer ikke dit kortnummer."
         : "Kortbetaling er ikke slået til på siden. Du sender en forespørgsel, og jeg vender tilbage med bekræftelse og betalingsinfo. Når betaling senere aktiveres, vil kortbetaling ske via Stripe, før tiden eller klippekortet gælder. Vi gemmer ikke dit kortnummer.",
     booking:
       "Enkelt PT: du angiver et ønsket tidspunkt i Viborg Fitness Gym. Klippekort til 5 træninger sendes uden tid — tider bookes, når kortet er aktivt. Online Coaching sendes som forespørgsel; opstart aftales.",

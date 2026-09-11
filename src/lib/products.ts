@@ -158,7 +158,7 @@ export function isCheckoutProduct(product: Product) {
 
 /**
  * Public booking form: regular PT is always an inquiry.
- * Checkout is started later (after Lukas confirms) or from /dev/stripe-test.
+ * Checkout for PT starts later from the confirmed payment link.
  * Pack-5 may go to Checkout when payments are on.
  */
 export function startsCheckoutFromPublicForm(product: Product) {
