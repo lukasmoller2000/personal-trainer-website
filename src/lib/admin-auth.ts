@@ -30,7 +30,7 @@ export function safeEqual(a: string, b: string) {
 export function verifyAdminPassword(input: string) {
   const password = adminPassword();
   if (!password) return false;
-  return safeEqual(input, password);
+  return safeEqual(input.trim(), password);
 }
 
 export function adminCookieValue() {
