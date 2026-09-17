@@ -36,17 +36,18 @@ export function Hero() {
 
           <motion.h1
             variants={fadeUp}
-            className="font-display text-[2.55rem] font-extrabold italic uppercase leading-[0.92] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.1rem] xl:text-[5.5rem]"
+            className="font-display max-w-full text-[1.7rem] font-extrabold italic uppercase leading-[0.92] tracking-tight min-[400px]:text-[1.9rem] sm:text-[2.35rem] md:text-[2.6rem] lg:text-[2.75rem] xl:text-[2.95rem]"
           >
-            Styrke, fedttab
-            <span className="mt-2 block text-sage">og en hverdag der holder</span>
+            Muskelopbygning,
+            <span className="mt-2 block">Styrke</span>
+            <span className="mt-2 block text-sage">og fedttab</span>
           </motion.h1>
 
           <motion.p
             variants={fadeUp}
             className="mt-8 max-w-lg text-base leading-relaxed text-white/70 sm:text-lg md:mt-10 md:text-xl md:leading-relaxed"
           >
-            Jeg hjælper dig med at træne målrettet — 1:1 i{" "}
+            Jeg hjælper dig med målrettet træning — 1:1 i{" "}
             <a
               href={siteConfig.gymUrl}
               target="_blank"
@@ -54,8 +55,8 @@ export function Hero() {
               className="font-medium text-sage transition-colors hover:text-moss"
             >
               {siteConfig.venue}
-            </a>
-            , eller med online coaching hvis du træner selv. Klar plan, ærlig opfølgning. Ingen hype.
+            </a>{" "}
+            eller online coaching, hvis du træner selv. Klar plan, struktur og løbende opfølgning.
           </motion.p>
 
           <motion.div
