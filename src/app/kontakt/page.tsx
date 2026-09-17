@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { ContactActions } from "@/components/sections/ContactActions";
 import { ContactForm } from "@/components/sections/ContactForm";
 import { PageHero } from "@/components/ui/PageHero";
-import { Button } from "@/components/ui/Button";
 import { GymInstagramLink, SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { getCompanyConfig } from "@/lib/commerce";
+import { phoneTelHref } from "@/lib/contact-ui";
 import { siteConfig } from "@/lib/utils";
 import { pageSeo } from "@/lib/seo";
 
@@ -28,7 +29,7 @@ const info = [
     icon: Phone,
     label: "Telefon",
     value: siteConfig.links.phone,
-    href: `tel:${siteConfig.links.phone.replace(/\s/g, "")}`,
+    href: phoneTelHref(siteConfig.links.phone),
   },
   {
     icon: MapPin,
@@ -50,8 +51,10 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Kontakt"
         title="Tag en uforpligtende snak"
-        description="Usikker på om personlig træning i Viborg eller online coaching passer? Skriv, så tager vi en snak om dit mål og hvilket program der giver mening."
-      />
+        description="Usikker på om personlig træning i Viborg eller online coaching passer? Book en tid, skriv på WhatsApp, eller ring — så tager vi en snak om dit mål."
+      >
+        <ContactActions />
+      </PageHero>
 
       <section className="pt-12">
         <div className="container-custom flex flex-col items-start justify-between gap-6 border-b border-sand pb-10 md:flex-row md:items-center">
@@ -70,12 +73,7 @@ export default function ContactPage() {
               <GymInstagramLink className="underline decoration-sage/50 underline-offset-4 hover:text-sage" />
             </p>
           </div>
-          <div className="flex flex-col items-start gap-4 sm:items-end">
-            <SocialLinks />
-            <Button href="/booking?produkt=session" trackEvent="pt_cta_clicked">
-              Book personlig træning
-            </Button>
-          </div>
+          <SocialLinks compact />
         </div>
       </section>
 
@@ -83,8 +81,10 @@ export default function ContactPage() {
         <div className="container-custom grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {info.map((item) => (
             <div key={item.label} className="border-t border-sand pt-5">
-              <item.icon className="mb-3 h-4 w-4 text-sage" />
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink/40">
+              <span className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-sage text-ink">
+                <item.icon className="h-4 w-4" strokeWidth={2} aria-hidden />
+              </span>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink/60">
                 {item.label}
               </p>
               {item.href ? (

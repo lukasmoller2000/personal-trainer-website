@@ -1,13 +1,16 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export function PageHero({
   eyebrow,
   title,
   description,
+  children,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
+  children?: ReactNode;
 }) {
   return (
     <section className="bg-ink pt-32 pb-14 text-cream md:pt-40 md:pb-16">
@@ -23,6 +26,7 @@ export function PageHero({
         {description && (
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-cream/65">{description}</p>
         )}
+        {children ? <div className="mt-8">{children}</div> : null}
       </div>
     </section>
   );
