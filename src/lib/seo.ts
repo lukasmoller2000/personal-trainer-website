@@ -46,6 +46,7 @@ export function siteJsonLd(siteUrl: string) {
     siteConfig.links.tiktok,
   ];
   const image = `${siteUrl}/images/lukas-portrait.png`;
+  const logo = `${siteUrl}/images/lukas-moller-logo.jpg`;
   const legalAddress = company.address
     ? {
         "@type": "PostalAddress" as const,
@@ -76,6 +77,7 @@ export function siteJsonLd(siteUrl: string) {
         description: siteConfig.description,
         url: siteUrl,
         image,
+        logo,
         email: siteConfig.links.email,
         telephone: siteConfig.links.phone,
         ...(legalAddress ? { address: legalAddress } : {}),

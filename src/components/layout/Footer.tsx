@@ -30,7 +30,7 @@ export function Footer() {
       <div className="container-custom pt-16 pb-8 md:pt-20">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <Logo inverted />
+            <Logo inverted size="footer" />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-cream/55">
               {company.name} · Personlig træning i {siteConfig.location}.
               <br />
