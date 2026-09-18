@@ -52,13 +52,20 @@ export function ProductPrice({
       {memberPrice ? (
         <div className={cn(size === "compact" ? "mt-1.5" : "mt-2.5")}>
           <p className={cn(size === "compact" ? "text-xs leading-snug" : "text-sm leading-snug")}>
-            <span className="font-semibold text-sage">{memberLabel}:</span>{" "}
+            <span
+              className={cn(
+                "mr-1.5 inline-flex items-center rounded-full bg-sage font-semibold text-ink",
+                size === "compact" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-0.5 text-[11px]"
+              )}
+            >
+              {memberLabel}
+            </span>
             <span
               className={cn(
                 size === "card" && "font-display text-lg font-bold italic tracking-tight",
                 size === "aside" && "font-display text-base font-bold italic tracking-tight",
-                size === "compact" && "font-medium",
-                premium ? "text-sage" : "text-ink"
+                size === "compact" && "font-semibold",
+                premium ? "text-white" : "text-ink"
               )}
             >
               {memberPrice}

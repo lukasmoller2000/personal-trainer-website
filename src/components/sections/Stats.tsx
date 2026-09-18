@@ -33,8 +33,14 @@ function StatFigure({
       >
         {value}
       </p>
-      <p className={accent ? "mt-1 text-sm font-medium text-sage" : "mt-2 text-sm text-white/55"}>
-        {label}
+      <p className={accent ? "mt-1.5" : "mt-2 text-sm text-white/55"}>
+        {accent ? (
+          <span className="inline-flex items-center rounded-full bg-sage px-2.5 py-0.5 text-[11px] font-semibold text-ink">
+            {label}
+          </span>
+        ) : (
+          label
+        )}
       </p>
     </div>
   );
