@@ -16,12 +16,12 @@ export const faqs = [
   {
     question: "Kan jeg booke bare én træning?",
     answer:
-      "Ja. Du kan booke en enkelt personlig træning til 300 kr. uden at binde dig til et forløb. Du kan også købe 5 træninger til 1.350 kr. (270 kr. pr. træning — 150 kr. under 5 enkeltbookinger).",
+      "Ja. Du kan booke en enkelt personlig træning til 300 kr. (VFG-medlem: 250 kr.) uden at binde dig til et forløb. Du kan også købe 5 træninger til 1.350 kr. (VFG-medlem: 1.150 kr.).",
   },
   {
     question: "Hvad er forskellen på PT og Online Coaching?",
     answer:
-      "En personlig træning er én session i gymmet til 300 kr. Du kan også købe 5 træninger til 1.350 kr. Online Coaching er et løbende månedligt forløb med program, kostplan og ugentlige check-ins — 799 kr./md.",
+      "En personlig træning er én session i gymmet til 300 kr. (VFG-medlem: 250 kr.). Du kan også købe 5 træninger til 1.350 kr. (VFG-medlem: 1.150 kr.). Online Coaching er et løbende månedligt forløb med program, kostplan og ugentlige check-ins — 799 kr./md.",
   },
   {
     question: "Hvordan fungerer Online Coaching?",
@@ -31,7 +31,7 @@ export const faqs = [
   {
     question: "Hvordan virker klippekort?",
     answer:
-      `Du kan købe 5 træninger til 1.350 kr. Du vælger ikke tid ved henvendelsen. Når klippekortet er aktivt, booker du tider med dine klip og kan se, hvor mange træninger du har tilbage. Klippekortet gælder ${clipCardValidity.months} måneder fra køb.`,
+      `Du kan købe 5 træninger til 1.350 kr. Aktive medlemmer af Viborg Fitness Gym får medlemspris på 1.150 kr. Du vælger ikke tid ved henvendelsen. Når klippekortet er aktivt, booker du tider med dine klip og kan se, hvor mange træninger du har tilbage. Klippekortet gælder ${clipCardValidity.months} måneder fra køb.`,
   },
   {
     question: "Skal jeg være i god form inden?",

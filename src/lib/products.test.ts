@@ -27,6 +27,16 @@ describe("products", () => {
     assert.equal((pt.price ?? 0) * 5 - (five.price ?? 0), 150);
     assert.equal((five.price ?? 0) / five.sessions, 270);
     assert.equal(online.price, 799);
+    assert.equal(pt.memberPrice, 250);
+    assert.equal(pt.memberPriceLabel, "VFG-medlem");
+    assert.equal(pt.memberPriceNote, "pr. session");
+    assert.match(pt.memberNote ?? "", /250 kr/);
+    assert.equal(five.memberPrice, 1150);
+    assert.equal(five.memberPriceLabel, "VFG-medlem");
+    assert.equal(five.memberPriceNote, "230 kr. pr. træning");
+    assert.match(five.memberNote ?? "", /1\.150 kr/);
+    assert.equal(online.memberPrice, undefined);
+    assert.equal(online.memberNote, undefined);
     assert.equal(online.pricePrefix, undefined);
     assert.equal(products.length, 3);
     assert.equal(products.filter((product) => product.kind === "pack").length, 1);
@@ -61,10 +71,12 @@ describe("products", () => {
     const onlineLabel = priceLabel(online);
 
     assert.match(ptLabel, /300/);
+    assert.doesNotMatch(ptLabel, /250/);
     assert.doesNotMatch(ptLabel, /^Fra /);
     assert.match(onlineLabel, /799/);
     assert.match(onlineLabel, /md/);
     assert.doesNotMatch(onlineLabel, /^Fra /);
+    assert.doesNotMatch(onlineLabel, /VFG-medlem/);
   });
 
   it("maps product CTAs to track events", () => {

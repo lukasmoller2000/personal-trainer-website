@@ -1,11 +1,11 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { cn, formatPrice } from "@/lib/utils";
+import { ProductPrice } from "@/components/sections/ProductPrice";
+import { cn } from "@/lib/utils";
 import { trackEventForProduct, type Product } from "@/lib/products";
 
 export function ProductCard({ product }: { product: Product }) {
-  const price = formatPrice(product.price);
   const premium = product.emphasis === "premium";
   const featured = product.emphasis === "featured";
 
@@ -53,25 +53,9 @@ export function ProductCard({ product }: { product: Product }) {
         {product.fits}
       </p>
 
-      {price ? (
+      {product.price != null ? (
         <div className="mt-6">
-          <p
-            className={cn(
-              "font-display text-4xl font-extrabold italic tracking-tight md:text-[2.5rem]",
-              premium ? "text-sage" : "text-ink"
-            )}
-          >
-            {product.pricePrefix}
-            {price}
-            {product.priceSuffix && (
-              <span className="text-2xl font-semibold">{product.priceSuffix}</span>
-            )}
-          </p>
-          {product.priceNote && (
-            <p className={cn("mt-1 text-sm", premium ? "text-white/45" : "text-ink/50")}>
-              {product.priceNote}
-            </p>
-          )}
+          <ProductPrice product={product} size="card" premium={premium} />
         </div>
       ) : (
         <div className="mt-6 min-h-[4.5rem]" />
@@ -80,6 +64,11 @@ export function ProductCard({ product }: { product: Product }) {
       <p className={cn("mt-5 leading-relaxed", premium ? "text-white/70" : "text-ink/65")}>
         {product.description}
       </p>
+      {product.memberNote ? (
+        <p className={cn("mt-3 text-sm leading-relaxed", premium ? "text-white/70" : "text-ink/65")}>
+          {product.memberNote}
+        </p>
+      ) : null}
 
       <ul className="mt-6 flex-1 space-y-2.5">
         {product.perks.map((perk) => (

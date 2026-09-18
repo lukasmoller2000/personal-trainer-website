@@ -22,6 +22,16 @@ export type Product = {
   pricePrefix?: string;
   priceSuffix?: string;
   priceNote?: string;
+  /**
+   * Display-only VFG member price in kroner.
+   * Never sent to Stripe. Checkout still uses `price` / Stripe Price IDs.
+   */
+  memberPrice?: number;
+  /** Display-only label, e.g. "VFG-medlem". Never sent to Stripe. */
+  memberPriceLabel?: string;
+  memberPriceNote?: string;
+  /** Short offering copy explaining the member price. Display-only. */
+  memberNote?: string;
   perks: string[];
   popular?: boolean;
   badge?: string;
@@ -61,6 +71,11 @@ export const products: Product[] = [
     durationMinutes: sessionDuration.minutes,
     price: 300,
     priceNote: "pr. session",
+    memberPrice: 250,
+    memberPriceLabel: "VFG-medlem",
+    memberPriceNote: "pr. session",
+    memberNote:
+      "Aktive medlemmer af Viborg Fitness Gym får medlemspris på 250 kr. pr. session.",
     emphasis: "simple",
     cta: "Book personlig træning",
     perks: [
@@ -89,7 +104,12 @@ export const products: Product[] = [
     sessions: 5,
     durationMinutes: sessionDuration.minutes,
     price: 1350,
-    priceNote: "270 kr. pr. træning · spar 150 kr.",
+    priceNote: "270 kr. pr. træning",
+    memberPrice: 1150,
+    memberPriceLabel: "VFG-medlem",
+    memberPriceNote: "230 kr. pr. træning",
+    memberNote:
+      "Aktive medlemmer af Viborg Fitness Gym får medlemspris på 1.150 kr. for 5 træninger.",
     badge: "Spar 150 kr.",
     popular: true,
     emphasis: "featured",
@@ -177,7 +197,7 @@ export function trackEventForProduct(productId: string) {
   return productId === "online" ? "coaching_cta_clicked" : "pt_cta_clicked";
 }
 
-/** Server-side price in øre. Never accept an amount from the client. */
+/** Server-side price in øre. Never accept an amount from the client. Uses `price`, never `memberPrice`. */
 export function getCheckoutAmountOre(productId: string) {
   const product = getProduct(productId);
   if (!product || !isCheckoutProduct(product) || product.price == null) return null;

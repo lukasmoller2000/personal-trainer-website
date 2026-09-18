@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Check, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Honeypot } from "@/components/ui/Honeypot";
+import { ProductPrice } from "@/components/sections/ProductPrice";
 import {
   getCalendarDays,
   getSlotsForDate,
@@ -356,7 +357,7 @@ export function BookingWizard({
                         setStep(1);
                       }}
                       className={cn(
-                        "flex min-h-16 w-full items-center justify-between gap-4 rounded-2xl border bg-white p-5 text-left transition-colors hover:border-ink",
+                        "flex min-h-16 w-full flex-col gap-3 rounded-2xl border bg-white p-5 text-left transition-colors hover:border-ink sm:flex-row sm:items-start sm:justify-between sm:gap-4",
                         product?.id === item.id ? "border-ink" : "border-sand"
                       )}
                     >
@@ -372,12 +373,11 @@ export function BookingWizard({
                           <p className="mt-1 text-sm text-ink/50">{item.tagline}</p>
                         )}
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p className="font-medium text-ink">{label}</p>
-                        {item.priceNote && (
-                          <p className="mt-0.5 text-xs text-ink/45">{item.priceNote}</p>
-                        )}
-                      </div>
+                      <ProductPrice
+                        product={item}
+                        size="compact"
+                        className="sm:shrink-0 sm:text-right"
+                      />
                     </button>
                   );
                 })}

@@ -5,14 +5,15 @@ import { PageHero } from "@/components/ui/PageHero";
 import { Button } from "@/components/ui/Button";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { CtaBanner } from "@/components/sections/CtaBanner";
+import { ProductPrice } from "@/components/sections/ProductPrice";
 import { products, trackEventForProduct } from "@/lib/products";
-import { cn, priceLabel } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = pageSeo("/ydelser", {
   title: "Personlig træning og online coaching i Viborg",
   description:
-    "PT i Viborg Fitness Gym til 300 kr. pr. session, klippekort til 5 træninger for 1.350 kr., eller online coaching til 799 kr./md.",
+    "PT i Viborg Fitness Gym til 300 kr. pr. session (VFG-medlem: 250 kr.), klippekort til 5 træninger for 1.350 kr. (VFG-medlem: 1.150 kr.), eller online coaching til 799 kr./md.",
 });
 
 export default function ServicesPage() {
@@ -83,6 +84,16 @@ export default function ServicesPage() {
                 >
                   {product.description}
                 </p>
+                {product.memberNote ? (
+                  <p
+                    className={cn(
+                      "mt-3 text-sm leading-relaxed",
+                      product.emphasis === "premium" ? "text-white/70" : "text-ink/70"
+                    )}
+                  >
+                    {product.memberNote}
+                  </p>
+                ) : null}
                 <ul className="mt-6 grid gap-2 sm:grid-cols-2">
                   {product.perks.map((perk) => (
                     <li
@@ -130,26 +141,11 @@ export default function ServicesPage() {
                   product.emphasis === "premium" ? "border-white/10" : "border-sand"
                 )}
               >
-                <div>
-                  <p
-                    className={cn(
-                      "font-display text-3xl font-extrabold italic tracking-tight",
-                      product.emphasis === "premium" ? "text-sage" : "text-ink"
-                    )}
-                  >
-                    {priceLabel(product)}
-                  </p>
-                  {product.priceNote && (
-                    <p
-                      className={cn(
-                        "mt-1 text-sm",
-                        product.emphasis === "premium" ? "text-white/45" : "text-ink/50"
-                      )}
-                    >
-                      {product.priceNote}
-                    </p>
-                  )}
-                </div>
+                <ProductPrice
+                  product={product}
+                  size="aside"
+                  premium={product.emphasis === "premium"}
+                />
                 <Button
                   href={`/booking?produkt=${product.id}`}
                   variant={product.emphasis === "simple" ? "secondary" : "primary"}
