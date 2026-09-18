@@ -1,9 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { GymLogo } from "@/components/layout/GymLogo";
 import { SiteVideo } from "@/components/ui/SiteVideo";
 import { siteConfig } from "@/lib/utils";
 
@@ -12,25 +12,40 @@ const fadeUp = {
   show: { opacity: 1, y: 0 },
 };
 
+/** Official lockup, black plate removed. Intrinsic 891×179. */
+const HERO_LOGO = {
+  src: "/images/lukas-moller-logo.png",
+  width: 891,
+  height: 179,
+} as const;
+
 export function Hero() {
   const reduceMotion = useReducedMotion();
 
   return (
     <section className="relative overflow-hidden bg-ink text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(200,255,0,0.08),transparent_42%)]" />
+      <div className="hero-ambient pointer-events-none absolute inset-0" />
 
-      <div className="container-custom relative grid min-h-[100svh] items-center gap-12 pt-28 pb-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16 lg:pt-32 lg:pb-20">
+      <div className="container-custom relative grid min-h-[100svh] items-center gap-14 pt-28 pb-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-20 lg:pt-32 lg:pb-24 xl:gap-24">
         <motion.div
           initial={reduceMotion ? false : "hidden"}
           animate="show"
           transition={{ staggerChildren: reduceMotion ? 0 : 0.08, delayChildren: reduceMotion ? 0 : 0.08 }}
-          className="max-w-2xl"
+          className="max-w-xl xl:max-w-2xl"
         >
-          <motion.div variants={fadeUp} className="mb-8 flex items-center gap-4">
-            <GymLogo size={56} />
-            <p className="text-[11px] font-semibold tracking-[0.22em] text-white/45 uppercase">
-              {siteConfig.trainer}
-              <span className="mt-1 block text-sage">Personlig træner · Viborg</span>
+          <motion.div variants={fadeUp} className="mb-10 md:mb-12">
+            <Image
+              src={HERO_LOGO.src}
+              alt={`${siteConfig.name} — ${siteConfig.role}`}
+              width={HERO_LOGO.width}
+              height={HERO_LOGO.height}
+              priority
+              quality={90}
+              sizes="(min-width: 768px) 360px, 280px"
+              className="h-12 w-auto max-w-[min(100%,280px)] object-contain object-left sm:h-14 sm:max-w-[320px] md:h-16 md:max-w-[360px]"
+            />
+            <p className="mt-5 text-[11px] font-semibold tracking-[0.22em] text-white/50 uppercase sm:mt-6">
+              Personlig træner i Viborg
             </p>
           </motion.div>
 
@@ -45,7 +60,7 @@ export function Hero() {
 
           <motion.p
             variants={fadeUp}
-            className="mt-8 max-w-lg text-base leading-relaxed text-white/70 sm:text-lg md:mt-10 md:text-xl md:leading-relaxed"
+            className="mt-10 max-w-lg text-base leading-relaxed text-white/70 sm:text-lg md:mt-12 md:text-xl md:leading-relaxed"
           >
             Jeg hjælper dig med målrettet træning — 1:1 i{" "}
             <a
@@ -61,7 +76,7 @@ export function Hero() {
 
           <motion.div
             variants={fadeUp}
-            className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+            className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap md:mt-12"
           >
             <Button
               href="/booking?produkt=session"
@@ -89,8 +104,8 @@ export function Hero() {
           transition={{ duration: reduceMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1], delay: reduceMotion ? 0 : 0.18 }}
           className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none"
         >
-          <div className="absolute -inset-3 rounded-[2.2rem] border border-sage/20 lg:-inset-4" />
-          <div className="absolute -right-6 top-10 hidden h-28 w-px bg-sage/50 lg:block" />
+          <div className="absolute -inset-3 rounded-[2.2rem] border border-sage/15 lg:-inset-5" />
+          <div className="absolute -right-6 top-10 hidden h-28 w-px bg-sage/35 lg:block" />
           <div className="relative overflow-hidden rounded-[1.75rem] ring-1 ring-white/10">
             <SiteVideo
               src="/videos/discipline.mp4"

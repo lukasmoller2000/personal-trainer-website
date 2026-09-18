@@ -58,4 +58,11 @@ body {
   .section-padding {
     @apply py-20 md:py-28 lg:py-32;
   }
+
+  .hero-ambient {
+    background:
+      radial-gradient(ellipse 72% 58% at 16% 40%, color-mix(in srgb, var(--color-sage) 11%, transparent), transparent 62%),
+      radial-gradient(ellipse 48% 42% at 88% 28%, color-mix(in srgb, var(--color-moss) 6%, transparent), transparent 55%),
+      radial-gradient(ellipse 80% 50% at 50% 120%, color-mix(in srgb, var(--color-forest) 70%, transparent), transparent 68%);
+  }
 }
