@@ -9,14 +9,14 @@ import { siteConfig } from "@/lib/utils";
 export function AboutTeaser() {
   return (
     <AnimatedSection className="bg-[#eadfce] pb-10 md:pb-12 lg:pb-14">
-      <div className="container-custom grid items-start gap-10 md:gap-12 lg:grid-cols-[auto_1fr] lg:gap-16">
-        <figure className="relative m-0 mx-auto h-[280px] w-[260px] shrink-0 self-start overflow-hidden rounded-2xl bg-ink lg:mx-0 lg:h-[290px] lg:w-[230px] lg:justify-self-start">
+      <div className="container-custom grid items-start gap-8 lg:grid-cols-[auto_1fr] lg:gap-10">
+        <figure className="relative m-0 mx-auto h-[180px] w-[160px] shrink-0 self-start overflow-hidden rounded-2xl bg-ink lg:mx-0 lg:h-[165px] lg:w-[130px] lg:justify-self-start">
           <Image
             src="/images/lukas-portrait.png"
             alt={`${siteConfig.trainer}, personlig træner i ${siteConfig.venue}`}
             fill
             className="object-cover object-[center_24%]"
-            sizes="(min-width: 1024px) 230px, 260px"
+            sizes="(min-width: 1024px) 130px, 160px"
           />
         </figure>
         <div className="min-w-0">
