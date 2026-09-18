@@ -32,16 +32,9 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Logo inverted />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-cream/55">
-              {company.name} · {company.tradeName}. Personlig træning i{" "}
-              <a
-                href={siteConfig.gymUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sage hover:underline"
-              >
-                {siteConfig.venue}
-              </a>
-              . Enkelt PT 300 kr., 5 træninger 1.350 kr. Online Coaching 799 kr./md.
+              {company.name} · Personlig træning i {siteConfig.location}.
+              <br />
+              Målrettet 1:1 træning med fokus på muskelopbygning, styrke og fedttab.
             </p>
             {company.cvr ? (
               <p className="mt-2 text-sm text-cream/45">CVR {company.cvr}</p>

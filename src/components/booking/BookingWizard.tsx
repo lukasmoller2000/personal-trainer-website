@@ -798,9 +798,9 @@ function ClipLookup({
       }}
     >
       <Honeypot value={honeypot} onChange={onHoneypot} />
-      <p className="font-medium text-ink">Jeg har allerede et klippekort</p>
+      <p className="font-medium text-ink">Har du allerede et aktivt klippekort?</p>
       <p className="mt-1 text-sm text-ink/55">
-        Skriv den mail, du købte med. Vi sender et link til at booke, hvis kortet er aktivt.
+        Indtast den mailadresse, du købte klippekortet med, så sender vi dig et link til at booke din næste træning.
       </p>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
         <input
@@ -808,10 +808,10 @@ function ClipLookup({
           required
           value={email}
           onChange={(event) => onEmail(event.target.value)}
-          placeholder="din@mail.dk"
+          placeholder="Din e-mail"
           className="min-h-12 flex-1 rounded-xl border border-sand px-4 outline-none ring-sage/40 focus:ring-2"
         />
-        <Button type="submit">Send link</Button>
+        <Button type="submit">Send bookinglink</Button>
       </div>
       {done && (
         <p className="mt-3 text-sm text-ink/60">
