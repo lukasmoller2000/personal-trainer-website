@@ -81,8 +81,8 @@ export default function AboutPage() {
               træningshverdag, der faktisk kan holdes — ikke et program, du dropper efter tre uger.
             </p>
             <p className="mt-4 text-base leading-relaxed text-ink/65 md:text-lg">
-              Tilgangen er individuel. Vi tager udgangspunkt i dit niveau, din uge og det, du gerne
-              vil opnå. Progressionen er realistisk: teknik først, så belastning, så næste skridt.
+              Tilgangen er individuel. Træningen tilpasses dit niveau og dine mål, med fokus på
+              teknik, progression og resultater.
             </p>
             <p className="mt-4 text-base leading-relaxed text-ink/65 md:text-lg">
               Det er til dig, der vil træne seriøst uden at gøre det til et sideshow — uanset om du
