@@ -114,6 +114,7 @@ export async function refundUnusedClipCard(orderId: string, prisma?: PrismaClien
   });
 }
 
+/** Marks a Stripe event as successfully processed. Call only after validation and fulfillment. */
 export async function claimStripeEvent(id: string, type: string) {
   const prisma = getPrisma();
   if (!prisma) return "skipped" as const;
@@ -125,4 +126,21 @@ export async function claimStripeEvent(id: string, type: string) {
     if (isUniqueConstraintError(error)) return "duplicate" as const;
     throw error;
   }
+}
+
+export async function isStripeEventProcessed(id: string) {
+  const prisma = getPrisma();
+  if (!prisma) return false;
+  const row = await prisma.stripeEvent.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+  return Boolean(row);
+}
+
+/** Drops a processed lock so Stripe can retry after validation or fulfillment failure. */
+export async function releaseStripeEvent(id: string) {
+  const prisma = getPrisma();
+  if (!prisma) return;
+  await prisma.stripeEvent.delete({ where: { id } }).catch(() => undefined);
 }
