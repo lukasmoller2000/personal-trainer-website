@@ -37,7 +37,9 @@ export function Footer() {
               Målrettet 1:1 træning med fokus på muskelopbygning, styrke og fedttab.
             </p>
             {company.cvr ? (
-              <p className="mt-2 text-sm text-cream/45">CVR {company.cvr}</p>
+              <p className="mt-2 text-sm leading-relaxed text-cream/45">
+                CVR: {company.cvr}
+              </p>
             ) : null}
             <div className="mt-5">
               <SocialLinks inverted personalInstagram />

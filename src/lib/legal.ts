@@ -1,6 +1,7 @@
 /**
  * Danish legal copy for /vilkaar, driven by commerce config.
- * COMPANY_CVR / COMPANY_ADDRESS stay empty until filled — never show TODO publicly.
+ * COMPANY_CVR is the official display-only number. COMPANY_ADDRESS stays empty
+ * until filled — never show TODO publicly.
  */
 
 import {

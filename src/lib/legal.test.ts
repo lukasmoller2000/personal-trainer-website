@@ -6,7 +6,7 @@ describe("terms copy", () => {
   it("renders company info without empty CVR or address placeholders", () => {
     const terms = getTermsCopy();
 
-    assert.equal(terms.cvr, "");
+    assert.equal(terms.cvr, "46738527");
     assert.equal(terms.address, "");
     assert.equal(terms.companyName, "Lukas Møller");
     assert.ok(terms.email.includes("@"));

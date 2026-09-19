@@ -20,11 +20,11 @@ import { siteConfig } from "@/lib/utils";
 export const PAYMENTS_NOT_CONFIGURED = "Betaling er ikke aktiveret endnu";
 
 /**
- * LEGAL_PENDING — CVR and address stay empty until Lukas fills them.
- * Never render placeholder / TODO values publicly.
+ * Official CVR is display-only (footer / legal pages). Address stays empty
+ * until filled — never invent one, never render TODO publicly.
  */
 export const LEGAL_PENDING = {
-  COMPANY_CVR: "",
+  COMPANY_CVR: "46738527",
   COMPANY_ADDRESS: "",
 } as const;
 
@@ -193,7 +193,7 @@ export function getCompanyConfig() {
   return {
     name: process.env.COMPANY_NAME?.trim() || "Lukas Møller",
     tradeName: "Personlig træning",
-    /** Legal CVR — leave empty until Lukas fills COMPANY_CVR. Do not invent a value. */
+    /** Legal CVR — env override, otherwise the official display-only default. */
     cvr: process.env.COMPANY_CVR?.trim() || LEGAL_PENDING.COMPANY_CVR,
     /** Legal business address — leave empty until Lukas fills COMPANY_ADDRESS. Falkevej is the training location, not this field. */
     address: process.env.COMPANY_ADDRESS?.trim() || LEGAL_PENDING.COMPANY_ADDRESS,

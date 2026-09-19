@@ -167,13 +167,13 @@ describe("payments", () => {
 });
 
 describe("company and legal config", () => {
-  it("hides empty CVR and address and keeps payments off", () => {
+  it("exposes official CVR, hides empty address, and keeps payments off", () => {
     const company = getCompanyConfig();
     assert.equal(company.name, "Lukas Møller");
-    assert.equal(company.cvr, "");
+    assert.equal(company.cvr, "46738527");
     assert.equal(company.address, "");
     assert.ok(company.email.includes("@"));
-    assert.equal(LEGAL_PENDING.COMPANY_CVR, "");
+    assert.equal(LEGAL_PENDING.COMPANY_CVR, "46738527");
     assert.equal(LEGAL_PENDING.COMPANY_ADDRESS, "");
     assert.doesNotMatch(company.cvr, /TODO/i);
     assert.doesNotMatch(company.address, /TODO/i);
