@@ -117,9 +117,6 @@ export function Hero() {
               playOnClick
             />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
-            <p className="pointer-events-none absolute bottom-6 left-6 font-display text-3xl font-extrabold italic uppercase tracking-tight text-white md:text-4xl">
-              1:1
-            </p>
           </div>
         </motion.div>
       </div>
