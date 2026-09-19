@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
-import { GymInstagramLink, SocialLinks } from "@/components/layout/SocialLinks";
+import { SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { Button } from "@/components/ui/Button";
 import { siteConfig } from "@/lib/utils";
@@ -16,10 +16,9 @@ const footerLinks = [
   { label: "Kontakt", href: "/kontakt" },
 ];
 
-const legal = [
+const legalLinks = [
   { label: "Vilkår", href: "/vilkaar" },
   { label: "Privatliv", href: "/privatliv" },
-  { label: "Kontakt", href: "/kontakt" },
 ];
 
 export function Footer() {
@@ -28,8 +27,8 @@ export function Footer() {
   return (
     <footer className="bg-ink text-cream">
       <div className="container-custom pt-16 pb-8 md:pt-20">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
-          <div className="lg:col-span-1">
+        <div className="grid items-start gap-12 md:grid-cols-2 md:gap-x-14 md:gap-y-12 lg:grid-cols-[1fr_0.75fr_1.4fr_1.2fr] lg:gap-x-16 xl:gap-x-20">
+          <div className="min-w-0">
             <Logo inverted size="footer" />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-cream/55">
               {company.name} · Personlig træning i {siteConfig.location}.
@@ -46,7 +45,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/40">
               Navigation
             </h2>
@@ -59,19 +58,14 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-            <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-cream/40">
-              Jura
-            </h2>
-            <ul className="mt-4 space-y-2.5">
-              {legal
-                .filter((link) => link.href !== "/kontakt")
-                .map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href} className="text-cream/70 transition-colors hover:text-cream">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+            <ul className="mt-8 space-y-2.5">
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-cream/70 transition-colors hover:text-cream">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -98,38 +92,44 @@ export function Footer() {
                   {siteConfig.links.phone}
                 </a>
               </li>
-              <li className="flex items-start gap-3">
-                <GymLogo size={48} />
-                <span>
-                  <a
-                    href={siteConfig.gymUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-sage"
-                  >
-                    {siteConfig.venue}
-                  </a>
-                  <br />
-                  <span className="text-cream/45">Træningssted</span>
-                  <br />
-                  {siteConfig.address}
-                  <br />
-                  {siteConfig.hours}
-                  <br />
-                  <GymInstagramLink className="text-cream/55 hover:text-sage" />
-                </span>
-              </li>
             </ul>
+            <div className="mt-5">
+              <GymLogo size={40} />
+              <p className="mt-3">
+                <a
+                  href={siteConfig.gymUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-cream/70 hover:text-sage"
+                >
+                  {siteConfig.venue}
+                </a>
+              </p>
+              <p className="mt-1 text-cream/70">{siteConfig.address}</p>
+              <p className="mt-1 text-cream/55">Åbent {siteConfig.hours}</p>
+              <a
+                href={siteConfig.links.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-cream/55 hover:text-sage"
+              >
+                Instagram: Viborg Fitness Gym
+              </a>
+            </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/40">
               Book
             </h2>
             <p className="mt-4 mb-5 text-sm leading-relaxed text-cream/70">
               Book 1:1 i Viborg, eller start online coaching.
             </p>
-            <Button href="/booking?produkt=session" trackEvent="pt_cta_clicked">
+            <Button
+              href="/booking?produkt=session"
+              trackEvent="pt_cta_clicked"
+              className="whitespace-nowrap"
+            >
               Book personlig træning
             </Button>
             <p className="mt-4 text-sm text-cream/55">
@@ -144,21 +144,10 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 text-sm md:flex-row md:items-center">
+        <div className="mt-14 border-t border-white/10 pt-6 text-sm">
           <p className="text-cream/40">
             © {new Date().getFullYear()} {siteConfig.name}. Alle rettigheder forbeholdes.
           </p>
-          <nav aria-label="Juridiske links" className="flex flex-wrap gap-x-6 gap-y-2">
-            {legal.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-cream/80 underline-offset-4 hover:text-cream hover:underline"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
         </div>
       </div>
     </footer>
