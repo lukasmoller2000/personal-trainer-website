@@ -2,9 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn, siteConfig } from "@/lib/utils";
 
-/** Official lockup: LM monogram + wordmark. Intrinsic 1024×341. */
-const LOGO_WIDTH = 1024;
-const LOGO_HEIGHT = 341;
+/** Official lockup: LM monogram + wordmark. Intrinsic 891×179 (transparent PNG). */
+const LOGO_WIDTH = 891;
+const LOGO_HEIGHT = 179;
 
 const imageSizes = {
   nav: "h-9 w-auto max-w-[148px] object-contain object-left sm:h-10 sm:max-w-[180px]",
@@ -28,15 +28,18 @@ export function Logo({
         className,
       )}
     >
-      <Image
-        src="/images/lukas-moller-logo.jpg"
-        alt={`${siteConfig.name} — Personlig træner`}
-        width={LOGO_WIDTH}
-        height={LOGO_HEIGHT}
-        sizes={size === "footer" ? "228px" : "180px"}
-        priority={size === "nav"}
-        className={imageSizes[size]}
-      />
+      <span className="nav-logo-lockup">
+        <Image
+          src="/images/lukas-moller-logo.png"
+          alt={`${siteConfig.name} — Personlig træner`}
+          width={LOGO_WIDTH}
+          height={LOGO_HEIGHT}
+          sizes={size === "footer" ? "228px" : "180px"}
+          priority={size === "nav"}
+          quality={90}
+          className={cn(imageSizes[size], "bg-transparent")}
+        />
+      </span>
     </Link>
   );
 }

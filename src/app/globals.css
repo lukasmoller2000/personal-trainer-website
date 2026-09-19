@@ -94,4 +94,29 @@ body {
   .hero-logo-lockup img {
     background-color: transparent;
   }
+
+  /* Soften leftover lockup plate into the dark navbar pill / footer — fade left+right and a little top/bottom. */
+  .nav-logo-lockup {
+    display: inline-block;
+    max-width: 100%;
+    line-height: 0;
+    background: transparent;
+    mix-blend-mode: screen;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+    mask-image:
+      linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .nav-logo-lockup img {
+    background-color: transparent;
+  }
 }
