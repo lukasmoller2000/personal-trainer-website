@@ -13,7 +13,7 @@ import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = pageSeo("/om", {
   title: "Om Lukas Møller – personlig træner i Viborg",
-  description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. 1:1 PT til 300 kr. (VFG-medlem: 250 kr.), eller online coaching til 799 kr./md.`,
+  description: `Mød ${siteConfig.trainer} — personlig træner i ${siteConfig.venue}. Over 12 års erfaring med styrketræning. 1:1 PT og online coaching.`,
 });
 
 const philosophy = [
@@ -77,22 +77,19 @@ export default function AboutPage() {
               </span>
             </h2>
             <p className="mt-6 text-base leading-relaxed text-ink/65 md:text-lg">
-              Jeg arbejder med personlig træning og online coaching. Fokus er styrke, fedttab og en
-              træningshverdag, der faktisk kan holdes — ikke et program, du dropper efter tre uger.
+              Jeg har over 12 års erfaring med styrketræning og bruger den erfaring til at gøre
+              træningen enkel, målrettet og realistisk. Fokus er på teknik, progression og en plan,
+              der passer til dit niveau og dine mål.
             </p>
             <p className="mt-4 text-base leading-relaxed text-ink/65 md:text-lg">
-              Tilgangen er individuel. Træningen tilpasses dit niveau og dine mål, med fokus på
-              teknik, progression og resultater.
+              Jeg arbejder med personlig træning og online coaching. Det handler om styrke, fedttab
+              og en træningshverdag, der faktisk kan holdes — ikke et program, du dropper efter tre
+              uger.
             </p>
             <p className="mt-4 text-base leading-relaxed text-ink/65 md:text-lg">
               Det er til dig, der vil træne seriøst uden at gøre det til et sideshow — uanset om du
               er i gang, eller skal i gang. Personlig træning foregår 1:1 i Viborg Fitness Gym.
               Online coaching er til dig, der træner selv.
-            </p>
-            <p className="mt-6 leading-relaxed text-ink/65">
-              Du kan booke én personlig træning til 300 kr. (VFG-medlem: 250 kr.), købe 5 træninger
-              til 1.350 kr. (VFG-medlem: 1.150 kr.), eller få løbende hjælp gennem Online Coaching til
-              799 kr./md.
             </p>
             <div className="mt-10 mb-6 flex items-center gap-3">
               <GymLogo size={56} />
