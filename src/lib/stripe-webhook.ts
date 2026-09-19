@@ -78,7 +78,10 @@ export type ProcessVerifiedStripeEventInput = {
     orderId: string;
     stripePaymentIntentId?: string | null;
   }) => Promise<unknown>;
-  failPendingOrder: (orderId: string) => Promise<unknown>;
+  failPendingOrder: (
+    orderId: string,
+    stripeCheckoutSessionId?: string | null
+  ) => Promise<unknown>;
   ledger: StripeEventLedger;
 };
 
@@ -290,7 +293,7 @@ async function processCheckoutTerminal(input: ProcessVerifiedStripeEventInput) {
   const orderId = orderIdFromStripeSession(event.data.object);
   if (orderId) {
     try {
-      await input.failPendingOrder(orderId);
+      await input.failPendingOrder(orderId, event.data.object.id);
     } catch (error) {
       console.error("Webhook-behandling fejlede", event.id, error instanceof Error ? error.name : "unknown");
       return failEvent(ledger, event, "fail_pending_failed");

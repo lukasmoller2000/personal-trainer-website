@@ -13,6 +13,12 @@ import {
 } from "@/lib/commerce";
 import { getPrisma, holdUntilFromNow } from "@/lib/db";
 import { trySendCustomerEmail, trySendNotification } from "@/lib/mail";
+import {
+  normalizeCheckoutEmail,
+  packCheckoutIdempotencyKey,
+  resolvePendingOrderRace,
+  shouldApplyTerminalSessionToOrder,
+} from "@/lib/checkout-idempotency";
 import { resolveCheckoutPrice, type PriceTier } from "@/lib/checkout-price";
 import { getProduct } from "@/lib/products";
 import { planClipCardActivation } from "@/lib/stripe-fulfillment";
@@ -103,32 +109,60 @@ export async function createPendingOrder(input: {
     input.productId,
     input.customer.birthYear
   );
+  const email = normalizeCheckoutEmail(input.customer.email);
+  const key = packCheckoutIdempotencyKey(email, input.productId);
+  const pricingWrite = {
+    amountOre: vat.chargeOre,
+    vatRegistered: vat.vatApplied,
+    vatRatePercent: vat.vatRatePercent,
+    vatAmountOre: vat.vatAmountOre,
+    vfgMemberVerified: pricing.vfgMemberVerified,
+    priceTier: pricing.priceTier,
+    chargedAmountOre: pricing.amountOre,
+    verifiedAt: pricing.verifiedAt,
+    vfgMemberId: pricing.vfgMemberId ?? null,
+  };
+  const customerWrite = {
+    customerName: input.customer.name,
+    customerEmail: email,
+    customerPhone: input.customer.phone,
+    goal: input.customer.goal,
+    notes: input.customer.notes ?? null,
+    date: input.customer.date ?? null,
+    time: input.customer.time ?? null,
+    birthYear: input.customer.birthYear ?? null,
+    earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
+    earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
+  };
 
-  const order = await prisma.order.create({
-    data: {
-      productId: input.productId,
-      status: "pending",
-      amountOre: vat.chargeOre,
-      currency: "dkk",
-      vatRegistered: vat.vatApplied,
-      vatRatePercent: vat.vatRatePercent,
-      vatAmountOre: vat.vatAmountOre,
-      customerName: input.customer.name,
-      customerEmail: input.customer.email.toLowerCase(),
-      customerPhone: input.customer.phone,
-      goal: input.customer.goal,
-      notes: input.customer.notes ?? null,
-      date: input.customer.date ?? null,
-      time: input.customer.time ?? null,
-      birthYear: input.customer.birthYear ?? null,
-      earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
-      earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
-      vfgMemberVerified: pricing.vfgMemberVerified,
-      priceTier: pricing.priceTier,
-      chargedAmountOre: pricing.amountOre,
-      verifiedAt: pricing.verifiedAt,
-      vfgMemberId: pricing.vfgMemberId ?? null,
-    },
+  const order = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
+    const pending = await tx.order.findMany({
+      where: { customerEmail: email, productId: input.productId, status: "pending" },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    });
+    const race = resolvePendingOrderRace(pending);
+    for (const extraId of race.cancelIds) {
+      await tx.order.update({
+        where: { id: extraId },
+        data: { status: "cancelled" },
+      });
+    }
+    if (race.keep) {
+      return tx.order.update({
+        where: { id: race.keep.id },
+        data: { ...pricingWrite, ...customerWrite },
+      });
+    }
+    return tx.order.create({
+      data: {
+        productId: input.productId,
+        status: "pending",
+        currency: "dkk",
+        ...pricingWrite,
+        ...customerWrite,
+      },
+    });
   });
 
   return { order, bookingId: null as string | null };
@@ -183,33 +217,45 @@ export async function createPendingOrderForExistingBooking(input: {
     booking.productId,
     input.birthYear
   );
+  const pricingWrite = {
+    amountOre: vat.chargeOre,
+    vatRegistered: vat.vatApplied,
+    vatRatePercent: vat.vatRatePercent,
+    vatAmountOre: vat.vatAmountOre,
+    vfgMemberVerified: pricing.vfgMemberVerified,
+    priceTier: pricing.priceTier,
+    chargedAmountOre: pricing.amountOre,
+    verifiedAt: pricing.verifiedAt,
+    vfgMemberId: pricing.vfgMemberId ?? null,
+  };
+  const customerWrite = {
+    customerName: booking.name,
+    customerEmail: booking.email.toLowerCase(),
+    customerPhone: booking.phone,
+    goal: booking.goal,
+    notes: booking.notes,
+    date: booking.date,
+    time: booking.time,
+    birthYear: input.birthYear ?? null,
+    earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
+    earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
+  };
 
-  const order = await prisma.order.create({
-    data: {
-      productId: booking.productId,
-      status: "pending",
-      amountOre: vat.chargeOre,
-      currency: "dkk",
-      vatRegistered: vat.vatApplied,
-      vatRatePercent: vat.vatRatePercent,
-      vatAmountOre: vat.vatAmountOre,
-      customerName: booking.name,
-      customerEmail: booking.email.toLowerCase(),
-      customerPhone: booking.phone,
-      goal: booking.goal,
-      notes: booking.notes,
-      date: booking.date,
-      time: booking.time,
-      birthYear: input.birthYear ?? null,
-      earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
-      earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
-      vfgMemberVerified: pricing.vfgMemberVerified,
-      priceTier: pricing.priceTier,
-      chargedAmountOre: pricing.amountOre,
-      verifiedAt: pricing.verifiedAt,
-      vfgMemberId: pricing.vfgMemberId ?? null,
-    },
-  });
+  const order =
+    booking.order?.status === "pending"
+      ? await prisma.order.update({
+          where: { id: booking.order.id },
+          data: { ...pricingWrite, ...customerWrite },
+        })
+      : await prisma.order.create({
+          data: {
+            productId: booking.productId,
+            status: "pending",
+            currency: "dkk",
+            ...pricingWrite,
+            ...customerWrite,
+          },
+        });
 
   const now = new Date();
   const attached = await prisma.booking.updateMany({
@@ -228,10 +274,12 @@ export async function createPendingOrderForExistingBooking(input: {
     },
   });
   if (attached.count !== 1) {
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { status: "cancelled" },
-    });
+    if (booking.order?.id !== order.id) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "cancelled" },
+      });
+    }
     throw new Error("Bookingen kan ikke betales i denne status");
   }
 
@@ -438,10 +486,17 @@ async function sendPaidReceipts(input: {
   });
 }
 
-export async function failPendingOrder(orderId: string) {
-  await markOrderStatus(orderId, "failed");
+export async function failPendingOrder(
+  orderId: string,
+  stripeCheckoutSessionId?: string | null
+) {
   const prisma = getPrisma();
   if (!prisma) return;
+  const current = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!current) return;
+  if (!shouldApplyTerminalSessionToOrder(current, stripeCheckoutSessionId)) return;
+
+  await markOrderStatus(orderId, "failed");
   const held = await prisma.booking.findMany({
     where: { orderId, status: BOOKING_STATUS.hold },
   });

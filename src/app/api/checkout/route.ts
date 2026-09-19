@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import type Stripe from "stripe";
 import {
   bookingPaymentCancelPath,
   evaluateSessionCheckoutBinding,
 } from "@/lib/booking-payment";
 import { evaluateCheckoutStart, type CheckoutStartOk } from "@/lib/checkout-guard";
+import {
+  ensureOpenCheckoutSession,
+  type CheckoutSessionView,
+} from "@/lib/checkout-idempotency";
 import { getVatSettings, paymentsNotConfiguredMessage } from "@/lib/commerce";
 import {
   attachStripeSession,
@@ -65,6 +70,50 @@ function checkoutLineItem(productName: string, checkout: CheckoutStartOk) {
   });
 }
 
+function toCheckoutSessionView(session: Stripe.Checkout.Session): CheckoutSessionView {
+  return {
+    id: session.id,
+    url: session.url,
+    status: session.status,
+    expires_at: session.expires_at,
+    payment_status: session.payment_status,
+    amount_total: session.amount_total,
+  };
+}
+
+async function retrieveCheckoutSessionView(
+  stripe: Stripe,
+  sessionId: string
+): Promise<CheckoutSessionView | null> {
+  try {
+    return toCheckoutSessionView(await stripe.checkout.sessions.retrieve(sessionId));
+  } catch {
+    return null;
+  }
+}
+
+async function openOrCreateCheckoutSession(input: {
+  stripe: Stripe;
+  orderId: string;
+  existingSessionId: string | null;
+  expectedAmountOre: number;
+  createParams: Stripe.Checkout.SessionCreateParams;
+}) {
+  return ensureOpenCheckoutSession({
+    orderId: input.orderId,
+    existingSessionId: input.existingSessionId,
+    expectedAmountOre: input.expectedAmountOre,
+    sessions: {
+      retrieve: (id) => retrieveCheckoutSessionView(input.stripe, id),
+      create: async (idempotencyKey) =>
+        toCheckoutSessionView(
+          await input.stripe.checkout.sessions.create(input.createParams, { idempotencyKey })
+        ),
+    },
+    attachSession: attachStripeSession,
+  });
+}
+
 function limited(request: NextRequest) {
   const result = rateLimit(`checkout:${getClientKey(request)}`);
   if (result.ok) return null;
@@ -107,6 +156,8 @@ export async function POST(request: NextRequest) {
   void body.priceTier;
   void body.vfgMemberVerified;
   void body.chargedAmount;
+  void body.requestId;
+  void body.idempotencyKey;
 
   const paymentsGate = evaluateCheckoutStart({
     productId,
@@ -192,27 +243,40 @@ export async function POST(request: NextRequest) {
       });
 
       const siteUrl = getSiteUrl();
-      const session = await stripe.checkout.sessions.create({
-        mode: STRIPE_CHECKOUT_MODE,
-        customer_email: order.customerEmail,
-        client_reference_id: order.id,
-        success_url: `${siteUrl}/booking/bekraeftelse?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}${bookingPaymentCancelPath(paymentToken)}`,
-        expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-        metadata: safeCheckoutMetadata({
-          productId: order.productId,
-          orderId: order.id,
-          bookingId,
-        }),
-        line_items: [checkoutLineItem(product.name, checkout)],
+      const session = await openOrCreateCheckoutSession({
+        stripe,
+        orderId: order.id,
+        existingSessionId: order.stripeCheckoutSessionId,
+        expectedAmountOre: checkout.amountOre,
+        createParams: {
+          mode: STRIPE_CHECKOUT_MODE,
+          customer_email: order.customerEmail,
+          client_reference_id: order.id,
+          success_url: `${siteUrl}/booking/bekraeftelse?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${siteUrl}${bookingPaymentCancelPath(paymentToken)}`,
+          expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+          metadata: safeCheckoutMetadata({
+            productId: order.productId,
+            orderId: order.id,
+            bookingId,
+          }),
+          line_items: [checkoutLineItem(product.name, checkout)],
+        },
       });
 
-      if (!session.url) {
-        console.info("[checkout] no checkout url", { productId, status: 502 });
-        return NextResponse.json({ error: "Kunne ikke starte betaling" }, { status: 502 });
+      if (!session.ok) {
+        const status = session.reason === "no_url" ? 502 : 409;
+        console.info("[checkout] session not reusable", { productId, status, reason: session.reason });
+        return NextResponse.json(
+          {
+            error:
+              session.reason === "no_url"
+                ? "Kunne ikke starte betaling"
+                : "Betalingen er allerede gennemført",
+          },
+          { status }
+        );
       }
-
-      await attachStripeSession(order.id, session.id);
 
       console.info("[checkout] checkout url received", { productId, status: 200, hasCheckoutUrl: true });
       return NextResponse.json({ url: session.url, orderId: order.id });
@@ -300,27 +364,40 @@ export async function POST(request: NextRequest) {
     });
 
     const siteUrl = getSiteUrl();
-    const session = await stripe.checkout.sessions.create({
-      mode: STRIPE_CHECKOUT_MODE,
-      customer_email: email.trim(),
-      client_reference_id: order.id,
-      success_url: `${siteUrl}/booking/bekraeftelse?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}${bookingCancelQuery(productId)}`,
-      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-      metadata: safeCheckoutMetadata({
-        productId,
-        orderId: order.id,
-        bookingId,
-      }),
-      line_items: [checkoutLineItem(product.name, checkout)],
+    const session = await openOrCreateCheckoutSession({
+      stripe,
+      orderId: order.id,
+      existingSessionId: order.stripeCheckoutSessionId,
+      expectedAmountOre: checkout.amountOre,
+      createParams: {
+        mode: STRIPE_CHECKOUT_MODE,
+        customer_email: email.trim(),
+        client_reference_id: order.id,
+        success_url: `${siteUrl}/booking/bekraeftelse?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}${bookingCancelQuery(productId)}`,
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+        metadata: safeCheckoutMetadata({
+          productId,
+          orderId: order.id,
+          bookingId,
+        }),
+        line_items: [checkoutLineItem(product.name, checkout)],
+      },
     });
 
-    if (!session.url) {
-      console.info("[checkout] no checkout url", { productId, status: 502 });
-      return NextResponse.json({ error: "Kunne ikke starte betaling" }, { status: 502 });
+    if (!session.ok) {
+      const status = session.reason === "no_url" ? 502 : 409;
+      console.info("[checkout] session not reusable", { productId, status, reason: session.reason });
+      return NextResponse.json(
+        {
+          error:
+            session.reason === "no_url"
+              ? "Kunne ikke starte betaling"
+              : "Betalingen er allerede gennemført",
+        },
+        { status }
+      );
     }
-
-    await attachStripeSession(order.id, session.id);
 
     console.info("[checkout] checkout url received", { productId, status: 200, hasCheckoutUrl: true });
     return NextResponse.json({ url: session.url, orderId: order.id });
