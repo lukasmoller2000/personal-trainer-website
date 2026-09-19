@@ -12,7 +12,7 @@ const fadeUp = {
   show: { opacity: 1, y: 0 },
 };
 
-/** Official lockup, black plate removed. Intrinsic 891×179. */
+/** Official lockup; leftover plate faded in CSS. Intrinsic 891×179. */
 const HERO_LOGO = {
   src: "/images/lukas-moller-logo.png",
   width: 891,
@@ -34,16 +34,18 @@ export function Hero() {
           className="max-w-xl xl:max-w-2xl"
         >
           <motion.div variants={fadeUp} className="mb-10 md:mb-12">
-            <Image
-              src={HERO_LOGO.src}
-              alt={`${siteConfig.name} — ${siteConfig.role}`}
-              width={HERO_LOGO.width}
-              height={HERO_LOGO.height}
-              priority
-              quality={90}
-              sizes="(min-width: 768px) 360px, 280px"
-              className="h-12 w-auto max-w-[min(100%,280px)] object-contain object-left sm:h-14 sm:max-w-[320px] md:h-16 md:max-w-[360px]"
-            />
+            <div className="hero-logo-lockup">
+              <Image
+                src={HERO_LOGO.src}
+                alt={`${siteConfig.name} — ${siteConfig.role}`}
+                width={HERO_LOGO.width}
+                height={HERO_LOGO.height}
+                priority
+                quality={90}
+                sizes="(min-width: 768px) 360px, 280px"
+                className="h-12 w-auto max-w-[min(100%,280px)] bg-transparent object-contain object-left sm:h-14 sm:max-w-[320px] md:h-16 md:max-w-[360px]"
+              />
+            </div>
             <p className="mt-5 text-[11px] font-semibold tracking-[0.22em] text-white/50 uppercase sm:mt-6">
               Personlig træner i Viborg
             </p>
