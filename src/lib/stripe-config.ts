@@ -37,6 +37,20 @@ export const STRIPE_PRICE_LIVE_ENV = {
   "pack-5": "STRIPE_PRICE_LIVE_PT_5_CLIP",
 } as const;
 
+/**
+ * Optional VFG member Price IDs. Not required — member checkout uses
+ * server-side `price_data` when these are unset. Do not invent IDs.
+ */
+export const STRIPE_PRICE_VFG_ENV = {
+  session: "STRIPE_PRICE_PT_SINGLE_VFG",
+  "pack-5": "STRIPE_PRICE_PT_5_CLIP_VFG",
+} as const;
+
+export const STRIPE_PRICE_LIVE_VFG_ENV = {
+  session: "STRIPE_PRICE_LIVE_PT_SINGLE_VFG",
+  "pack-5": "STRIPE_PRICE_LIVE_PT_5_CLIP_VFG",
+} as const;
+
 export type CheckoutProductId = keyof typeof STRIPE_PRICE_ENV;
 
 export type StripeKeyKind = "test" | "live" | "invalid" | "missing";
@@ -125,6 +139,27 @@ export function readStripePriceId(productId: string) {
     }
   }
   const envName = getStripePriceEnvName(productId);
+  if (!envName) return null;
+  const id = readEnv(envName);
+  return id || null;
+}
+
+export function getStripeMemberPriceEnvName(productId: string) {
+  if (productId === "session" || productId === "pack-5") {
+    return STRIPE_PRICE_VFG_ENV[productId];
+  }
+  return null;
+}
+
+/** Optional member Price ID. Missing means checkout should use price_data. */
+export function readStripeMemberPriceId(productId: string) {
+  if (getStripeMode() === "live") {
+    if (productId === "session" || productId === "pack-5") {
+      const liveId = readEnv(STRIPE_PRICE_LIVE_VFG_ENV[productId]);
+      if (liveId) return liveId;
+    }
+  }
+  const envName = getStripeMemberPriceEnvName(productId);
   if (!envName) return null;
   const id = readEnv(envName);
   return id || null;

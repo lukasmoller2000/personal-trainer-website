@@ -60,6 +60,15 @@ model Order {
   /// Must not be pre-checked. Not a waiver of withdrawal rights.
   earlyPerformanceRequested   Boolean   @default(false)
   earlyPerformanceRequestedAt DateTime?
+  /// Server-verified VFG membership at checkout-creation time. Never from the client.
+  vfgMemberVerified           Boolean   @default(false)
+  /// standard | vfg_member — decided server-side from membership lookup.
+  priceTier                   String    @default("standard")
+  /// Catalog amount in øre that Stripe should charge (before VAT bookkeeping).
+  chargedAmountOre            Int?
+  verifiedAt                  DateTime?
+  /// Only set when an internal/external lookup already returned a member id.
+  vfgMemberId                 String?
   createdAt               DateTime  @default(now())
 
   bookings Booking[]

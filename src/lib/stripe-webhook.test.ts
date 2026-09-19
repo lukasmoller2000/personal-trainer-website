@@ -36,11 +36,34 @@ function sessionEvent(
   };
 }
 
-function catalogOrder(overrides: Partial<StripeWebhookOrder> = {}): StripeWebhookOrder {
+function standardOrder(overrides: Partial<StripeWebhookOrder> = {}): StripeWebhookOrder {
   return {
     id: "ord_1",
     productId: "session",
+    priceTier: "standard",
+    vfgMemberVerified: false,
+    chargedAmountOre: 30000,
     ...overrides,
+  };
+}
+
+function memberSessionOrder(): StripeWebhookOrder {
+  return {
+    id: "ord_member_session",
+    productId: "session",
+    priceTier: "vfg_member",
+    vfgMemberVerified: true,
+    chargedAmountOre: 25000,
+  };
+}
+
+function memberPackOrder(): StripeWebhookOrder {
+  return {
+    id: "ord_member_pack",
+    productId: "pack-5",
+    priceTier: "vfg_member",
+    vfgMemberVerified: true,
+    chargedAmountOre: 115000,
   };
 }
 
@@ -73,9 +96,9 @@ async function runWebhook(input: {
 }
 
 describe("Stripe webhook idempotency", () => {
-  it("fulfills a 30000 øre session exactly once and ignores replay", async () => {
+  it("fulfills a correct payment exactly once and ignores replay", async () => {
     const event = sessionEvent();
-    const order = catalogOrder();
+    const order = standardOrder();
     const ledger = createMemoryStripeEventLedger();
 
     const first = await runWebhook({ event, order, ledger });
@@ -91,28 +114,11 @@ describe("Stripe webhook idempotency", () => {
     assert.equal(await ledger.getStatus(event.id), STRIPE_EVENT_PROCESSED);
   });
 
-  it("fulfills a 135000 øre 5-pack exactly as before", async () => {
-    const event = sessionEvent({
-      id: "evt_pack",
-      session: {
-        amount_total: 135000,
-        metadata: { orderId: "ord_pack" },
-      },
-    });
-    const { result, fulfillments, ledger } = await runWebhook({
-      event,
-      order: catalogOrder({ id: "ord_pack", productId: "pack-5" }),
-    });
-    assert.equal(result.status, 200);
-    assert.deepEqual(fulfillments, ["ord_pack"]);
-    assert.equal(await ledger.getStatus("evt_pack"), STRIPE_EVENT_PROCESSED);
-  });
-
   it("does not lock a wrong amount as processed", async () => {
     const event = sessionEvent({ session: { amount_total: 1 } });
     const { result, fulfillments, ledger } = await runWebhook({
       event,
-      order: catalogOrder(),
+      order: standardOrder(),
     });
     assert.equal(result.status, 409);
     assert.equal(result.body.rejected, "amount_mismatch");
@@ -126,7 +132,7 @@ describe("Stripe webhook idempotency", () => {
     const event = sessionEvent({ session: { currency: "usd" } });
     const { result, fulfillments, ledger } = await runWebhook({
       event,
-      order: catalogOrder(),
+      order: standardOrder(),
     });
     assert.equal(result.status, 409);
     assert.equal(result.body.rejected, "currency_mismatch");
@@ -138,7 +144,7 @@ describe("Stripe webhook idempotency", () => {
     const event = sessionEvent();
     const { result, fulfillments, ledger } = await runWebhook({
       event,
-      order: catalogOrder({ productId: "pack-10" }),
+      order: standardOrder({ productId: "pack-10" }),
     });
     assert.equal(result.status, 409);
     assert.equal(result.body.rejected, "unknown_product");
@@ -146,29 +152,9 @@ describe("Stripe webhook idempotency", () => {
     assert.notEqual(await ledger.getStatus(event.id), STRIPE_EVENT_PROCESSED);
   });
 
-  it("rejects member amounts against the standard catalog", async () => {
-    const session250 = await runWebhook({
-      event: sessionEvent({ session: { amount_total: 25000 } }),
-      order: catalogOrder(),
-    });
-    assert.equal(session250.result.status, 409);
-    assert.equal(session250.result.body.rejected, "amount_mismatch");
-    assert.equal(session250.fulfillments.length, 0);
-
-    const pack1150 = await runWebhook({
-      event: sessionEvent({
-        session: { amount_total: 115000, metadata: { orderId: "ord_pack" } },
-      }),
-      order: catalogOrder({ id: "ord_pack", productId: "pack-5" }),
-    });
-    assert.equal(pack1150.result.status, 409);
-    assert.equal(pack1150.result.body.rejected, "amount_mismatch");
-    assert.equal(pack1150.fulfillments.length, 0);
-  });
-
   it("leaves a DB/fulfillment failure unprocessed so Stripe can retry", async () => {
     const event = sessionEvent();
-    const order = catalogOrder();
+    const order = standardOrder();
     const ledger = createMemoryStripeEventLedger();
 
     const failed = await runWebhook({
@@ -190,27 +176,59 @@ describe("Stripe webhook idempotency", () => {
   });
 
   it("can succeed later after a catalog/amount mismatch is fixed", async () => {
+    const event = sessionEvent();
     const ledger = createMemoryStripeEventLedger();
-    const order = catalogOrder();
-    const wrong = sessionEvent({ session: { amount_total: 1 } });
+    const broken = standardOrder({ chargedAmountOre: 99999 });
 
-    const first = await runWebhook({ event: wrong, order, ledger });
+    const first = await runWebhook({ event, order: broken, ledger });
     assert.equal(first.result.status, 409);
     assert.equal(first.result.body.rejected, "amount_mismatch");
     assert.equal(first.fulfillments.length, 0);
-    assert.notEqual(await ledger.getStatus(wrong.id), STRIPE_EVENT_PROCESSED);
+    assert.notEqual(await ledger.getStatus(event.id), STRIPE_EVENT_PROCESSED);
 
-    const fixed = await runWebhook({ event: sessionEvent(), order, ledger });
+    const fixed = await runWebhook({ event, order: standardOrder(), ledger });
     assert.equal(fixed.result.status, 200);
     assert.equal(fixed.fulfillments.length, 1);
-    assert.equal(await ledger.getStatus(wrong.id), STRIPE_EVENT_PROCESSED);
+    assert.equal(await ledger.getStatus(event.id), STRIPE_EVENT_PROCESSED);
+  });
+
+  it("accepts verified member amounts 25000 and 115000", async () => {
+    const sessionEvent250 = sessionEvent({
+      id: "evt_member_session",
+      session: {
+        amount_total: 25000,
+        metadata: { orderId: "ord_member_session" },
+      },
+    });
+    const session = await runWebhook({
+      event: sessionEvent250,
+      order: memberSessionOrder(),
+    });
+    assert.equal(session.result.status, 200);
+    assert.deepEqual(session.fulfillments, ["ord_member_session"]);
+    assert.equal(await session.ledger.getStatus("evt_member_session"), STRIPE_EVENT_PROCESSED);
+
+    const packEvent = sessionEvent({
+      id: "evt_member_pack",
+      session: {
+        amount_total: 115000,
+        metadata: { orderId: "ord_member_pack" },
+      },
+    });
+    const pack = await runWebhook({
+      event: packEvent,
+      order: memberPackOrder(),
+    });
+    assert.equal(pack.result.status, 200);
+    assert.deepEqual(pack.fulfillments, ["ord_member_pack"]);
+    assert.equal(await pack.ledger.getStatus("evt_member_pack"), STRIPE_EVENT_PROCESSED);
   });
 
   it("ignores unused event types without marking them processed", async () => {
     const event = sessionEvent({ type: "payment_intent.succeeded" });
     const { result, fulfillments, ledger } = await runWebhook({
       event,
-      order: catalogOrder(),
+      order: standardOrder(),
     });
     assert.equal(result.status, 200);
     assert.equal(result.body.ignored, true);

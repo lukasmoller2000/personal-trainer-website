@@ -1,4 +1,5 @@
 import { sessionDuration } from "@/lib/commerce";
+import { resolveCheckoutPrice } from "@/lib/checkout-price";
 import { readStripePriceId } from "@/lib/stripe-config";
 
 export type ProductKind = "session" | "pack" | "program";
@@ -23,11 +24,11 @@ export type Product = {
   priceSuffix?: string;
   priceNote?: string;
   /**
-   * Display-only VFG member price in kroner.
-   * Never sent to Stripe. Checkout still uses `price` / Stripe Price IDs.
+   * Display VFG member price in kroner. Checkout never reads this field.
+   * Charged amount is resolved server-side after membership verification.
    */
   memberPrice?: number;
-  /** Display-only label, e.g. "VFG-medlem". Never sent to Stripe. */
+  /** Display label, e.g. "VFG-medlem". Never sent as a client price. */
   memberPriceLabel?: string;
   memberPriceNote?: string;
   /** Short offering copy explaining the member price. Display-only. */
@@ -197,16 +198,21 @@ export function trackEventForProduct(productId: string) {
   return productId === "online" ? "coaching_cta_clicked" : "pt_cta_clicked";
 }
 
-/** Server-side price in øre. Never accept an amount from the client. Uses `price`, never `memberPrice`. */
+/**
+ * Server-side standard price in øre. Never accept an amount from the client.
+ * Member pricing goes through `resolveCheckoutPrice({ productId, isVfgMember })`.
+ */
 export function getCheckoutAmountOre(productId: string) {
-  const product = getProduct(productId);
-  if (!product || !isCheckoutProduct(product) || product.price == null) return null;
-  return Math.round(product.price * 100);
+  return resolveCheckoutPrice({ productId, isVfgMember: false })?.amountOre ?? null;
 }
 
-export function resolveCheckoutAmountOre(productId: string, _clientAmount?: number) {
+export function resolveCheckoutAmountOre(
+  productId: string,
+  _clientAmount?: number,
+  isVfgMember?: boolean
+) {
   void _clientAmount;
-  return getCheckoutAmountOre(productId);
+  return resolveCheckoutPrice({ productId, isVfgMember: isVfgMember === true })?.amountOre ?? null;
 }
 
 /** Env-mapped Price ID. Never invent or hardcode an ID. Missing ID fails checkout. */

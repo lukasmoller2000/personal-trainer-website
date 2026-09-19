@@ -1,9 +1,12 @@
 /**
  * Defensive matching of a verified Stripe Checkout Session against OUR catalog.
- * Amounts in metadata are ignored. Price always comes from products.ts / env Price IDs.
+ * Amounts in metadata are ignored. Expected amount depends on the stored
+ * price tier / verified membership — never a client amount.
  */
 
-import { getCheckoutAmountOre, getProduct, getStripePriceId } from "@/lib/products";
+import { expectedAmountOreForTier, type PriceTier } from "@/lib/checkout-price";
+import { getProduct, getStripePriceId } from "@/lib/products";
+import { readStripeMemberPriceId } from "@/lib/stripe-config";
 
 export const EXPECTED_CHECKOUT_CURRENCY = "dkk" as const;
 
@@ -29,22 +32,50 @@ export type PaymentMatchBlocked = {
 
 export type PaymentMatchResult = PaymentMatchOk | PaymentMatchBlocked;
 
+export type StoredCheckoutPricing = {
+  priceTier?: string | null;
+  vfgMemberVerified?: boolean | null;
+  chargedAmountOre?: number | null;
+};
+
+export function resolveExpectedStripePriceId(productId: string, priceTier: string) {
+  if (priceTier === "vfg_member") {
+    return readStripeMemberPriceId(productId);
+  }
+  return getStripePriceId(productId);
+}
+
 /**
  * Accept a session as paid only when Stripe's charged amount, currency and
- * Price ID match the server catalog for this productId. Client/metadata amounts
- * are discarded.
+ * (when a catalog Price ID was used) Price ID match the server catalog for
+ * this product + stored membership tier. Client/metadata amounts are discarded.
  */
 export function matchStripePaymentToCatalog(
   productId: string,
-  snapshot: StripeCheckoutSnapshot
+  snapshot: StripeCheckoutSnapshot,
+  stored?: StoredCheckoutPricing
 ): PaymentMatchResult {
   void snapshot.metadataAmount;
 
-  const expectedOre = getCheckoutAmountOre(productId);
-  const expectedPriceId = getStripePriceId(productId);
+  const priceTier = stored?.priceTier === "vfg_member" && stored.vfgMemberVerified === true
+    ? "vfg_member"
+    : "standard";
+  const expectedOre = expectedAmountOreForTier(
+    productId,
+    priceTier,
+    priceTier === "vfg_member"
+  );
+  const expectedPriceId = resolveExpectedStripePriceId(productId, priceTier);
   const product = getProduct(productId);
   if (expectedOre == null || !product) {
     return { ok: false, reason: "unknown_product" };
+  }
+
+  if (
+    stored?.chargedAmountOre != null &&
+    stored.chargedAmountOre !== expectedOre
+  ) {
+    return { ok: false, reason: "amount_mismatch" };
   }
 
   if (snapshot.paymentStatus && snapshot.paymentStatus !== "paid") {
@@ -130,4 +161,39 @@ export function safeCheckoutMetadata(input: {
   };
   if (input.bookingId) metadata.bookingId = input.bookingId;
   return metadata;
+}
+
+export function buildStripeCheckoutLineItem(input: {
+  productName: string;
+  amountOre: number;
+  currency?: "dkk";
+  stripePriceId: string;
+  memberStripePriceId?: string | null;
+  priceTier: PriceTier;
+  usePriceData: boolean;
+}): { quantity: 1; price: string } | { quantity: 1; price_data: {
+  currency: "dkk";
+  unit_amount: number;
+  product_data: { name: string };
+} } {
+  if (input.usePriceData || (input.priceTier === "vfg_member" && !input.memberStripePriceId)) {
+    return {
+      quantity: 1,
+      price_data: {
+        currency: input.currency ?? "dkk",
+        unit_amount: input.amountOre,
+        product_data: { name: input.productName },
+      },
+    };
+  }
+
+  const priceId =
+    input.priceTier === "vfg_member" && input.memberStripePriceId
+      ? input.memberStripePriceId
+      : input.stripePriceId;
+
+  return {
+    quantity: 1,
+    price: priceId,
+  };
 }

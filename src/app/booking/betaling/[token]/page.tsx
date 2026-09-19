@@ -6,9 +6,16 @@ import {
   publicPaymentPageView,
   verifyBookingPaymentLinkToken,
 } from "@/lib/booking-payment";
+import { resolveCheckoutPrice } from "@/lib/checkout-price";
 import { isPaymentsReady } from "@/lib/commerce";
 import { getPrisma } from "@/lib/db";
 import { PAYMENT_CANCEL_QUERY } from "@/lib/payment-result";
+import {
+  isActiveVfgMember,
+  lookupVfgMembership,
+  membershipPreviewStatus,
+  vfgPricePreviewMessage,
+} from "@/lib/vfg-membership";
 
 export const metadata: Metadata = {
   title: "Betal personlig træning",
@@ -81,7 +88,18 @@ export default async function BookingPaymentPage({
     );
   }
 
-  const view = publicPaymentPageView(booking);
+  const membership = await lookupVfgMembership({
+    email: booking.email,
+    phone: booking.phone,
+  });
+  const priced = resolveCheckoutPrice({
+    productId: "session",
+    isVfgMember: isActiveVfgMember(membership),
+  });
+  const view = publicPaymentPageView(booking, {
+    amountOre: priced?.amountOre,
+    priceNote: vfgPricePreviewMessage(membershipPreviewStatus(membership)),
+  });
 
   return (
     <section className="section-padding">
@@ -92,6 +110,7 @@ export default async function BookingPaymentPage({
           date={booking.date}
           time={booking.time}
           amountLabel={view.amountLabel}
+          priceNote={view.priceNote}
           canceled={canceled}
           paymentsReady={isPaymentsReady()}
         />

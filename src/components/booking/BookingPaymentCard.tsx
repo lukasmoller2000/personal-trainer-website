@@ -15,6 +15,7 @@ export function BookingPaymentCard({
   date,
   time,
   amountLabel,
+  priceNote,
   canceled = false,
   paymentsReady = false,
 }: {
@@ -23,6 +24,7 @@ export function BookingPaymentCard({
   date: string;
   time: string;
   amountLabel: string;
+  priceNote?: string | null;
   canceled?: boolean;
   paymentsReady?: boolean;
 }) {
@@ -78,6 +80,7 @@ export function BookingPaymentCard({
         <Row label="Tidspunkt" value={time} />
         <Row label="Pris" value={amountLabel} />
       </dl>
+      {priceNote ? <p className="mt-3 text-sm text-ink/55">{priceNote}</p> : null}
       <div className="mt-6 space-y-2 text-sm text-ink/55">
         <p>{sessionDuration.copy}</p>
         <p>

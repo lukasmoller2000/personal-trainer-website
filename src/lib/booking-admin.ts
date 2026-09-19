@@ -11,9 +11,11 @@ import {
   bookingPaymentUrl,
   type BookingDecision,
 } from "@/lib/booking-payment";
+import { resolveCheckoutPrice } from "@/lib/checkout-price";
 import { getPrisma } from "@/lib/db";
 import { trySendCustomerEmail, trySendNotification } from "@/lib/mail";
 import { formatDate } from "@/lib/utils";
+import { isActiveVfgMember, lookupVfgMembership } from "@/lib/vfg-membership";
 
 export class BookingAdminError extends Error {
   status: number;
@@ -73,12 +75,24 @@ export async function decideSessionBooking(input: {
   const paymentUrl = linkToken ? bookingPaymentUrl(linkToken) : "";
   const sendMail = shouldSendDecisionEmail(input.action, fromStatus);
 
+  const membership = await lookupVfgMembership({
+    email: booking.email,
+    phone: booking.phone,
+  });
+  const previewAmount =
+    resolveCheckoutPrice({
+      productId: "session",
+      isVfgMember: isActiveVfgMember(membership),
+    })?.amountOre ?? 30000;
+  const previewPriceLabel = `${previewAmount / 100} kr.`;
+
   if (sendMail && input.action === "confirm" && booking.date && booking.time && paymentUrl) {
     const mail = buildConfirmCustomerEmail({
       name: booking.name,
       date: booking.date,
       time: booking.time,
       paymentUrl,
+      amountOre: previewAmount,
     });
     await trySendCustomerEmail({
       to: booking.email,
@@ -94,8 +108,9 @@ export async function decideSessionBooking(input: {
         booking.date && booking.time
           ? `Tid: ${formatDate(booking.date)} ${booking.time}`
           : "",
-        "Pris: 300 kr.",
+        `Pris: ${previewPriceLabel}`,
         "Status: Afventer betaling",
+        "Prisen bekræftes igen ved betaling.",
       ]
         .filter(Boolean)
         .join("\n"),
@@ -109,6 +124,7 @@ export async function decideSessionBooking(input: {
       date: booking.date,
       time: booking.time,
       paymentUrl,
+      amountOre: previewAmount,
     });
     await trySendCustomerEmail({
       to: booking.email,

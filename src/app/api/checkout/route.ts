@@ -3,7 +3,7 @@ import {
   bookingPaymentCancelPath,
   evaluateSessionCheckoutBinding,
 } from "@/lib/booking-payment";
-import { evaluateCheckoutStart } from "@/lib/checkout-guard";
+import { evaluateCheckoutStart, type CheckoutStartOk } from "@/lib/checkout-guard";
 import { getVatSettings, paymentsNotConfiguredMessage } from "@/lib/commerce";
 import {
   attachStripeSession,
@@ -11,10 +11,15 @@ import {
   createPendingOrderForExistingBooking,
 } from "@/lib/orders";
 import { getProduct, requiresTimeslot } from "@/lib/products";
-import { getTakenTimes } from "@/lib/db";
+import { getPrisma, getTakenTimes } from "@/lib/db";
 import { getStripe } from "@/lib/stripe";
 import { STRIPE_CHECKOUT_MODE } from "@/lib/stripe-config";
-import { safeCheckoutMetadata } from "@/lib/stripe-fulfillment";
+import { buildStripeCheckoutLineItem, safeCheckoutMetadata } from "@/lib/stripe-fulfillment";
+import {
+  isActiveVfgMember,
+  lookupVfgMembership,
+  type VfgMembershipLookupResult,
+} from "@/lib/vfg-membership";
 import { getSlotsForDate, isBookableDate } from "@/lib/availability";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
 import { bookingCancelQuery } from "@/lib/payment-result";
@@ -28,6 +33,37 @@ import {
   isValidPhone,
   readString,
 } from "@/lib/validation";
+
+function pricedCheckout(input: {
+  productId: string;
+  earlyPerformanceRequested: boolean;
+  membership: VfgMembershipLookupResult;
+  clientAmount?: number;
+  clientIsMember?: unknown;
+  clientIsVfgMember?: unknown;
+  clientPriceTier?: unknown;
+}) {
+  return evaluateCheckoutStart({
+    productId: input.productId,
+    clientAmount: input.clientAmount,
+    isMember: input.clientIsMember,
+    isVfgMember: input.clientIsVfgMember,
+    priceTier: input.clientPriceTier,
+    serverVerifiedVfgMember: isActiveVfgMember(input.membership),
+    earlyPerformanceRequested: input.earlyPerformanceRequested,
+  });
+}
+
+function checkoutLineItem(productName: string, checkout: CheckoutStartOk) {
+  return buildStripeCheckoutLineItem({
+    productName,
+    amountOre: checkout.amountOre,
+    stripePriceId: checkout.stripePriceId,
+    memberStripePriceId: checkout.memberStripePriceId,
+    priceTier: checkout.priceTier,
+    usePriceData: checkout.usePriceData,
+  });
+}
 
 function limited(request: NextRequest) {
   const result = rateLimit(`checkout:${getClientKey(request)}`);
@@ -66,16 +102,24 @@ export async function POST(request: NextRequest) {
   const birthYearRaw = body.birthYear;
   const earlyPerformanceRequested = body.earlyPerformanceRequested === true;
   const clientAmount = typeof body.amount === "number" ? body.amount : undefined;
+  void body.isMember;
+  void body.isVfgMember;
+  void body.priceTier;
+  void body.vfgMemberVerified;
+  void body.chargedAmount;
 
-  const checkout = evaluateCheckoutStart({
+  const paymentsGate = evaluateCheckoutStart({
     productId,
     clientAmount,
+    isMember: body.isMember,
+    isVfgMember: body.isVfgMember,
+    priceTier: body.priceTier,
     earlyPerformanceRequested,
   });
-  if (!checkout.ok) {
+  if (!paymentsGate.ok) {
     return NextResponse.json(
-      { error: checkout.error, reason: checkout.reason },
-      { status: checkout.status }
+      { error: paymentsGate.error, reason: paymentsGate.reason },
+      { status: paymentsGate.status }
     );
   }
 
@@ -116,10 +160,35 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      const prisma = getPrisma();
+      const booking = prisma
+        ? await prisma.booking.findUnique({ where: { id: binding.bookingId } })
+        : null;
+      const membership = await lookupVfgMembership({
+        email: booking?.email,
+        phone: booking?.phone,
+      });
+      const checkout = pricedCheckout({
+        productId,
+        earlyPerformanceRequested: true,
+        membership,
+        clientAmount,
+        clientIsMember: body.isMember,
+        clientIsVfgMember: body.isVfgMember,
+        clientPriceTier: body.priceTier,
+      });
+      if (!checkout.ok) {
+        return NextResponse.json(
+          { error: checkout.error, reason: checkout.reason },
+          { status: checkout.status }
+        );
+      }
+
       const { order, bookingId } = await createPendingOrderForExistingBooking({
         bookingId: binding.bookingId,
         earlyPerformanceRequested: true,
         birthYear,
+        membership,
       });
 
       const siteUrl = getSiteUrl();
@@ -135,12 +204,7 @@ export async function POST(request: NextRequest) {
           orderId: order.id,
           bookingId,
         }),
-        line_items: [
-          {
-            quantity: 1,
-            price: checkout.stripePriceId,
-          },
-        ],
+        line_items: [checkoutLineItem(product.name, checkout)],
       });
 
       if (!session.url) {
@@ -199,9 +263,30 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const membership = await lookupVfgMembership({
+      email: email.trim(),
+      phone: phone.trim(),
+    });
+    const checkout = pricedCheckout({
+      productId,
+      earlyPerformanceRequested: true,
+      membership,
+      clientAmount,
+      clientIsMember: body.isMember,
+      clientIsVfgMember: body.isVfgMember,
+      clientPriceTier: body.priceTier,
+    });
+    if (!checkout.ok) {
+      return NextResponse.json(
+        { error: checkout.error, reason: checkout.reason },
+        { status: checkout.status }
+      );
+    }
+
     const { order, bookingId } = await createPendingOrder({
       productId,
       earlyPerformanceRequested: true,
+      membership,
       customer: {
         name: name.trim(),
         email: email.trim(),
@@ -227,12 +312,7 @@ export async function POST(request: NextRequest) {
         orderId: order.id,
         bookingId,
       }),
-      line_items: [
-        {
-          quantity: 1,
-          price: checkout.stripePriceId,
-        },
-      ],
+      line_items: [checkoutLineItem(product.name, checkout)],
     });
 
     if (!session.url) {

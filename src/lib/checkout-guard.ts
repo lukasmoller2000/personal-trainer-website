@@ -16,16 +16,20 @@ import {
   paymentsNotConfiguredMessage,
   stripeConfigBlocker,
 } from "@/lib/commerce";
-import { getProduct, getStripePriceId, isCheckoutProduct, resolveCheckoutAmountOre } from "@/lib/products";
+import { resolveCheckoutPrice, type PriceTier } from "@/lib/checkout-price";
+import { getProduct, getStripePriceId, isCheckoutProduct } from "@/lib/products";
 import { EARLY_PERFORMANCE_CONSENT } from "@/lib/early-performance";
-import { STRIPE_CHECKOUT_MODE } from "@/lib/stripe-config";
+import { readStripeMemberPriceId, STRIPE_CHECKOUT_MODE } from "@/lib/stripe-config";
 
 export { EARLY_PERFORMANCE_CONSENT };
 
 export type CheckoutStartOk = {
   ok: true;
   amountOre: number;
+  priceTier: PriceTier;
   stripePriceId: string;
+  memberStripePriceId: string | null;
+  usePriceData: boolean;
   currency: "dkk";
   mode: typeof STRIPE_CHECKOUT_MODE;
   earlyPerformanceRequested: true;
@@ -52,9 +56,22 @@ export function evaluateCheckoutStart(input: {
   productId: string;
   /** Ignored. Amount is always resolved from the server catalog. */
   clientAmount?: number;
+  /** Ignored. Membership is never client-selected. */
+  isMember?: unknown;
+  /** Ignored. Use serverVerifiedVfgMember from a server lookup only. */
+  isVfgMember?: unknown;
+  priceTier?: unknown;
+  /**
+   * Server-verified ACTIVE VFG membership. Must come from lookupVfgMembership,
+   * never from the request body.
+   */
+  serverVerifiedVfgMember?: boolean;
   earlyPerformanceRequested?: boolean;
 }): CheckoutStartResult {
   void input.clientAmount;
+  void input.isMember;
+  void input.isVfgMember;
+  void input.priceTier;
 
   if (!isPaymentsEnabledByFlag()) {
     return {
@@ -102,8 +119,11 @@ export function evaluateCheckoutStart(input: {
     };
   }
 
-  const amountOre = resolveCheckoutAmountOre(input.productId, input.clientAmount);
-  if (amountOre == null) {
+  const priced = resolveCheckoutPrice({
+    productId: input.productId,
+    isVfgMember: input.serverVerifiedVfgMember === true,
+  });
+  if (priced == null) {
     return {
       ok: false,
       status: 400,
@@ -122,6 +142,8 @@ export function evaluateCheckoutStart(input: {
     };
   }
 
+  const memberStripePriceId = priced.priceTier === "vfg_member" ? readStripeMemberPriceId(input.productId) : null;
+
   if (!input.earlyPerformanceRequested) {
     return {
       ok: false,
@@ -134,8 +156,11 @@ export function evaluateCheckoutStart(input: {
 
   return {
     ok: true,
-    amountOre,
+    amountOre: priced.amountOre,
+    priceTier: priced.priceTier,
     stripePriceId,
+    memberStripePriceId,
+    usePriceData: priced.priceTier === "vfg_member" && !memberStripePriceId,
     currency: "dkk",
     mode: STRIPE_CHECKOUT_MODE,
     earlyPerformanceRequested: true,

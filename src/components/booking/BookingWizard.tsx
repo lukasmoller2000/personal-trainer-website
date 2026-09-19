@@ -21,6 +21,7 @@ import {
   sessionDuration,
 } from "@/lib/commerce";
 import { EARLY_PERFORMANCE_CONSENT } from "@/lib/early-performance";
+import { hasVfgMemberPrice } from "@/lib/checkout-price";
 import {
   getProduct,
   products,
@@ -29,8 +30,9 @@ import {
   type Product,
 } from "@/lib/products";
 import { track } from "@/lib/track";
-import { cn, formatDate, priceLabel } from "@/lib/utils";
-import { readErrorMessage } from "@/lib/validation";
+import { cn, formatDate, formatPrice, priceLabel } from "@/lib/utils";
+import { isValidEmail, readErrorMessage } from "@/lib/validation";
+import { vfgPricePreviewMessage, type VfgPricePreview } from "@/lib/vfg-membership";
 
 type FormState = {
   name: string;
@@ -76,6 +78,13 @@ type ClipInfo = {
   name: string;
 };
 
+function bookingPriceLabel(product: Product, preview: VfgPricePreview | null) {
+  if (preview === "member" && product.memberPrice != null) {
+    return formatPrice(product.memberPrice) ?? priceLabel(product);
+  }
+  return priceLabel(product);
+}
+
 export function BookingWizard({
   initialProductId,
   clipToken,
@@ -109,6 +118,7 @@ export function BookingWizard({
   const [earlyPerformanceRequested, setEarlyPerformanceRequested] = useState<boolean>(
     EARLY_PERFORMANCE_CONSENT.defaultChecked
   );
+  const [vfgPreview, setVfgPreview] = useState<VfgPricePreview | null>(null);
   const submitLock = useRef(false);
 
   const steps = stepsForProduct(product, clipMode);
@@ -146,6 +156,42 @@ export function BookingWizard({
       })
       .catch(() => setError("Klippekortet kunne ikke hentes"));
   }, [clipToken]);
+
+  useEffect(() => {
+    if (clipMode || !product || !hasVfgMemberPrice(product.id)) {
+      setVfgPreview(null);
+      return;
+    }
+    const email = form.email.trim();
+    if (!isValidEmail(email)) {
+      setVfgPreview(null);
+      return;
+    }
+
+    const handle = window.setTimeout(() => {
+      void fetch("/api/vfg-membership/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          phone: form.phone,
+          productId: product.id,
+          website: form.website,
+        }),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data: { preview?: VfgPricePreview } | null) => {
+          if (data?.preview === "member" || data?.preview === "standard" || data?.preview === "unverified") {
+            setVfgPreview(data.preview);
+          } else {
+            setVfgPreview("unverified");
+          }
+        })
+        .catch(() => setVfgPreview("unverified"));
+    }, 400);
+
+    return () => window.clearTimeout(handle);
+  }, [clipMode, form.email, form.phone, form.website, product]);
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -261,7 +307,7 @@ export function BookingWizard({
             value={clipMode ? "Personlig træning (klippekort)" : product?.name ?? ""}
           />
           {!clipMode && product ? (
-            <SummaryRow label="Pris" value={priceLabel(product)} />
+            <SummaryRow label="Pris" value={bookingPriceLabel(product, vfgPreview)} />
           ) : null}
           {clipMode && doneRemaining != null ? (
             <SummaryRow label="Saldo" value={`${doneRemaining} træninger tilbage`} />
@@ -588,6 +634,11 @@ export function BookingWizard({
                         value={form.email}
                         onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
                       />
+                      {vfgPreview ? (
+                        <p className="text-sm text-ink/55" data-testid="vfg-price-preview">
+                          {vfgPricePreviewMessage(vfgPreview)}
+                        </p>
+                      ) : null}
                       <Field
                         id="goal"
                         label="Dit mål"
@@ -689,7 +740,7 @@ export function BookingWizard({
             value={clipMode ? "Personlig træning" : product?.name ?? "Ikke valgt"}
           />
           {!clipMode && (
-            <SummaryRow label="Pris" value={product ? priceLabel(product) : "—"} />
+            <SummaryRow label="Pris" value={product ? bookingPriceLabel(product, vfgPreview) : "—"} />
           )}
           {clipInfo && (
             <SummaryRow label="Saldo" value={`${clipInfo.remaining} træninger tilbage`} />

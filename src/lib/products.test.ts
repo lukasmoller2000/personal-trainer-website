@@ -44,7 +44,9 @@ describe("products", () => {
 
   it("looks up checkout amount from product id and ignores client price", () => {
     assert.equal(resolveCheckoutAmountOre("session", 1), 30000);
+    assert.equal(resolveCheckoutAmountOre("session", 1, true), 25000);
     assert.equal(resolveCheckoutAmountOre("pack-5", 999999), 135000);
+    assert.equal(resolveCheckoutAmountOre("pack-5", 1, true), 115000);
     assert.equal(resolveCheckoutAmountOre("pack-10"), null);
     assert.equal(resolveCheckoutAmountOre("online", 1), null);
     assert.equal(resolveCheckoutAmountOre("unknown", 300), null);

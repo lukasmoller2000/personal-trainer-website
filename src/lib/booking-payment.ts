@@ -1,11 +1,13 @@
 /**
  * PT session: inquiry → Lukas confirms → customer pays via signed link.
- * Price always comes from the catalog (300 kr). Client amounts are ignored.
+ * Price is resolved server-side at checkout (standard or verified VFG member).
+ * Client amounts and isMember flags are ignored.
  * Link token is HMAC-signed like the admin cookie — no extra schema field.
  */
 
 import { createHmac } from "crypto";
 import { safeEqual } from "@/lib/admin-auth";
+import { resolveCheckoutPrice } from "@/lib/checkout-price";
 import { getCheckoutAmountOre, getProduct } from "@/lib/products";
 import { formatDate, getSiteUrl } from "@/lib/utils";
 import { PAYMENT_CANCEL_QUERY } from "@/lib/payment-result";
@@ -112,8 +114,11 @@ export function bookingPaymentCancelPath(linkToken: string) {
   return `${bookingPaymentPath(linkToken)}?betaling=${PAYMENT_CANCEL_QUERY}`;
 }
 
-export function sessionCheckoutAmountOre() {
-  return getCheckoutAmountOre("session");
+export function sessionCheckoutAmountOre(isVfgMember = false) {
+  return (
+    resolveCheckoutPrice({ productId: "session", isVfgMember })?.amountOre ??
+    getCheckoutAmountOre("session")
+  );
 }
 
 export function isSessionProductId(productId: string) {
@@ -253,9 +258,10 @@ export function buildConfirmCustomerEmail(input: {
   date: string;
   time: string;
   paymentUrl: string;
+  amountOre?: number | null;
 }) {
   const product = getProduct("session");
-  const amount = sessionCheckoutAmountOre();
+  const amount = input.amountOre ?? sessionCheckoutAmountOre();
   const price = amount != null ? `${amount / 100} kr.` : "300 kr.";
   return {
     subject: `Bekræftet tid — betal ${price} for personlig træning`,
@@ -303,8 +309,11 @@ export function buildRejectCustomerEmail(input: {
   };
 }
 
-export function publicPaymentPageView(booking: SessionBookingSnapshot) {
-  const amountOre = sessionCheckoutAmountOre();
+export function publicPaymentPageView(
+  booking: SessionBookingSnapshot,
+  pricing?: { amountOre?: number | null; priceNote?: string | null }
+) {
+  const amountOre = pricing?.amountOre ?? sessionCheckoutAmountOre();
   return {
     productName: getProduct("session")?.name ?? "Personlig træning",
     date: booking.date ?? null,
@@ -312,6 +321,7 @@ export function publicPaymentPageView(booking: SessionBookingSnapshot) {
     name: booking.name ?? "",
     amountOre,
     amountLabel: amountOre != null ? `${amountOre / 100} kr.` : "300 kr.",
+    priceNote: pricing?.priceNote ?? null,
     status: booking.status,
   };
 }

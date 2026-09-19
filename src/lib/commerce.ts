@@ -4,7 +4,8 @@
  *
  * PT session payment flow (gated by PAYMENTS_ENABLED):
  *   choose product → request time → time confirmed → customer can pay
- *   → Stripe Checkout (server amount from productId) → webhook confirms
+ *   → Stripe Checkout (server amount from productId + verified VFG membership)
+ *   → webhook confirms against stored price tier
  *   → booking marked paid (Order.status=paid, paidAt, stripe ids).
  * Order already has productId, amountOre, currency, status, stripeCheckoutSessionId,
  * stripePaymentIntentId and paidAt. No second payment-status field.

@@ -4,9 +4,6 @@
  * A StripeEvent row is a PROCESSED lock only. Catalog/amount mismatches and
  * fulfillment errors must not create that lock. Recovery: Stripe retries on
  * 409/500; the same event can fulfill later once the cause is fixed.
- *
- * Isolated from VFG membership: expected amounts come from origin/main
- * matchStripePaymentToCatalog (30000 / 135000 øre). Member tiers ship later.
  */
 
 import {
@@ -16,7 +13,10 @@ import {
 } from "@/lib/clip-cards";
 import { getPrisma } from "@/lib/db";
 import { failPendingOrder, fulfillPaidOrder } from "@/lib/orders";
-import { matchStripePaymentToCatalog } from "@/lib/stripe-fulfillment";
+import {
+  matchStripePaymentToCatalog,
+  type StoredCheckoutPricing,
+} from "@/lib/stripe-fulfillment";
 
 export const STRIPE_EVENT_PROCESSED = "processed" as const;
 export const STRIPE_EVENT_FAILED = "failed" as const;
@@ -54,7 +54,7 @@ export type StripeWebhookEvent = {
   data: { object: StripeWebhookSession };
 };
 
-export type StripeWebhookOrder = {
+export type StripeWebhookOrder = StoredCheckoutPricing & {
   id: string;
   productId: string;
 };
@@ -244,13 +244,21 @@ async function processCheckoutCompleted(input: ProcessVerifiedStripeEventInput) 
     return failEvent(ledger, event, "session_lookup_failed");
   }
 
-  const match = matchStripePaymentToCatalog(order.productId, {
-    paymentStatus: fullSession.payment_status,
-    amountTotal: fullSession.amount_total,
-    currency: fullSession.currency,
-    priceIds: priceIdsFromStripeSession(fullSession),
-    metadataAmount: session.metadata?.amount,
-  });
+  const match = matchStripePaymentToCatalog(
+    order.productId,
+    {
+      paymentStatus: fullSession.payment_status,
+      amountTotal: fullSession.amount_total,
+      currency: fullSession.currency,
+      priceIds: priceIdsFromStripeSession(fullSession),
+      metadataAmount: session.metadata?.amount,
+    },
+    {
+      priceTier: order.priceTier,
+      vfgMemberVerified: order.vfgMemberVerified,
+      chargedAmountOre: order.chargedAmountOre,
+    }
+  );
 
   if (!match.ok) {
     console.error("Stripe-betaling matchede ikke kataloget", match.reason);

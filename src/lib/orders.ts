@@ -13,8 +13,15 @@ import {
 } from "@/lib/commerce";
 import { getPrisma, holdUntilFromNow } from "@/lib/db";
 import { trySendCustomerEmail, trySendNotification } from "@/lib/mail";
-import { getCheckoutAmountOre, getProduct } from "@/lib/products";
+import { resolveCheckoutPrice, type PriceTier } from "@/lib/checkout-price";
+import { getProduct } from "@/lib/products";
 import { planClipCardActivation } from "@/lib/stripe-fulfillment";
+import {
+  isActiveVfgMember,
+  lookupVfgMembership,
+  type VfgMembershipLookup,
+  type VfgMembershipLookupResult,
+} from "@/lib/vfg-membership";
 import { formatDate, getSiteUrl, priceLabel } from "@/lib/utils";
 
 export type CheckoutCustomer = {
@@ -28,17 +35,62 @@ export type CheckoutCustomer = {
   birthYear?: number | null;
 };
 
+export type OrderMembershipPricing = {
+  amountOre: number;
+  priceTier: PriceTier;
+  vfgMemberVerified: boolean;
+  verifiedAt: Date | null;
+  vfgMemberId?: string | null;
+};
+
+export async function resolveOrderMembershipPricing(input: {
+  productId: string;
+  email?: string | null;
+  phone?: string | null;
+  membership?: VfgMembershipLookupResult;
+  lookup?: VfgMembershipLookup;
+}): Promise<{ membership: VfgMembershipLookupResult; pricing: OrderMembershipPricing }> {
+  const membership =
+    input.membership ??
+    (await lookupVfgMembership({ email: input.email, phone: input.phone }, input.lookup));
+  const priced = resolveCheckoutPrice({
+    productId: input.productId,
+    isVfgMember: isActiveVfgMember(membership),
+  });
+  if (!priced) {
+    throw new Error("Ukendt ydelse");
+  }
+  return {
+    membership,
+    pricing: {
+      amountOre: priced.amountOre,
+      priceTier: priced.priceTier,
+      vfgMemberVerified: isActiveVfgMember(membership),
+      verifiedAt: membership.verifiedAt,
+      vfgMemberId: membership.memberId ?? null,
+    },
+  };
+}
+
 export async function createPendingOrder(input: {
   productId: string;
   customer: CheckoutCustomer;
   earlyPerformanceRequested?: boolean;
+  membership?: VfgMembershipLookupResult;
+  lookup?: VfgMembershipLookup;
 }) {
   const prisma = getPrisma();
   if (!prisma) throw new Error("DATABASE_URL mangler");
 
-  const amountOre = getCheckoutAmountOre(input.productId);
+  const { pricing } = await resolveOrderMembershipPricing({
+    productId: input.productId,
+    email: input.customer.email,
+    phone: input.customer.phone,
+    membership: input.membership,
+    lookup: input.lookup,
+  });
   const product = getProduct(input.productId);
-  if (amountOre == null || !product) {
+  if (!product) {
     throw new Error("Ukendt ydelse");
   }
   if (product.bookingType === "session") {
@@ -46,7 +98,7 @@ export async function createPendingOrder(input: {
   }
 
   const vat = calculateVat(
-    amountOre,
+    pricing.amountOre,
     getVatSettings(),
     input.productId,
     input.customer.birthYear
@@ -71,6 +123,11 @@ export async function createPendingOrder(input: {
       birthYear: input.customer.birthYear ?? null,
       earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
       earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
+      vfgMemberVerified: pricing.vfgMemberVerified,
+      priceTier: pricing.priceTier,
+      chargedAmountOre: pricing.amountOre,
+      verifiedAt: pricing.verifiedAt,
+      vfgMemberId: pricing.vfgMemberId ?? null,
     },
   });
 
@@ -81,6 +138,8 @@ export async function createPendingOrderForExistingBooking(input: {
   bookingId: string;
   earlyPerformanceRequested?: boolean;
   birthYear?: number | null;
+  membership?: VfgMembershipLookupResult;
+  lookup?: VfgMembershipLookup;
 }) {
   const prisma = getPrisma();
   if (!prisma) throw new Error("DATABASE_URL mangler");
@@ -106,14 +165,20 @@ export async function createPendingOrderForExistingBooking(input: {
     throw new Error(payable.error);
   }
 
-  const amountOre = getCheckoutAmountOre(booking.productId);
+  const { pricing } = await resolveOrderMembershipPricing({
+    productId: booking.productId,
+    email: booking.email,
+    phone: booking.phone,
+    membership: input.membership,
+    lookup: input.lookup,
+  });
   const product = getProduct(booking.productId);
-  if (amountOre == null || !product || product.id !== "session") {
+  if (!product || product.id !== "session") {
     throw new Error("Ukendt ydelse");
   }
 
   const vat = calculateVat(
-    amountOre,
+    pricing.amountOre,
     getVatSettings(),
     booking.productId,
     input.birthYear
@@ -138,6 +203,11 @@ export async function createPendingOrderForExistingBooking(input: {
       birthYear: input.birthYear ?? null,
       earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
       earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
+      vfgMemberVerified: pricing.vfgMemberVerified,
+      priceTier: pricing.priceTier,
+      chargedAmountOre: pricing.amountOre,
+      verifiedAt: pricing.verifiedAt,
+      vfgMemberId: pricing.vfgMemberId ?? null,
     },
   });
 

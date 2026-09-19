@@ -72,6 +72,35 @@ describe("Stripe payment matching", () => {
     });
   });
 
+  it("accepts a verified member amount and rejects a mismatched one", () => {
+    const member = matchStripePaymentToCatalog(
+      "session",
+      {
+        paymentStatus: "paid",
+        amountTotal: 25000,
+        currency: "dkk",
+        metadataAmount: 1,
+      },
+      { priceTier: "vfg_member", vfgMemberVerified: true, chargedAmountOre: 25000 }
+    );
+    assert.equal(member.ok, true);
+    if (!member.ok) return;
+    assert.equal(member.amountOre, 25000);
+
+    const wrong = matchStripePaymentToCatalog(
+      "pack-5",
+      {
+        paymentStatus: "paid",
+        amountTotal: 135000,
+        currency: "dkk",
+      },
+      { priceTier: "vfg_member", vfgMemberVerified: true, chargedAmountOre: 115000 }
+    );
+    assert.equal(wrong.ok, false);
+    if (wrong.ok) return;
+    assert.equal(wrong.reason, "amount_mismatch");
+  });
+
   it("rejects an unknown productId", () => {
     const match = matchStripePaymentToCatalog("pack-10", {
       paymentStatus: "paid",

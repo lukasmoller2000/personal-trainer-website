@@ -126,6 +126,23 @@ describe("checkout guard", () => {
       assert.equal(result.ok, true);
       if (!result.ok) return;
       assert.equal(result.amountOre, 30000);
+      assert.equal(result.priceTier, "standard");
+    });
+  });
+
+  it("ignores a client isMember flag", () => {
+    withPaymentEnv(validTestEnv, () => {
+      const result = evaluateCheckoutStart({
+        productId: "pack-5",
+        isMember: true,
+        isVfgMember: true,
+        clientAmount: 1,
+        earlyPerformanceRequested: true,
+      });
+      assert.equal(result.ok, true);
+      if (!result.ok) return;
+      assert.equal(result.amountOre, 135000);
+      assert.equal(result.priceTier, "standard");
     });
   });
 
