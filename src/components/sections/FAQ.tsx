@@ -61,7 +61,7 @@ export const faqs = [
   {
     question: "Hvordan betaler jeg?",
     answer:
-      "Når online betaling er slået til, betaler du med kort via Stripe, før tiden eller klippekortet gælder. Kortoplysninger gemmes hos Stripe — ikke på siden. Indtil betaling er slået til, sender du en forespørgsel, og jeg vender tilbage med bekræftelse og betalingsinfo (MobilePay, overførsel eller kontant).",
+      "Personlig træning og klippekort betales med kort via Stripe. Ved en enkelt PT betaler du, efter jeg har bekræftet tiden. Klippekort betales ved køb, før det gælder. Kortoplysninger gemmes hos Stripe — ikke på siden. Online Coaching er en forespørgsel; opstart aftales, når jeg vender tilbage.",
   },
 ];
 

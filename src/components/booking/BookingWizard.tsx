@@ -432,6 +432,7 @@ export function BookingWizard({
                   onEmail={setClipLookupEmail}
                   onSubmit={() => void lookupClip()}
                   done={clipLookupDone}
+                  error={error}
                   honeypot={form.website}
                   onHoneypot={(value) => setForm((prev) => ({ ...prev, website: value }))}
                 />
@@ -830,6 +831,7 @@ function ClipLookup({
   onEmail,
   onSubmit,
   done,
+  error,
   honeypot,
   onHoneypot,
 }: {
@@ -837,9 +839,20 @@ function ClipLookup({
   onEmail: (value: string) => void;
   onSubmit: () => void;
   done: boolean;
+  error: string | null;
   honeypot: string;
   onHoneypot: (value: string) => void;
 }) {
+  const inputId = "clip-lookup-email";
+  const errorId = "clip-lookup-error";
+  const statusId = "clip-lookup-status";
+  const describedBy = [
+    error ? errorId : null,
+    done && !error ? statusId : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <form
       className="relative mt-4 rounded-2xl border border-sand bg-white p-5"
@@ -853,22 +866,41 @@ function ClipLookup({
       <p className="mt-1 text-sm text-ink/55">
         Indtast den mailadresse, du købte klippekortet med, så sender vi dig et link til at booke din næste træning.
       </p>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(event) => onEmail(event.target.value)}
-          placeholder="Din e-mail"
-          className="min-h-12 flex-1 rounded-xl border border-sand px-4 outline-none ring-sage/40 focus:ring-2"
-        />
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="min-w-0 flex-1">
+          <label htmlFor={inputId} className="mb-2 block text-sm font-medium text-ink">
+            Email
+          </label>
+          <input
+            id={inputId}
+            name={inputId}
+            type="email"
+            required
+            value={email}
+            autoComplete="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            aria-required
+            aria-invalid={Boolean(error)}
+            aria-describedby={describedBy || undefined}
+            onChange={(event) => onEmail(event.target.value)}
+            placeholder="Din e-mail"
+            className="min-h-12 w-full rounded-xl border border-sand px-4 outline-none ring-sage/40 focus:ring-2"
+          />
+        </div>
         <Button type="submit">Send bookinglink</Button>
       </div>
-      {done && (
-        <p className="mt-3 text-sm text-ink/60">
+      {error ? (
+        <p id={errorId} className="mt-3 text-sm text-red-700" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {done && !error ? (
+        <p id={statusId} className="mt-3 text-sm text-ink/60" role="status">
           Hvis der er et aktivt klippekort på denne mail, sender vi et link.
         </p>
-      )}
+      ) : null}
     </form>
   );
 }

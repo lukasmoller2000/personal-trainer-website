@@ -1,6 +1,6 @@
 # Lukas Møller — Personlig træner
 
-Hjemmeside til personlig træning i Viborg. Book en PT til 300 kr., send en forespørgsel på 5 træninger til 1.350 kr., eller send en forespørgsel om Online Coaching til 799 kr./md.
+Hjemmeside til personlig træning i Viborg. Book en PT til 300 kr. (betales efter bekræftelse), køb 5 træninger til 1.350 kr. via Stripe, eller send en forespørgsel om Online Coaching til 799 kr./md.
 
 ## Kom i gang
 
@@ -11,13 +11,13 @@ npm run dev
 
 Åbn [http://localhost:3000](http://localhost:3000). Brug `npm run dev -- -p 3001`, hvis port 3000 allerede er i brug.
 
-Kopiér `.env.example` til `.env.local` og udfyld nøglerne nedenfor, når du vil sende rigtig mail. Stripe-betaling er slået fra, indtil `PAYMENTS_ENABLED=true` sættes efter udtrykkelig godkendelse.
+Kopiér `.env.example` til `.env.local` og udfyld nøglerne nedenfor, når du vil sende rigtig mail. Live Stripe Checkout er aktiv: PT betales efter bekræftelse, 5-klip kan betales via Stripe, VFG-medlemspris verificeres server-side, og Online Coaching er stadig en forespørgsel.
 
 ## Sider
 
 - `/` — Forside
 - `/ydelser` — Personlig træning, klippekort og Online Coaching
-- `/booking` — Book 1 PT (dato/tid), send forespørgsel på 5 træninger, eller send Online Coaching-forespørgsel
+- `/booking` — Book 1 PT (dato/tid, betales efter bekræftelse), køb 5 træninger via Stripe, eller send Online Coaching-forespørgsel
 - `/om` — Om træneren
 - `/faq` — Spørgsmål
 - `/kontakt` — Kontakt
@@ -43,17 +43,17 @@ Alle navne står i `.env.example`.
 | `DATABASE_URL` | Nej (ja til Stripe/klippekort) | PostgreSQL til bookinger, ordrer, klip |
 | `BOOKINGS_NOTIFY_EMAIL` | Nej | TO-adresse (default: `lukasmoller2000@gmail.com`) |
 | `RESEND_FROM_EMAIL` | Nej | FROM-adresse (default: Resend test-afsender) |
-| `PAYMENTS_ENABLED` | Nej | Default `false`. Live Stripe slår **ikke** til uden denne + nøgler |
+| `PAYMENTS_ENABLED` | Ja til Checkout | Skal være `true` sammen med Stripe-nøgler. Live Checkout er aktiv |
 | `STRIPE_MODE` | Nej | Default `test`. `live` kun i produktion + `sk_live_` / `pk_live_` |
-| `STRIPE_SECRET_KEY` | Nej | Checkout. Dormant — sæt ikke rigtige nøgler uden godkendelse |
+| `STRIPE_SECRET_KEY` | Ja til Checkout | Checkout |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Nej | Mode-validering. Hosted Checkout behøver den ikke i browseren |
-| `STRIPE_WEBHOOK_SECRET` | Nej | Webhook-signatur (dormant) |
+| `STRIPE_WEBHOOK_SECRET` | Ja til webhook | Webhook-signatur |
 | `STRIPE_PRICE_PT_SINGLE` / `STRIPE_PRICE_PT_5_CLIP` | Nej | Stripe Price IDs. Server-pris er stadig 300 / 1350 kr. |
 | `ADMIN_PASSWORD` | Nej | `/admin`. Min. 8 tegn. Uden kode: 404 |
 | `COMPANY_CVR` / `COMPANY_ADDRESS` | Nej | Vises kun hvis udfyldt |
 | `VAT_REGISTERED` | Nej | Default `false` — ingen moms på prisen |
 
-Der er **ingen** separat `SITE_URL`. Uden `RESEND_API_KEY` returnerer `/api/bookings` og `/api/contact` **503** — der vises aldrig falsk success. Booking/kontakt kører som e-mail-forespørgsel. Live Stripe er slået fra (`PAYMENTS_ENABLED` default `false`). Success-URL fra Stripe er **ikke** bevis for betaling.
+Der er **ingen** separat `SITE_URL`. Uden `RESEND_API_KEY` returnerer `/api/bookings` og `/api/contact` **503** — der vises aldrig falsk success. Booking/kontakt kører som e-mail-forespørgsel. Live Stripe Checkout er aktiv (PT efter bekræftelse, 5-klip direkte, VFG-pris server-side; Online Coaching er stadig forespørgsel). Success-URL fra Stripe er **ikke** bevis for betaling.
 
 ### Hvad du skal sætte i Vercel
 
@@ -61,8 +61,8 @@ Vercel → Project → **Settings** → **Environment Variables**. Sæt mindst P
 
 1. **`RESEND_API_KEY`** — Gratis på [resend.com/api-keys](https://resend.com/api-keys).
 2. **`NEXT_PUBLIC_SITE_URL`** — Dit rigtige public URL, fx `https://lukasmoller.dk`.
-3. **`DATABASE_URL`** (valgfri indtil Stripe) — Neon eller Vercel Postgres. Upoolet string med `sslmode=require`.
-4. Stripe-nøgler kun når du er klar til rigtige betalinger — og først efter udtrykkelig godkendelse.
+3. **`DATABASE_URL`** — Neon eller Vercel Postgres. Upoolet string med `sslmode=require`. Påkrævet til Stripe/klippekort.
+4. Stripe-nøgler til live Checkout. PT betales efter bekræftelse; 5-klip kan betales via Stripe. Online Coaching er stadig forespørgsel.
 
 Efter nye env vars: redeploy. Prisma-klienten genereres i `postinstall` og i `npm run build`.
 

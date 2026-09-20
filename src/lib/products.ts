@@ -66,7 +66,7 @@ export const products: Product[] = [
       "Vælg en ønsket tid i Viborg Fitness Gym (træningssted: Falkevej 16B)",
       `Sessionen varer som udgangspunkt ca. ${sessionDuration.minutes} minutter og er 1:1`,
       "Vi træner teknik, styrke og det, du gerne vil opnå",
-      "Betaling bekræftes, før tiden gælder — eller jeg vender tilbage, hvis betaling ikke er slået til",
+      "Når tiden er bekræftet, betaler du via Stripe — først da gælder tiden"
     ],
     sessions: 1,
     durationMinutes: sessionDuration.minutes,
@@ -97,8 +97,8 @@ export const products: Product[] = [
       "Fem 1:1-sessioner i Viborg Fitness Gym. Du vælger ikke tid nu — tider bookes, når klippekortet er aktivt.",
     fits: "Til dig, der vil træne jævnligt uden at binde dig til et langt forløb.",
     how: [
-      "Send en forespørgsel på 5 træninger — du vælger ikke tid nu",
-      "Jeg vender tilbage med bekræftelse og betalingsinfo",
+      "Vælg 5 træninger — du vælger ikke tid nu",
+      "Betal med kort via Stripe. Klippekortet gælder, når betalingen er gennemført",
       `Hver session varer som udgangspunkt ca. ${sessionDuration.minutes} minutter`,
       "Når kortet er aktivt, booker du tider med dine klip",
     ],

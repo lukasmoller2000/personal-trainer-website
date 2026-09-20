@@ -36,7 +36,7 @@ export function Footer() {
               Målrettet 1:1 træning med fokus på muskelopbygning, styrke og fedttab.
             </p>
             {company.cvr ? (
-              <p className="mt-2 text-sm leading-relaxed text-cream/45">
+              <p className="mt-2 text-sm leading-relaxed text-cream/70">
                 CVR: {company.cvr}
               </p>
             ) : null}
@@ -46,7 +46,7 @@ export function Footer() {
           </div>
 
           <div className="min-w-0">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/40">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/70">
               Navigation
             </h2>
             <ul className="mt-4 space-y-2.5">
@@ -70,7 +70,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/40">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/70">
               Kontakt
             </h2>
             <ul className="mt-4 space-y-3 text-cream/70">
@@ -119,7 +119,7 @@ export function Footer() {
           </div>
 
           <div className="min-w-0">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/40">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-cream/70">
               Book
             </h2>
             <p className="mt-4 mb-5 text-sm leading-relaxed text-cream/70">
@@ -145,7 +145,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 border-t border-white/10 pt-6 text-sm">
-          <p className="text-cream/40">
+          <p className="text-cream/70">
             © {new Date().getFullYear()} {siteConfig.name}. Alle rettigheder forbeholdes.
           </p>
         </div>

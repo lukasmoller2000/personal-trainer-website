@@ -43,7 +43,7 @@ export function ProductPrice({
         <p
           className={cn(
             size === "compact" ? "mt-0.5 text-xs text-ink/45" : "mt-1 text-sm",
-            size !== "compact" && (premium ? "text-white/45" : "text-ink/50")
+            size !== "compact" && (premium ? "text-white/70" : "text-ink/50")
           )}
         >
           {product.priceNote}
@@ -75,7 +75,7 @@ export function ProductPrice({
             <p
               className={cn(
                 size === "compact" ? "mt-0.5 text-[11px] text-ink/45" : "mt-0.5 text-sm",
-                size !== "compact" && (premium ? "text-white/45" : "text-ink/50")
+                size !== "compact" && (premium ? "text-white/70" : "text-ink/50")
               )}
             >
               {product.memberPriceNote}
