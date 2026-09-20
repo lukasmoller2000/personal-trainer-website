@@ -7,6 +7,7 @@ import {
   blocksTimeslot,
   bookingStatusAfterCheckoutExpired,
   bookingStatusAfterPaid,
+  bookingStatusAfterRefund,
   buildConfirmCustomerEmail,
   buildFailedPaymentCustomerEmail,
   buildRejectCustomerEmail,
@@ -217,6 +218,14 @@ describe("webhook booking fulfillment", () => {
       bookingStatusAfterCheckoutExpired(BOOKING_STATUS.confirmed),
       BOOKING_STATUS.confirmed
     );
+  });
+
+  it("cancels a paid PT booking after refund without dropping rejected or no-show history", () => {
+    assert.equal(bookingStatusAfterRefund(BOOKING_STATUS.confirmed), BOOKING_STATUS.cancelled);
+    assert.equal(bookingStatusAfterRefund(BOOKING_STATUS.hold), BOOKING_STATUS.cancelled);
+    assert.equal(bookingStatusAfterRefund(BOOKING_STATUS.cancelled), BOOKING_STATUS.cancelled);
+    assert.equal(bookingStatusAfterRefund(BOOKING_STATUS.rejected), BOOKING_STATUS.rejected);
+    assert.equal(bookingStatusAfterRefund(BOOKING_STATUS.noShow), BOOKING_STATUS.noShow);
   });
 });
 

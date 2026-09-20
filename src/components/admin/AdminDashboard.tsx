@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import {
+  adminRefundProductName,
+  canShowAdminRefund,
+  paymentStatusLabel,
+  refundAmountOre,
+  refundStatusLabel,
+} from "@/lib/refund-policy";
 
 type BookingRow = {
   id: string;
@@ -20,6 +27,7 @@ type OrderRow = {
   productId: string;
   status: string;
   amountOre: number;
+  chargedAmountOre?: number | null;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -119,8 +127,8 @@ export function AdminDashboard({
             <thead className="bg-sand/60 text-ink/60">
               <tr>
                 <th className="px-4 py-3 font-medium">Kunde</th>
-                <th className="px-4 py-3 font-medium">Betaling</th>
-                <th className="px-4 py-3 font-medium">Stripe</th>
+                <th className="px-4 py-3 font-medium">Ydelse og beløb</th>
+                <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Handling</th>
               </tr>
             </thead>
@@ -135,16 +143,27 @@ export function AdminDashboard({
                     {row.customerPhone}
                   </td>
                   <td className="px-4 py-3">
-                    {row.status} · {(row.amountOre / 100).toFixed(0)} kr.
+                    {adminRefundProductName(row.productId)}
                     <br />
-                    {row.productId}
-                  </td>
-                  <td className="px-4 py-3 text-xs break-all">
-                    {row.stripePaymentIntentId ?? row.stripeCheckoutSessionId ?? "—"}
+                    {(refundAmountOre(row) / 100).toFixed(0)} kr.
                   </td>
                   <td className="px-4 py-3">
-                    {row.status === "paid" ? (
-                      <RefundButton orderId={row.id} />
+                    Betaling: {paymentStatusLabel(row.status)}
+                    <br />
+                    Refundering: {refundStatusLabel(row.status)}
+                  </td>
+                  <td className="px-4 py-3">
+                    {canShowAdminRefund(
+                      row,
+                      clipCards.find((card) => card.orderId === row.id) ?? null
+                    ) ? (
+                      <RefundButton
+                        orderId={row.id}
+                        amountOre={refundAmountOre(row)}
+                        productName={adminRefundProductName(row.productId)}
+                      />
+                    ) : row.status === "refunded" ? (
+                      "Refunderet"
                     ) : (
                       "—"
                     )}
@@ -162,8 +181,8 @@ export function AdminDashboard({
           </table>
         </div>
         <p className="mt-3 text-sm text-ink/50">
-          Refundering her annullerer kun ubrugte klip i systemet. Selve pengene refunderes manuelt i
-          Stripe.
+          Refundering tilbagefører hele beløbet i Stripe. Klippekort kan kun refunderes, hvis ingen
+          klip er brugt.
         </p>
       </section>
 
@@ -255,16 +274,27 @@ function BookingActions({ row }: { row: BookingRow }) {
   );
 }
 
-function RefundButton({ orderId }: { orderId: string }) {
+function RefundButton({
+  orderId,
+  amountOre,
+  productName,
+}: {
+  orderId: string;
+  amountOre: number;
+  productName: string;
+}) {
+  const [busy, setBusy] = useState(false);
   return (
     <Button
       size="sm"
       variant="outline"
+      disabled={busy}
       onClick={async () => {
         const confirmed = window.confirm(
-          "Markér ubrugt klippekort som refunderet i systemet? Pengene refunderes ikke automatisk i Stripe."
+          `Refundér hele beløbet (${amountOre / 100} kr.) for ${productName} i Stripe? Kunden får pengene tilbage.`
         );
         if (!confirmed) return;
+        setBusy(true);
         const response = await fetch("/api/admin/refund", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -273,12 +303,13 @@ function RefundButton({ orderId }: { orderId: string }) {
         if (!response.ok) {
           const data = (await response.json()) as { error?: string };
           window.alert(data.error ?? "Kunne ikke refundere");
+          setBusy(false);
           return;
         }
         window.location.reload();
       }}
     >
-      Refundér ubrugt
+      Refundér
     </Button>
   );
 }

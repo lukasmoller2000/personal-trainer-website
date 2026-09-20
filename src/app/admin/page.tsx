@@ -65,6 +65,7 @@ export default async function AdminPage() {
             productId: row.productId,
             status: row.status,
             amountOre: row.amountOre,
+            chargedAmountOre: row.chargedAmountOre,
             customerName: row.customerName,
             customerEmail: row.customerEmail,
             customerPhone: row.customerPhone,

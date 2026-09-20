@@ -337,6 +337,18 @@ export function bookingStatusAfterCheckoutExpired(current: string) {
   return current;
 }
 
+/** Paid PT booking after a confirmed Stripe refund. Keeps the row; uses existing cancelled. */
+export function bookingStatusAfterRefund(current: string) {
+  if (
+    current === BOOKING_STATUS.cancelled ||
+    current === BOOKING_STATUS.rejected ||
+    current === BOOKING_STATUS.noShow
+  ) {
+    return current;
+  }
+  return BOOKING_STATUS.cancelled;
+}
+
 export function blocksTimeslot(status: string, holdUntil: Date | null, now = new Date()) {
   if (
     status === BOOKING_STATUS.inquiry ||
