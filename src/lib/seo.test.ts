@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import robots from "../app/robots";
+import sitemap from "../app/sitemap";
 import { pageSeo, siteJsonLd } from "./seo";
 import { siteConfig, socialInstagramHref } from "./utils";
 
@@ -41,6 +42,24 @@ describe("seo", () => {
     assert.equal(business.address, undefined);
     assert.ok(JSON.stringify(gym).includes("Falkevej 16B"));
     assert.equal(json.includes("CVR"), false);
+  });
+
+  it("lists only public www canonical pages in the sitemap", () => {
+    const urls = sitemap().map((entry) => entry.url);
+    assert.deepEqual(urls, [
+      "https://www.lukasmoller.dk",
+      "https://www.lukasmoller.dk/ydelser",
+      "https://www.lukasmoller.dk/booking",
+      "https://www.lukasmoller.dk/om",
+      "https://www.lukasmoller.dk/faq",
+      "https://www.lukasmoller.dk/kontakt",
+      "https://www.lukasmoller.dk/vilkaar",
+      "https://www.lukasmoller.dk/privatliv",
+    ]);
+    assert.equal(
+      urls.some((url) => /\/(admin|api\/|dev\/|booking\/betaling)/.test(url)),
+      false
+    );
   });
 
   it("keeps /dev out of the public robots file", () => {
