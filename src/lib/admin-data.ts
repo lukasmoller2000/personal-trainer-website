@@ -1,3 +1,4 @@
+import { effectiveClipCardStatus } from "@/lib/commerce";
 import { canShowAdminRefund, refundAmountOre } from "@/lib/refund-policy";
 
 export const ADMIN_DATA_CACHE_CONTROL = "private, no-store, no-cache, must-revalidate";
@@ -39,6 +40,7 @@ export const ADMIN_CLIP_CARD_SELECT = {
   totalSessions: true,
   status: true,
   orderId: true,
+  createdAt: true,
 } as const;
 
 export type AdminBookingRow = {
@@ -141,6 +143,8 @@ export type AdminClipCardSource = {
   totalSessions: number;
   status: string;
   orderId: string;
+  createdAt?: Date | string | null;
+  expiresAt?: Date | string | null;
 };
 
 export type AdminDataClient = {
@@ -198,7 +202,7 @@ export function toAdminClipCardRow(row: AdminClipCardSource): AdminClipCardRow {
     email: row.email,
     remaining: row.remaining,
     totalSessions: row.totalSessions,
-    status: row.status,
+    status: effectiveClipCardStatus(row),
   };
 }
 

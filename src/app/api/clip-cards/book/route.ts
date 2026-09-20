@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSlotsForDate, isBookableDate } from "@/lib/availability";
 import { ClipConsumeError, consumeClipAtomically } from "@/lib/clip-cards";
-import { isClipCardExpired } from "@/lib/commerce";
+import { evaluateClipCardBooking, evaluateClipCardPublicView } from "@/lib/commerce";
 import { getTakenTimes, getPrisma } from "@/lib/db";
 import { trySendCustomerEmail, trySendNotification } from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
@@ -36,14 +36,15 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  if (!card || card.status === "cancelled" || isClipCardExpired(card.createdAt)) {
-    return NextResponse.json({ error: "Klippekortet blev ikke fundet" }, { status: 404 });
+  const view = evaluateClipCardPublicView(card);
+  if (!card || !view.ok) {
+    return NextResponse.json({ error: view.error }, { status: 404 });
   }
 
   return NextResponse.json({
     remaining: card.remaining,
     totalSessions: card.totalSessions,
-    status: card.status,
+    status: view.status,
     name: card.name,
     productId: card.productId,
   });
@@ -103,7 +104,14 @@ export async function POST(request: NextRequest) {
   }
 
   const card = await prisma.clipCard.findUnique({ where: { accessToken: token } });
-  if (!card || isClipCardExpired(card.createdAt)) {
+  const bookingAccess = evaluateClipCardBooking(card);
+  if (!bookingAccess.ok) {
+    return NextResponse.json(
+      { error: bookingAccess.error },
+      { status: bookingAccess.status === "expired" ? 409 : 404 }
+    );
+  }
+  if (!card) {
     return NextResponse.json({ error: "Klippekortet blev ikke fundet" }, { status: 404 });
   }
 

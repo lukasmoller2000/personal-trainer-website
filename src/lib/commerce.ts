@@ -274,6 +274,24 @@ export type BookingStatus = (typeof bookingStatuses)[number];
 export const clipCardStatuses = ["active", "exhausted", "cancelled"] as const;
 export type ClipCardStatus = (typeof clipCardStatuses)[number];
 
+/** Computed only — not a persisted Prisma enum. */
+export const clipCardEffectiveStatuses = [
+  "active",
+  "exhausted",
+  "cancelled",
+  "expired",
+  "refunded",
+  "inactive",
+] as const;
+export type ClipCardEffectiveStatus = (typeof clipCardEffectiveStatuses)[number];
+
+export const CLIP_CARD_EXPIRED_MESSAGE = "Klippekortet er udløbet";
+export const CLIP_CARD_INACTIVE_MESSAGE = "Klippekortet er ikke aktivt";
+export const CLIP_CARD_EMPTY_MESSAGE = "Ingen træninger tilbage";
+export const CLIP_CARD_MISSING_MESSAGE = "Klippekortet blev ikke fundet";
+export const CLIP_LOOKUP_GENERIC_MESSAGE =
+  "Hvis der er et aktivt klippekort på denne mail, sender vi et link til at booke.";
+
 export function canTransitionOrder(from: string, to: OrderStatus) {
   if (from === to) return false;
   if (from === "refunded" || from === "cancelled") return false;
@@ -311,17 +329,106 @@ export type ClipCardSnapshot = {
   status: string;
   remaining: number;
   totalSessions: number;
-  createdAt?: Date;
+  createdAt?: Date | string | null;
+  expiresAt?: Date | string | null;
 };
 
-export function canConsumeClip(card: ClipCardSnapshot | null, now = new Date()) {
-  if (!card) return { ok: false as const, error: "Klippekortet blev ikke fundet" };
-  if (card.status !== "active") return { ok: false as const, error: "Klippekortet er ikke aktivt" };
-  if (card.createdAt && isClipCardExpired(card.createdAt, now)) {
-    return { ok: false as const, error: "Klippekortet er udløbet" };
+function asClipDate(value: Date | string | null | undefined): Date | undefined {
+  if (!value) return undefined;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+export function clipCardExpiresAt(
+  card: Pick<ClipCardSnapshot, "createdAt" | "expiresAt">,
+  months = getClipExpiryMonths()
+): Date | null {
+  const explicit = asClipDate(card.expiresAt);
+  if (explicit) return explicit;
+  const createdAt = asClipDate(card.createdAt);
+  if (createdAt) return clipExpiresAt(createdAt, months);
+  return null;
+}
+
+export function isClipSnapshotExpired(
+  card: Pick<ClipCardSnapshot, "createdAt" | "expiresAt">,
+  now = new Date()
+) {
+  const expiresAt = clipCardExpiresAt(card);
+  if (!expiresAt) return false;
+  return now.getTime() >= expiresAt.getTime();
+}
+
+/**
+ * Server-side status from stored status + expiry + remaining.
+ * Do not persist "expired" — compute it so cron is not required.
+ */
+export function effectiveClipCardStatus(
+  card: Pick<ClipCardSnapshot, "status" | "remaining" | "createdAt" | "expiresAt">,
+  now = new Date()
+): ClipCardEffectiveStatus | string {
+  if (card.status === "refunded" || card.status === "cancelled" || card.status === "inactive") {
+    return card.status;
   }
-  if (card.remaining < 1) return { ok: false as const, error: "Ingen træninger tilbage" };
+  if (isClipSnapshotExpired(card, now)) return "expired";
+  if (card.remaining <= 0 || card.status === "exhausted") return "exhausted";
+  if (card.status === "active") return "active";
+  return card.status;
+}
+
+export function isClipCardUsable(
+  card: Pick<ClipCardSnapshot, "status" | "remaining" | "createdAt" | "expiresAt"> | null,
+  now = new Date()
+) {
+  return Boolean(card) && effectiveClipCardStatus(card!, now) === "active";
+}
+
+export function clipCardAccessError(
+  card: ClipCardSnapshot | null,
+  now = new Date()
+): string | null {
+  if (!card) return CLIP_CARD_MISSING_MESSAGE;
+  const status = effectiveClipCardStatus(card, now);
+  if (status === "expired") return CLIP_CARD_EXPIRED_MESSAGE;
+  if (status !== "active") return CLIP_CARD_INACTIVE_MESSAGE;
+  if (card.remaining < 1) return CLIP_CARD_EMPTY_MESSAGE;
+  return null;
+}
+
+export function canConsumeClip(card: ClipCardSnapshot | null, now = new Date()) {
+  const error = clipCardAccessError(card, now);
+  if (error) return { ok: false as const, error };
   return { ok: true as const };
+}
+
+export function evaluateClipCardPublicView(card: ClipCardSnapshot | null, now = new Date()) {
+  if (!card) {
+    return { ok: false as const, error: CLIP_CARD_MISSING_MESSAGE, status: null };
+  }
+  const status = effectiveClipCardStatus(card, now);
+  if (status === "expired") {
+    return { ok: false as const, error: CLIP_CARD_EXPIRED_MESSAGE, status };
+  }
+  if (status === "cancelled" || status === "refunded" || status === "inactive") {
+    return { ok: false as const, error: CLIP_CARD_MISSING_MESSAGE, status };
+  }
+  return { ok: true as const, status, remaining: card.remaining };
+}
+
+export function evaluateClipCardBooking(card: ClipCardSnapshot | null, now = new Date()) {
+  const view = evaluateClipCardPublicView(card, now);
+  if (!view.ok) return view;
+  if (view.status !== "active") {
+    return { ok: false as const, error: CLIP_CARD_INACTIVE_MESSAGE, status: view.status };
+  }
+  return { ok: true as const, status: view.status, remaining: view.remaining };
+}
+
+export function selectUsableClipCardForLookup<T extends ClipCardSnapshot>(
+  cards: T[],
+  now = new Date()
+): T | null {
+  return cards.find((card) => isClipCardUsable(card, now)) ?? null;
 }
 
 export function remainingAfterConsume(remaining: number) {

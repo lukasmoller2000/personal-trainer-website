@@ -196,6 +196,51 @@ describe("GET /api/admin/data shape", () => {
     assert.equal(body.orders[0].canRefund, true);
     assert.equal(body.orders[1].canRefund, true);
     assert.equal(body.clipCards[0].remaining, 5);
+    assert.equal(body.clipCards[0].status, "active");
+  });
+
+  it("shows computed expiry instead of stored active after 12 months", () => {
+    const now = new Date();
+    const expiredAt = new Date(now);
+    expiredAt.setMonth(expiredAt.getMonth() - 13);
+
+    const data = toAdminDashboardData({
+      bookings: [],
+      orders: [],
+      clipCards: [
+        clipSource({
+          id: "clip_expired",
+          status: "active",
+          remaining: 4,
+          createdAt: expiredAt,
+        }),
+        clipSource({
+          id: "clip_live",
+          status: "active",
+          remaining: 3,
+          createdAt: now,
+        }),
+        clipSource({
+          id: "clip_used",
+          status: "active",
+          remaining: 0,
+          createdAt: now,
+        }),
+        clipSource({
+          id: "clip_cancelled",
+          status: "cancelled",
+          remaining: 5,
+          createdAt: expiredAt,
+        }),
+      ],
+    });
+
+    assert.equal(data.clipCards[0].status, "expired");
+    assert.equal(data.clipCards[1].status, "active");
+    assert.equal(data.clipCards[2].status, "exhausted");
+    assert.equal(data.clipCards[3].status, "cancelled");
+    assert.equal("createdAt" in data.clipCards[0], false);
+    assert.equal("expiresAt" in data.clipCards[0], false);
   });
 
   it("strips unused and sensitive source fields", () => {
@@ -335,5 +380,6 @@ describe("admin data sources stay minimized", () => {
     assert.match(dashboard, /bookingId: row\.id/);
     assert.match(dashboard, /orderId/ );
     assert.match(dashboard, /JSON\.stringify\(\{ orderId \}\)/);
+    assert.match(dashboard, /expired: "Udløbet"/);
   });
 });

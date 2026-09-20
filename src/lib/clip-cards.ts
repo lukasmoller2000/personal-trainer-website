@@ -3,13 +3,22 @@ import type { PrismaClient } from "@prisma/client";
 import {
   canConsumeClip,
   canRefundUnusedClipCard,
+  CLIP_CARD_EXPIRED_MESSAGE,
+  CLIP_CARD_INACTIVE_MESSAGE,
   clipStatusAfterConsume,
+  effectiveClipCardStatus,
   isUniqueConstraintError,
   remainingAfterConsume,
 } from "@/lib/commerce";
 import { getPrisma } from "@/lib/db";
 
-export { canConsumeClip, canRefundUnusedClipCard, remainingAfterConsume, clipStatusAfterConsume };
+export {
+  canConsumeClip,
+  canRefundUnusedClipCard,
+  remainingAfterConsume,
+  clipStatusAfterConsume,
+  effectiveClipCardStatus,
+};
 
 export async function consumeClipAtomically(input: {
   clipCardId: string;
@@ -35,6 +44,12 @@ export async function consumeClipAtomically(input: {
     const check = canConsumeClip(card);
     if (!check.ok || !card) {
       throw new ClipConsumeError(check.ok ? "Ingen træninger tilbage" : check.error);
+    }
+    const effective = effectiveClipCardStatus(card);
+    if (effective !== "active") {
+      throw new ClipConsumeError(
+        effective === "expired" ? CLIP_CARD_EXPIRED_MESSAGE : CLIP_CARD_INACTIVE_MESSAGE
+      );
     }
 
     const remaining = remainingAfterConsume(card.remaining);

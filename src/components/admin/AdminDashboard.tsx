@@ -271,6 +271,7 @@ function statusLabel(status: string) {
     rejected: "Afvist",
     no_show: "Udeblevet",
     active: "Aktiv",
+    expired: "Udløbet",
     exhausted: "Brugt op",
     pending: "Afventer",
     paid: "Betalt",

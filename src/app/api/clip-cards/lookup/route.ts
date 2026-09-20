@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isClipCardExpired } from "@/lib/commerce";
+import { CLIP_LOOKUP_GENERIC_MESSAGE, selectUsableClipCardForLookup } from "@/lib/commerce";
 import { getPrisma } from "@/lib/db";
 import { isMailConfigured, trySendCustomerEmail } from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
@@ -33,8 +33,7 @@ export async function POST(request: NextRequest) {
 
   const generic = {
     ok: true,
-    message:
-      "Hvis der er et aktivt klippekort på denne mail, sender vi et link til at booke.",
+    message: CLIP_LOOKUP_GENERIC_MESSAGE,
   };
 
   const prisma = getPrisma();
@@ -42,12 +41,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(generic);
   }
 
-  const card = await prisma.clipCard.findFirst({
-    where: { email, status: "active", remaining: { gt: 0 } },
+  const cards = await prisma.clipCard.findMany({
+    where: { email, remaining: { gt: 0 } },
     orderBy: { createdAt: "desc" },
+    take: 5,
   });
+  const card = selectUsableClipCardForLookup(cards);
 
-  if (card && !isClipCardExpired(card.createdAt)) {
+  if (card) {
     const siteUrl = getSiteUrl();
     await trySendCustomerEmail({
       to: email,
