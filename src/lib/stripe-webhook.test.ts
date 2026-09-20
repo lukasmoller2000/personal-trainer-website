@@ -75,9 +75,11 @@ async function runWebhook(input: {
   failPending?: ProcessVerifiedStripeEventInput["failPendingOrder"];
   retrieveSession?: ProcessVerifiedStripeEventInput["retrieveSession"];
   findOrder?: ProcessVerifiedStripeEventInput["findOrder"];
+  notifyFailedPayment?: ProcessVerifiedStripeEventInput["notifyFailedPayment"];
 }) {
   const ledger = input.ledger ?? createMemoryStripeEventLedger();
   const fulfillments: string[] = [];
+  const failedPayments: string[] = [];
   const result = await processVerifiedStripeEvent({
     event: input.event,
     retrieveSession:
@@ -90,9 +92,14 @@ async function runWebhook(input: {
         return { ok: true as const };
       }),
     failPendingOrder: input.failPending ?? (async () => undefined),
+    notifyFailedPayment:
+      input.notifyFailedPayment ??
+      (async (order) => {
+        failedPayments.push(order.id);
+      }),
     ledger,
   });
-  return { result, fulfillments, ledger };
+  return { result, fulfillments, failedPayments, ledger };
 }
 
 describe("Stripe webhook idempotency", () => {
@@ -234,5 +241,123 @@ describe("Stripe webhook idempotency", () => {
     assert.equal(result.body.ignored, true);
     assert.equal(fulfillments.length, 0);
     assert.equal(await ledger.getStatus(event.id), STRIPE_EVENT_NONE);
+  });
+});
+
+function failedPaymentEvent(
+  overrides: {
+    id?: string;
+    session?: Partial<StripeWebhookSession>;
+  } = {}
+): StripeWebhookEvent {
+  return sessionEvent({
+    id: overrides.id ?? "evt_pi_fail_1",
+    type: "payment_intent.payment_failed",
+    session: {
+      id: "pi_fail_1",
+      payment_status: "unpaid",
+      payment_intent: "pi_fail_1",
+      metadata: { orderId: "ord_1" },
+      ...overrides.session,
+    },
+  });
+}
+
+function failedPaymentOrder(overrides: Partial<StripeWebhookOrder> = {}): StripeWebhookOrder {
+  return {
+    ...standardOrder(),
+    customerEmail: "test@example.com",
+    customerName: "Test",
+    date: "2099-06-02",
+    time: "07:00",
+    status: "pending",
+    ...overrides,
+  };
+}
+
+describe("failed payment customer mail", () => {
+  it("sends one mail on the first failed event and does not fulfill", async () => {
+    const event = failedPaymentEvent();
+    const order = failedPaymentOrder();
+    const ledger = createMemoryStripeEventLedger();
+    const first = await runWebhook({ event, order, ledger });
+    assert.equal(first.result.status, 200);
+    assert.equal(first.result.body.received, true);
+    assert.deepEqual(first.failedPayments, ["ord_1"]);
+    assert.equal(first.fulfillments.length, 0);
+    assert.equal(await ledger.getStatus(event.id), STRIPE_EVENT_PROCESSED);
+  });
+
+  it("does not send a second mail on replay of the same event", async () => {
+    const event = failedPaymentEvent();
+    const order = failedPaymentOrder();
+    const ledger = createMemoryStripeEventLedger();
+    await runWebhook({ event, order, ledger });
+    const replay = await runWebhook({ event, order, ledger });
+    assert.equal(replay.result.status, 200);
+    assert.equal(replay.result.body.duplicate, true);
+    assert.equal(replay.failedPayments.length, 0);
+    assert.equal(replay.fulfillments.length, 0);
+  });
+
+  it("can send a new mail for a later genuine failure", async () => {
+    const order = failedPaymentOrder();
+    const ledger = createMemoryStripeEventLedger();
+    const first = await runWebhook({
+      event: failedPaymentEvent({ id: "evt_pi_fail_1" }),
+      order,
+      ledger,
+    });
+    const second = await runWebhook({
+      event: failedPaymentEvent({
+        id: "evt_pi_fail_2",
+        session: { id: "pi_fail_2", payment_intent: "pi_fail_2" },
+      }),
+      order,
+      ledger,
+    });
+    assert.equal(first.result.status, 200);
+    assert.equal(second.result.status, 200);
+    assert.deepEqual(first.failedPayments, ["ord_1"]);
+    assert.deepEqual(second.failedPayments, ["ord_1"]);
+    assert.equal(first.fulfillments.length, 0);
+    assert.equal(second.fulfillments.length, 0);
+  });
+
+  it("handles a mail-provider error safely without fulfilling", async () => {
+    const event = failedPaymentEvent({ id: "evt_pi_mail_err" });
+    const { result, fulfillments, ledger } = await runWebhook({
+      event,
+      order: failedPaymentOrder(),
+      notifyFailedPayment: async () => {
+        throw new Error("mail provider unavailable");
+      },
+    });
+    assert.equal(result.status, 200);
+    assert.equal(result.body.received, true);
+    assert.equal(fulfillments.length, 0);
+    assert.equal(await ledger.getStatus(event.id), STRIPE_EVENT_PROCESSED);
+  });
+
+  it("does not fulfill a failed payment even when mail is sent", async () => {
+    const event = failedPaymentEvent({ id: "evt_pi_no_fulfill" });
+    const { result, fulfillments, failedPayments } = await runWebhook({
+      event,
+      order: failedPaymentOrder(),
+    });
+    assert.equal(result.status, 200);
+    assert.deepEqual(failedPayments, ["ord_1"]);
+    assert.equal(fulfillments.length, 0);
+  });
+
+  it("skips mail when the customer email is missing", async () => {
+    const event = failedPaymentEvent({ id: "evt_pi_no_email" });
+    const { result, failedPayments, fulfillments } = await runWebhook({
+      event,
+      order: failedPaymentOrder({ customerEmail: "" }),
+    });
+    assert.equal(result.status, 200);
+    assert.equal(failedPayments.length, 0);
+    assert.equal(fulfillments.length, 0);
   });
 });

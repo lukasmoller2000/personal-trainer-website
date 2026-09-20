@@ -7,16 +7,23 @@
  */
 
 import {
+  buildFailedPaymentCustomerEmail,
+  resolveFailedPaymentRetryUrl,
+} from "@/lib/booking-payment";
+import {
   claimStripeEvent,
   isStripeEventProcessed,
   releaseStripeEvent,
 } from "@/lib/clip-cards";
 import { getPrisma } from "@/lib/db";
+import { isValidEmail, trySendCustomerEmail } from "@/lib/mail";
 import { failPendingOrder, fulfillPaidOrder } from "@/lib/orders";
+import { getProduct } from "@/lib/products";
 import {
   matchStripePaymentToCatalog,
   type StoredCheckoutPricing,
 } from "@/lib/stripe-fulfillment";
+import { siteConfig } from "@/lib/utils";
 
 export const STRIPE_EVENT_PROCESSED = "processed" as const;
 export const STRIPE_EVENT_FAILED = "failed" as const;
@@ -57,6 +64,19 @@ export type StripeWebhookEvent = {
 export type StripeWebhookOrder = StoredCheckoutPricing & {
   id: string;
   productId: string;
+  customerEmail?: string | null;
+  customerName?: string | null;
+  date?: string | null;
+  time?: string | null;
+  status?: string | null;
+  bookings?: Array<{
+    id: string;
+    productId: string;
+    status: string;
+    date?: string | null;
+    time?: string | null;
+    holdUntil?: Date | null;
+  }>;
 };
 
 export type StripeWebhookResult = {
@@ -82,12 +102,14 @@ export type ProcessVerifiedStripeEventInput = {
     orderId: string,
     stripeCheckoutSessionId?: string | null
   ) => Promise<unknown>;
+  notifyFailedPayment?: (order: StripeWebhookOrder) => Promise<void>;
   ledger: StripeEventLedger;
 };
 
 const CHECKOUT_COMPLETED = "checkout.session.completed";
 const CHECKOUT_EXPIRED = "checkout.session.expired";
 const CHECKOUT_ASYNC_FAILED = "checkout.session.async_payment_failed";
+const PAYMENT_INTENT_FAILED = "payment_intent.payment_failed";
 
 export function orderIdFromStripeSession(session: {
   metadata?: Record<string, string> | null;
@@ -154,12 +176,34 @@ export function createDefaultStripeWebhookDeps(retrieveSession: ProcessVerifiedS
     async findOrder(orderId: string) {
       const prisma = getPrisma();
       if (!prisma) return null;
-      return prisma.order.findUnique({ where: { id: orderId } });
+      return prisma.order.findUnique({
+        where: { id: orderId },
+        include: { bookings: true },
+      });
     },
     fulfillPaidOrder,
     failPendingOrder,
+    notifyFailedPayment: sendFailedPaymentCustomerEmail,
     ledger: createPrismaStripeEventLedger(),
   };
+}
+
+export async function sendFailedPaymentCustomerEmail(order: StripeWebhookOrder) {
+  const email = order.customerEmail?.trim() ?? "";
+  if (!isValidEmail(email)) return;
+  const mail = buildFailedPaymentCustomerEmail({
+    name: order.customerName,
+    productName: getProduct(order.productId)?.name ?? order.productId,
+    date: order.date,
+    time: order.time,
+    retryUrl: resolveFailedPaymentRetryUrl(order),
+    contactEmail: siteConfig.links.email,
+  });
+  await trySendCustomerEmail({
+    to: email,
+    subject: mail.subject,
+    text: mail.text,
+  });
 }
 
 function paymentIntentId(session: StripeWebhookSession) {
@@ -212,6 +256,10 @@ export async function processVerifiedStripeEvent(
 
   if (event.type === CHECKOUT_EXPIRED || event.type === CHECKOUT_ASYNC_FAILED) {
     return processCheckoutTerminal(input);
+  }
+
+  if (event.type === PAYMENT_INTENT_FAILED) {
+    return processPaymentIntentFailed(input);
   }
 
   return { status: 200, body: { received: true, ignored: true } };
@@ -302,5 +350,58 @@ async function processCheckoutTerminal(input: ProcessVerifiedStripeEventInput) {
 
   const claimed = await ledger.markProcessed(event.id, event.type);
   if (claimed === "duplicate") return duplicateResult();
+  if (event.type === CHECKOUT_ASYNC_FAILED && orderId) {
+    await safeNotifyFailedPayment(input, orderId);
+  }
   return { status: 200, body: { received: true } };
+}
+
+async function processPaymentIntentFailed(input: ProcessVerifiedStripeEventInput) {
+  const { event, ledger } = input;
+  const orderId = orderIdFromStripeSession(event.data.object);
+
+  if (orderId) {
+    let order: StripeWebhookOrder | null;
+    try {
+      order = await input.findOrder(orderId);
+    } catch (error) {
+      console.error(
+        "Webhook-behandling fejlede",
+        event.id,
+        error instanceof Error ? error.name : "unknown"
+      );
+      return failEvent(ledger, event, "order_lookup_failed");
+    }
+
+    const claimed = await ledger.markProcessed(event.id, event.type);
+    if (claimed === "duplicate") return duplicateResult();
+    if (order) {
+      await safeNotifyFailedPayment(input, orderId, order);
+    }
+    return { status: 200, body: { received: true } };
+  }
+
+  const claimed = await ledger.markProcessed(event.id, event.type);
+  if (claimed === "duplicate") return duplicateResult();
+  return { status: 200, body: { received: true } };
+}
+
+async function safeNotifyFailedPayment(
+  input: ProcessVerifiedStripeEventInput,
+  orderId: string,
+  knownOrder?: StripeWebhookOrder | null
+) {
+  if (!input.notifyFailedPayment) return;
+  try {
+    const order = knownOrder === undefined ? await input.findOrder(orderId) : knownOrder;
+    if (!order) return;
+    const email = order.customerEmail?.trim() ?? "";
+    if (!isValidEmail(email)) return;
+    await input.notifyFailedPayment(order);
+  } catch (error) {
+    console.error(
+      "Kunde-mail kunne ikke sendes",
+      error instanceof Error ? error.name : "unknown"
+    );
+  }
 }
