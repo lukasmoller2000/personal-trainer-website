@@ -21,13 +21,21 @@ import { siteConfig } from "@/lib/utils";
 export const PAYMENTS_NOT_CONFIGURED = "Betaling er ikke aktiveret endnu";
 
 /**
- * Official CVR is display-only (footer / legal pages). Address stays empty
- * until filled — never invent one, never render TODO publicly.
+ * Official CVR and juridisk virksomhedsadresse (footer / legal pages).
+ * Falkevej is the training venue only — never use it as COMPANY_ADDRESS.
  */
 export const LEGAL_PENDING = {
   COMPANY_CVR: "46738527",
-  COMPANY_ADDRESS: "",
+  COMPANY_ADDRESS: "Hedevænget 95, 8800 Viborg",
 } as const;
+
+/** Street + postal city as separate lines for legal/footer display. */
+export function companyAddressLines(address: string): string[] {
+  return address
+    .split(/\r?\n|,\s*(?=\d{4}\b)/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 
 /** Decided commercial defaults. Env can override the numbers. */
 export const COMMERCE_DEFAULTS = {
@@ -196,7 +204,7 @@ export function getCompanyConfig() {
     tradeName: "Personlig træning",
     /** Legal CVR — env override, otherwise the official display-only default. */
     cvr: process.env.COMPANY_CVR?.trim() || LEGAL_PENDING.COMPANY_CVR,
-    /** Legal business address — leave empty until Lukas fills COMPANY_ADDRESS. Falkevej is the training location, not this field. */
+    /** Juridisk virksomhedsadresse. Env override; Falkevej is the training venue, not this field. */
     address: process.env.COMPANY_ADDRESS?.trim() || LEGAL_PENDING.COMPANY_ADDRESS,
     email: process.env.CONTACT_EMAIL?.trim() || siteConfig.links.email,
     phone: siteConfig.links.phone,

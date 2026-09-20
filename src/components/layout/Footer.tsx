@@ -5,7 +5,7 @@ import { SocialLinks } from "@/components/layout/SocialLinks";
 import { GymLogo } from "@/components/layout/GymLogo";
 import { Button } from "@/components/ui/Button";
 import { siteConfig } from "@/lib/utils";
-import { getCompanyConfig } from "@/lib/commerce";
+import { companyAddressLines, getCompanyConfig } from "@/lib/commerce";
 
 const footerLinks = [
   { label: "Forside", href: "/" },
@@ -38,6 +38,15 @@ export function Footer() {
             {company.cvr ? (
               <p className="mt-2 text-sm leading-relaxed text-cream/70">
                 CVR: {company.cvr}
+              </p>
+            ) : null}
+            {company.address ? (
+              <p className="mt-2 text-sm leading-relaxed text-cream/70">
+                {companyAddressLines(company.address).map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
               </p>
             ) : null}
             <div className="mt-5">
@@ -105,7 +114,7 @@ export function Footer() {
                   {siteConfig.venue}
                 </a>
               </p>
-              <p className="mt-1 text-cream/70">{siteConfig.address}</p>
+              <p className="mt-1 text-cream/70">Træningssted: {siteConfig.address}</p>
               <p className="mt-1 text-cream/55">Åbent {siteConfig.hours}</p>
               <a
                 href={siteConfig.links.instagram}

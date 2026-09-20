@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/ui/PageHero";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { pageSeo } from "@/lib/seo";
+import { companyAddressLines } from "@/lib/commerce";
 import { getPrivacyCopy } from "@/lib/legal";
 
 export const metadata: Metadata = pageSeo("/privatliv", {
@@ -33,7 +34,11 @@ export default function PrivacyPage() {
               ) : null}
               {privacy.address ? (
                 <>
-                  {privacy.address}
+                  {companyAddressLines(privacy.address).map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))}
                   <br />
                 </>
               ) : null}

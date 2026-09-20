@@ -1,7 +1,7 @@
 /**
  * Danish legal copy for /vilkaar and /privatliv, driven by commerce config.
- * COMPANY_CVR is the official display-only number. COMPANY_ADDRESS stays empty
- * until filled — never show TODO publicly. Falkevej is the training venue only.
+ * COMPANY_CVR and COMPANY_ADDRESS come from getCompanyConfig().
+ * Falkevej is the training venue only — never treat it as the legal address.
  */
 
 import {

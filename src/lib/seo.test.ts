@@ -36,11 +36,13 @@ describe("seo", () => {
     assert.equal(json.includes("worksFor"), false);
 
     const business = data["@graph"].find((node) => node["@type"] === "LocalBusiness") as {
-      address?: unknown;
+      address?: { streetAddress?: string };
     };
     const gym = data["@graph"].find((node) => node["@type"] === "HealthClub");
-    assert.equal(business.address, undefined);
+    assert.match(String(business.address?.streetAddress), /Hedevænget 95/);
+    assert.doesNotMatch(String(business.address?.streetAddress), /Falkevej/);
     assert.ok(JSON.stringify(gym).includes("Falkevej 16B"));
+    assert.doesNotMatch(JSON.stringify(gym), /Hedevænget/);
     assert.equal(json.includes("CVR"), false);
   });
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/ui/PageHero";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { pageSeo } from "@/lib/seo";
+import { companyAddressLines } from "@/lib/commerce";
 import { getTermsCopy } from "@/lib/legal";
 
 export const metadata: Metadata = pageSeo("/vilkaar", {
@@ -36,7 +37,15 @@ export default function TermsPage() {
               {terms.tradeName}
             </p>
             {terms.cvr ? <p className="mt-3">CVR: {terms.cvr}</p> : null}
-            {terms.address ? <p className="mt-3">{terms.address}</p> : null}
+            {terms.address ? (
+              <p className="mt-3">
+                {companyAddressLines(terms.address).map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </p>
+            ) : null}
             <p className="mt-3">
               Email: {terms.email}
               <br />

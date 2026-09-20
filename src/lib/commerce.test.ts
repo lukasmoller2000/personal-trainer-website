@@ -280,16 +280,18 @@ describe("payments", () => {
 });
 
 describe("company and legal config", () => {
-  it("exposes official CVR, hides empty address, and keeps payments off", () => {
+  it("exposes official CVR and legal address, not the training venue", () => {
     const company = getCompanyConfig();
     assert.equal(company.name, "Lukas Møller");
     assert.equal(company.cvr, "46738527");
-    assert.equal(company.address, "");
+    assert.equal(company.address, "Hedevænget 95, 8800 Viborg");
     assert.ok(company.email.includes("@"));
+    assert.match(company.phone, /25 89 04 53/);
     assert.equal(LEGAL_PENDING.COMPANY_CVR, "46738527");
-    assert.equal(LEGAL_PENDING.COMPANY_ADDRESS, "");
+    assert.equal(LEGAL_PENDING.COMPANY_ADDRESS, "Hedevænget 95, 8800 Viborg");
     assert.doesNotMatch(company.cvr, /TODO/i);
     assert.doesNotMatch(company.address, /TODO/i);
+    assert.doesNotMatch(company.address, /Falkevej/);
     assert.equal(isPaymentsEnabledByFlag(), false);
     assert.equal(isStripeEnabled(), false);
   });

@@ -1,17 +1,27 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { companyAddressLines } from "./commerce";
 import { getPrivacyCopy, getTermsCopy } from "./legal";
 
 describe("terms copy", () => {
-  it("renders company info without empty CVR or address placeholders", () => {
+  it("renders company info with legal address and training venue kept separate", () => {
     const terms = getTermsCopy();
 
     assert.equal(terms.cvr, "46738527");
-    assert.equal(terms.address, "");
+    assert.equal(terms.address, "Hedevænget 95, 8800 Viborg");
+    assert.deepEqual(companyAddressLines(terms.address), [
+      "Hedevænget 95",
+      "8800 Viborg",
+    ]);
+    assert.doesNotMatch(terms.address, /Falkevej/);
+    assert.match(terms.trainingAddress, /Falkevej 16B/);
+    assert.match(terms.trainingVenue, /Viborg Fitness Gym/);
     assert.equal(terms.companyName, "Lukas Møller");
     assert.ok(terms.email.includes("@"));
+    assert.match(terms.phone, /25 89 04 53/);
     assert.doesNotMatch(JSON.stringify(terms), /TODO/i);
     assert.doesNotMatch(terms.trainingAddress, /CVR/);
+    assert.doesNotMatch(terms.trainingAddress, /Hedevænget/);
   });
 
   it("shows 12-month clip expiry when config is set and 24-hour cancellation", () => {
@@ -99,7 +109,12 @@ describe("privacy copy", () => {
     const blob = JSON.stringify(privacy);
 
     assert.equal(privacy.cvr, "46738527");
-    assert.equal(privacy.address, "");
+    assert.equal(privacy.address, "Hedevænget 95, 8800 Viborg");
+    assert.doesNotMatch(privacy.address, /Falkevej/);
+    assert.match(privacy.trainingAddress, /Falkevej 16B/);
+    assert.match(privacy.venueNote, /træningssted/);
+    assert.match(privacy.venueNote, /Falkevej 16B/);
+    assert.doesNotMatch(privacy.venueNote, /Hedevænget/);
     assert.match(privacy.payment, /Betaling kan ske via Stripe/);
     assert.match(privacy.payment, /Stripe behandler dine betalingsoplysninger/);
     assert.match(privacy.payment, /gemmer ikke fulde kortoplysninger/);
