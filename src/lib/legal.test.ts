@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getTermsCopy } from "./legal";
+import { getPrivacyCopy, getTermsCopy } from "./legal";
 
 describe("terms copy", () => {
   it("renders company info without empty CVR or address placeholders", () => {
@@ -64,14 +64,57 @@ describe("terms copy", () => {
     assert.doesNotMatch(terms.withdrawal, /fraskrevet/);
   });
 
-  it("keeps payments off and does not block a later online-cancel path", () => {
+  it("keeps the payments flag off by default and does not block a later online-cancel path", () => {
     const terms = getTermsCopy();
     assert.equal(terms.paymentsEnabled, false);
     assert.match(terms.inquiryNotAgreement, /ikke en endelig aftale/);
+    assert.doesNotMatch(terms.inquiryNotAgreement, /hvis betaling er slået til/);
     assert.match(terms.online, /forespørgsel/);
     assert.match(terms.online, /skrive eller ringe/);
     assert.match(terms.online, /opsige online/);
     assert.equal(terms.onlineCancelRequiredIfSubscription, true);
     assert.doesNotMatch(terms.online, /kan ikke opsiges/);
+  });
+
+  it("describes live Stripe payment and VFG member-price verification", () => {
+    const terms = getTermsCopy();
+    const blob = JSON.stringify(terms);
+
+    assert.match(terms.payment, /Betaling kan ske via Stripe/);
+    assert.match(terms.payment, /Stripe behandler dine betalingsoplysninger/);
+    assert.match(terms.payment, /gemmer ikke fulde kortoplysninger/);
+    assert.match(terms.memberPrice, /aktivt medlemskab/);
+    assert.match(terms.memberPrice, /tjekkes ved betaling/);
+    assert.match(terms.memberPrice, /standardprisen/);
+    assert.match(terms.prices, /VFG-medlem: 250 kr/);
+    assert.match(terms.prices, /VFG-medlem: 1150 kr/);
+    assert.doesNotMatch(blob, /ikke slået til/);
+    assert.doesNotMatch(blob, /aktiv webshop/);
+  });
+});
+
+describe("privacy copy", () => {
+  it("describes Stripe payment and VFG lookup without saying the shop is inactive", () => {
+    const privacy = getPrivacyCopy();
+    const blob = JSON.stringify(privacy);
+
+    assert.equal(privacy.cvr, "46738527");
+    assert.equal(privacy.address, "");
+    assert.match(privacy.payment, /Betaling kan ske via Stripe/);
+    assert.match(privacy.payment, /Stripe behandler dine betalingsoplysninger/);
+    assert.match(privacy.payment, /gemmer ikke fulde kortoplysninger/);
+    assert.match(privacy.payment, /bogføring, dokumentation/);
+    assert.match(privacy.membership, /email/);
+    assert.match(privacy.membership, /telefonnummer/);
+    assert.match(privacy.membership, /Viborg Fitness Gym/);
+    assert.match(privacy.membership, /berettiget eller ej/);
+    assert.match(privacy.membership, /ikke hele medlemsprofilen/);
+    assert.match(privacy.membership, /standardprisen/);
+    assert.match(privacy.processors, /Stripe/);
+    assert.match(privacy.processors, /Viborg Fitness Gym/);
+    assert.doesNotMatch(blob, /aktiv webshop/);
+    assert.doesNotMatch(blob, /ikke slået til/);
+    assert.doesNotMatch(blob, /Fremtidig betaling/);
+    assert.doesNotMatch(blob, /TODO/i);
   });
 });

@@ -21,7 +21,6 @@ export default function TermsPage() {
         description="Senest opdateret: september 2026"
       />
       <AnimatedSection>
-        {/* LEGAL_PENDING: Review with Lukas before live Stripe payments. */}
         <div className="container-custom max-w-3xl space-y-8 leading-relaxed text-ink/75">
           <section>
             <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
@@ -59,6 +58,7 @@ export default function TermsPage() {
               3. Priser og betaling
             </h2>
             <p>{terms.prices}</p>
+            <p className="mt-3">{terms.memberPrice}</p>
             <p className="mt-3">{terms.payment}</p>
           </section>
           <section>
