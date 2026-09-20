@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminLogin } from "@/components/admin/AdminLogin";
 import { ADMIN_COOKIE, isAdminConfigured, isValidAdminCookie } from "@/lib/admin-auth";
+import { loadAdminDashboardData, type AdminDataClient } from "@/lib/admin-data";
 import { getPrisma } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -25,65 +26,12 @@ export default async function AdminPage() {
     );
   }
 
-  const prisma = getPrisma();
-  if (!prisma) {
-    return (
-      <section className="section-padding">
-        <div className="container-custom">
-          <AdminDashboard bookings={[]} orders={[]} clipCards={[]} />
-        </div>
-      </section>
-    );
-  }
-
-  const [bookings, orders, clipCards] = await Promise.all([
-    prisma.booking.findMany({
-      orderBy: [{ date: "asc" }, { time: "asc" }, { createdAt: "desc" }],
-      take: 200,
-    }),
-    prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
-    prisma.clipCard.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
-  ]);
+  const data = await loadAdminDashboardData(getPrisma() as AdminDataClient | null);
 
   return (
     <section className="section-padding">
       <div className="container-custom">
-        <AdminDashboard
-          bookings={bookings.map((row) => ({
-            id: row.id,
-            name: row.name,
-            email: row.email,
-            phone: row.phone,
-            productId: row.productId,
-            date: row.date,
-            time: row.time,
-            status: row.status,
-            createdAt: row.createdAt.toISOString(),
-          }))}
-          orders={orders.map((row) => ({
-            id: row.id,
-            productId: row.productId,
-            status: row.status,
-            amountOre: row.amountOre,
-            chargedAmountOre: row.chargedAmountOre,
-            customerName: row.customerName,
-            customerEmail: row.customerEmail,
-            customerPhone: row.customerPhone,
-            stripeCheckoutSessionId: row.stripeCheckoutSessionId,
-            stripePaymentIntentId: row.stripePaymentIntentId,
-            date: row.date,
-            time: row.time,
-          }))}
-          clipCards={clipCards.map((row) => ({
-            id: row.id,
-            name: row.name,
-            email: row.email,
-            remaining: row.remaining,
-            totalSessions: row.totalSessions,
-            status: row.status,
-            orderId: row.orderId,
-          }))}
-        />
+        <AdminDashboard {...data} />
       </div>
     </section>
   );

@@ -2,60 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import {
-  adminRefundProductName,
-  canShowAdminRefund,
-  paymentStatusLabel,
-  refundAmountOre,
-  refundStatusLabel,
-} from "@/lib/refund-policy";
+import type { AdminBookingRow, AdminDashboardData } from "@/lib/admin-data";
+import { adminRefundProductName, paymentStatusLabel, refundStatusLabel } from "@/lib/refund-policy";
 
-type BookingRow = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  productId: string;
-  date: string | null;
-  time: string | null;
-  status: string;
-  createdAt: string;
-};
-
-type OrderRow = {
-  id: string;
-  productId: string;
-  status: string;
-  amountOre: number;
-  chargedAmountOre?: number | null;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  stripeCheckoutSessionId: string | null;
-  stripePaymentIntentId: string | null;
-  date: string | null;
-  time: string | null;
-};
-
-type ClipRow = {
-  id: string;
-  name: string;
-  email: string;
-  remaining: number;
-  totalSessions: number;
-  status: string;
-  orderId: string;
-};
-
-export function AdminDashboard({
-  bookings,
-  orders,
-  clipCards,
-}: {
-  bookings: BookingRow[];
-  orders: OrderRow[];
-  clipCards: ClipRow[];
-}) {
+export function AdminDashboard({ bookings, orders, clipCards }: AdminDashboardData) {
   return (
     <div className="space-y-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -145,7 +95,7 @@ export function AdminDashboard({
                   <td className="px-4 py-3">
                     {adminRefundProductName(row.productId)}
                     <br />
-                    {(refundAmountOre(row) / 100).toFixed(0)} kr.
+                    {(row.amountOre / 100).toFixed(0)} kr.
                   </td>
                   <td className="px-4 py-3">
                     Betaling: {paymentStatusLabel(row.status)}
@@ -153,13 +103,10 @@ export function AdminDashboard({
                     Refundering: {refundStatusLabel(row.status)}
                   </td>
                   <td className="px-4 py-3">
-                    {canShowAdminRefund(
-                      row,
-                      clipCards.find((card) => card.orderId === row.id) ?? null
-                    ) ? (
+                    {row.canRefund ? (
                       <RefundButton
                         orderId={row.id}
-                        amountOre={refundAmountOre(row)}
+                        amountOre={row.amountOre}
                         productName={adminRefundProductName(row.productId)}
                       />
                     ) : row.status === "refunded" ? (
@@ -226,7 +173,7 @@ export function AdminDashboard({
   );
 }
 
-function BookingActions({ row }: { row: BookingRow }) {
+function BookingActions({ row }: { row: AdminBookingRow }) {
   const [busy, setBusy] = useState(false);
   const sessionInquiry = row.productId === "session" && row.status === "inquiry" && row.date && row.time;
   const awaitingPay = row.productId === "session" && row.status === "awaiting_payment";
