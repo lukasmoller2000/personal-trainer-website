@@ -3,11 +3,19 @@
  * Price is resolved server-side at checkout (standard or verified VFG member).
  * Client amounts and isMember flags are ignored.
  * Link token is HMAC-signed like the admin cookie — no extra schema field.
+ *
+ * Token v2: `{bookingId}.{expiresAtUnix}.{hmac}` where hmac covers
+ * `booking-pay-v2:{bookingId}:{expiresAtUnix}`. expiresAt is server-computed
+ * as min(now + 48h, bookingStart) and cannot be extended by the client.
+ *
+ * Token v1 (`{bookingId}.{hmac}` without expiry) is verified then rejected as
+ * expired. Old links are not left valid forever.
  */
 
 import { createHmac } from "crypto";
 import { safeEqual } from "@/lib/admin-auth";
 import { resolveCheckoutPrice } from "@/lib/checkout-price";
+import { sessionStartAt } from "@/lib/commerce";
 import { getCheckoutAmountOre, getProduct } from "@/lib/products";
 import { formatDate, getSiteUrl } from "@/lib/utils";
 import { PAYMENT_CANCEL_QUERY } from "@/lib/payment-result";
@@ -46,11 +54,15 @@ export type SessionPaymentBlocked = {
     | "missing_timeslot"
     | "cancelled"
     | "missing_token"
-    | "invalid_token";
+    | "invalid_token"
+    | "expired_token";
   error: string;
 };
 
-const PAYMENT_ERRORS: Record<SessionPaymentBlocked["reason"], string> = {
+export const PAYMENT_LINK_TTL_HOURS = 48;
+const PAYMENT_LINK_TTL_MS = PAYMENT_LINK_TTL_HOURS * 60 * 60 * 1000;
+
+export const PAYMENT_ERRORS: Record<SessionPaymentBlocked["reason"], string> = {
   not_session: "Kun en bekræftet PT-session kan betales her",
   unconfirmed: "Tiden er ikke bekræftet endnu",
   already_paid: "Denne træning er allerede betalt",
@@ -58,8 +70,14 @@ const PAYMENT_ERRORS: Record<SessionPaymentBlocked["reason"], string> = {
   missing_timeslot: "Bookingen mangler dato og tid",
   cancelled: "Denne tid er ikke længere tilgængelig",
   missing_token: "Betalingslinket mangler",
-  invalid_token: "Linket er ugyldigt eller udløbet",
+  invalid_token: "Linket er ugyldigt.",
+  expired_token: "Betalingslinket er udløbet. Skriv til mig, så sender jeg et nyt.",
 };
+
+export const EXPIRED_PAYMENT_LINK_COPY = {
+  title: "Linket er udløbet",
+  body: PAYMENT_ERRORS.expired_token,
+} as const;
 
 function paymentLinkSecret() {
   return process.env.BOOKING_PAY_SECRET?.trim() || process.env.ADMIN_PASSWORD?.trim() || "";
@@ -69,37 +87,108 @@ export function isPaymentLinkSecretConfigured() {
   return paymentLinkSecret().length >= 8;
 }
 
-export function signBookingPaymentToken(bookingId: string) {
+export function paymentLinkExpiresAt(now: Date, bookingStart: Date) {
+  const ttlExpiry = new Date(now.getTime() + PAYMENT_LINK_TTL_MS);
+  return ttlExpiry.getTime() <= bookingStart.getTime() ? ttlExpiry : new Date(bookingStart.getTime());
+}
+
+export function bookingStartFromTimeslot(date?: string | null, time?: string | null) {
+  if (!date || !time) return null;
+  const start = sessionStartAt(date, time);
+  if (Number.isNaN(start.getTime())) return null;
+  return start;
+}
+
+function signLegacyBookingPaymentToken(bookingId: string) {
   const secret = paymentLinkSecret();
   if (!secret) return "";
   return createHmac("sha256", secret).update(`booking-pay-v1:${bookingId}`).digest("hex");
 }
 
-/** Public token: bookingId.hmac. bookingId is already a UUID. */
-export function createBookingPaymentLinkToken(bookingId: string) {
-  const mac = signBookingPaymentToken(bookingId);
+export function signBookingPaymentToken(bookingId: string, expiresAtUnix: string | number) {
+  const secret = paymentLinkSecret();
+  if (!secret) return "";
+  return createHmac("sha256", secret)
+    .update(`booking-pay-v2:${bookingId}:${expiresAtUnix}`)
+    .digest("hex");
+}
+
+/** Public token: bookingId.expiresAtUnix.hmac. bookingId is already a UUID. */
+export function createBookingPaymentLinkToken(
+  bookingId: string,
+  input: { date: string; time: string; now?: Date }
+) {
+  const bookingStart = bookingStartFromTimeslot(input.date, input.time);
+  if (!bookingStart) return "";
+  const expiresAt = paymentLinkExpiresAt(input.now ?? new Date(), bookingStart);
+  const expiresAtUnix = String(Math.floor(expiresAt.getTime() / 1000));
+  const mac = signBookingPaymentToken(bookingId, expiresAtUnix);
   if (!mac) return "";
-  return `${bookingId}.${mac}`;
+  return `${bookingId}.${expiresAtUnix}.${mac}`;
 }
 
 export function parseBookingPaymentLinkToken(token: string) {
-  const trimmed = token.trim();
-  const sep = trimmed.lastIndexOf(".");
-  if (sep <= 0 || sep === trimmed.length - 1) return null;
-  return {
-    bookingId: trimmed.slice(0, sep),
-    mac: trimmed.slice(sep + 1),
-  };
+  const parts = token.trim().split(".");
+  if (parts.length === 2 && parts[0] && parts[1]) {
+    return { version: 1 as const, bookingId: parts[0], mac: parts[1] };
+  }
+  if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+    return {
+      version: 2 as const,
+      bookingId: parts[0],
+      expiresAtUnix: parts[1],
+      mac: parts[2],
+    };
+  }
+  return null;
 }
 
-export function verifyBookingPaymentLinkToken(token: string) {
+export type BookingPaymentTokenOk = {
+  ok: true;
+  bookingId: string;
+  expiresAt: Date;
+};
+
+export type BookingPaymentTokenBlocked = {
+  ok: false;
+  reason: "invalid_token" | "expired_token";
+  bookingId?: string;
+};
+
+export function verifyBookingPaymentLinkToken(
+  token: string,
+  now = new Date()
+): BookingPaymentTokenOk | BookingPaymentTokenBlocked {
   const parsed = parseBookingPaymentLinkToken(token);
-  if (!parsed) return { ok: false as const, reason: "invalid_token" as const };
-  const expected = signBookingPaymentToken(parsed.bookingId);
-  if (!expected || !safeEqual(parsed.mac, expected)) {
-    return { ok: false as const, reason: "invalid_token" as const };
+  if (!parsed) return { ok: false, reason: "invalid_token" };
+
+  if (parsed.version === 1) {
+    const expected = signLegacyBookingPaymentToken(parsed.bookingId);
+    if (!expected || !safeEqual(parsed.mac, expected)) {
+      return { ok: false, reason: "invalid_token" };
+    }
+    return { ok: false, reason: "expired_token", bookingId: parsed.bookingId };
   }
-  return { ok: true as const, bookingId: parsed.bookingId };
+
+  if (!/^\d{1,12}$/.test(parsed.expiresAtUnix)) {
+    return { ok: false, reason: "invalid_token" };
+  }
+
+  const expected = signBookingPaymentToken(parsed.bookingId, parsed.expiresAtUnix);
+  if (!expected || !safeEqual(parsed.mac, expected)) {
+    return { ok: false, reason: "invalid_token" };
+  }
+
+  const expiresAtMs = Number(parsed.expiresAtUnix) * 1000;
+  if (expiresAtMs <= now.getTime()) {
+    return { ok: false, reason: "expired_token", bookingId: parsed.bookingId };
+  }
+
+  return {
+    ok: true,
+    bookingId: parsed.bookingId,
+    expiresAt: new Date(expiresAtMs),
+  };
 }
 
 export function bookingPaymentPath(linkToken: string) {
@@ -189,6 +278,10 @@ export function evaluateSessionPayment(
   if (booking.status === BOOKING_STATUS.inquiry) {
     return { ok: false, reason: "unconfirmed", error: PAYMENT_ERRORS.unconfirmed };
   }
+  const bookingStart = bookingStartFromTimeslot(booking.date, booking.time);
+  if (bookingStart && bookingStart.getTime() <= now.getTime()) {
+    return { ok: false, reason: "expired_token", error: PAYMENT_ERRORS.expired_token };
+  }
   if (
     booking.status === BOOKING_STATUS.hold &&
     booking.holdUntil &&
@@ -210,15 +303,20 @@ export function evaluateSessionCheckoutBinding(input: {
   paymentToken?: string;
   productId?: string;
   clientAmount?: number;
+  now?: Date;
 }): { ok: true; bookingId: string } | SessionPaymentBlocked {
   void input.clientAmount;
   const token = input.paymentToken?.trim() ?? "";
   if (!token) {
     return { ok: false, reason: "missing_token", error: PAYMENT_ERRORS.missing_token };
   }
-  const verified = verifyBookingPaymentLinkToken(token);
+  const verified = verifyBookingPaymentLinkToken(token, input.now);
   if (!verified.ok) {
-    return { ok: false, reason: "invalid_token", error: PAYMENT_ERRORS.invalid_token };
+    return {
+      ok: false,
+      reason: verified.reason,
+      error: PAYMENT_ERRORS[verified.reason],
+    };
   }
   if (input.productId && input.productId !== "session") {
     return { ok: false, reason: "not_session", error: PAYMENT_ERRORS.not_session };
@@ -306,6 +404,89 @@ export function buildRejectCustomerEmail(input: {
       "Mvh",
       "Lukas Møller",
     ].join("\n"),
+  };
+}
+
+export function resolveFailedPaymentRetryUrl(
+  order: {
+    productId: string;
+    status?: string | null;
+    date?: string | null;
+    time?: string | null;
+    bookings?: Array<{
+      id: string;
+      productId: string;
+      status: string;
+      date?: string | null;
+      time?: string | null;
+      holdUntil?: Date | null;
+    }>;
+  },
+  now = new Date()
+) {
+  if (order.productId === "pack-5") {
+    return `${getSiteUrl()}/booking`;
+  }
+  if (order.productId !== "session") return null;
+
+  const booking = order.bookings?.find((row) => row.productId === "session");
+  if (!booking?.date || !booking.time) return null;
+
+  const payable = evaluateSessionPayment(
+    {
+      id: booking.id,
+      productId: booking.productId,
+      status: booking.status,
+      date: booking.date,
+      time: booking.time,
+      holdUntil: booking.holdUntil,
+      orderStatus: order.status ?? null,
+    },
+    now
+  );
+  if (!payable.ok) return null;
+
+  const token = createBookingPaymentLinkToken(booking.id, {
+    date: booking.date,
+    time: booking.time,
+    now,
+  });
+  return token ? bookingPaymentUrl(token) : null;
+}
+
+export function buildFailedPaymentCustomerEmail(input: {
+  name?: string | null;
+  productName: string;
+  date?: string | null;
+  time?: string | null;
+  retryUrl?: string | null;
+  contactEmail: string;
+}) {
+  const greeting = input.name?.trim() ? `Hej ${input.name.trim()}` : "Hej";
+  const lines = [
+    greeting,
+    "",
+    "Betalingen gik desværre ikke igennem. Der er ikke trukket penge.",
+    "",
+    `Ydelse: ${input.productName}`,
+  ];
+  if (input.date && input.time) {
+    lines.push(`Dato: ${formatDate(input.date)}`);
+    lines.push(`Tidspunkt: ${input.time}`);
+  }
+  lines.push("");
+  if (input.retryUrl) {
+    lines.push("Du kan prøve igen her:");
+    lines.push(input.retryUrl);
+  } else {
+    lines.push(
+      `Skriv til mig på ${input.contactEmail}, så sender jeg et nyt betalingslink — eller book en ny tid.`
+    );
+  }
+  lines.push("", "Mvh", "Lukas Møller");
+  return {
+    subject: `Betalingen gik ikke igennem — ${input.productName}`,
+    text: lines.join("\n"),
   };
 }
 

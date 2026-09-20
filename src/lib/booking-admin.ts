@@ -71,7 +71,10 @@ export async function decideSessionBooking(input: {
     throw new BookingAdminError("Ukendt handling");
   }
 
-  const linkToken = createBookingPaymentLinkToken(booking.id);
+  const linkToken =
+    booking.date && booking.time
+      ? createBookingPaymentLinkToken(booking.id, { date: booking.date, time: booking.time })
+      : "";
   const paymentUrl = linkToken ? bookingPaymentUrl(linkToken) : "";
   const sendMail = shouldSendDecisionEmail(input.action, fromStatus);
 

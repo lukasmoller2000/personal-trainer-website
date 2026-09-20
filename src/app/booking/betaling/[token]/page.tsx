@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BookingPaymentCard } from "@/components/booking/BookingPaymentCard";
 import { Button } from "@/components/ui/Button";
 import {
+  EXPIRED_PAYMENT_LINK_COPY,
   evaluateSessionPayment,
   publicPaymentPageView,
   verifyBookingPaymentLinkToken,
@@ -35,20 +36,38 @@ export default async function BookingPaymentPage({
   const verified = verifyBookingPaymentLinkToken(token);
   const canceled = betaling === PAYMENT_CANCEL_QUERY;
 
-  if (!verified.ok) {
-    return <PaymentLinkMessage title="Linket er ugyldigt" body="Linket er ugyldigt eller udløbet." />;
+  if (!verified.ok && verified.reason === "invalid_token") {
+    return <PaymentLinkMessage title="Linket er ugyldigt" body="Linket er ugyldigt." />;
+  }
+
+  const bookingId = verified.bookingId;
+  if (!bookingId) {
+    return (
+      <PaymentLinkMessage
+        title={EXPIRED_PAYMENT_LINK_COPY.title}
+        body={EXPIRED_PAYMENT_LINK_COPY.body}
+      />
+    );
   }
 
   const prisma = getPrisma();
   const booking = prisma
     ? await prisma.booking.findUnique({
-        where: { id: verified.bookingId },
+        where: { id: bookingId },
         include: { order: true },
       })
     : null;
 
   if (!booking) {
-    return <PaymentLinkMessage title="Linket er ugyldigt" body="Linket er ugyldigt eller udløbet." />;
+    if (!verified.ok && verified.reason === "expired_token") {
+      return (
+        <PaymentLinkMessage
+          title={EXPIRED_PAYMENT_LINK_COPY.title}
+          body={EXPIRED_PAYMENT_LINK_COPY.body}
+        />
+      );
+    }
+    return <PaymentLinkMessage title="Linket er ugyldigt" body="Linket er ugyldigt." />;
   }
 
   const payable = evaluateSessionPayment({
@@ -67,6 +86,27 @@ export default async function BookingPaymentPage({
       <PaymentLinkMessage
         title="Allerede betalt"
         body="Denne træning er allerede betalt og bekræftet."
+      />
+    );
+  }
+  if (!payable.ok && payable.reason === "cancelled") {
+    return <PaymentLinkMessage title="Ikke tilgængelig" body={payable.error} />;
+  }
+  if (!verified.ok && verified.reason === "expired_token") {
+    return (
+      <PaymentLinkMessage
+        title={EXPIRED_PAYMENT_LINK_COPY.title}
+        body={EXPIRED_PAYMENT_LINK_COPY.body}
+        contact
+      />
+    );
+  }
+  if (!payable.ok && payable.reason === "expired_token") {
+    return (
+      <PaymentLinkMessage
+        title={EXPIRED_PAYMENT_LINK_COPY.title}
+        body={EXPIRED_PAYMENT_LINK_COPY.body}
+        contact
       />
     );
   }
@@ -119,15 +159,23 @@ export default async function BookingPaymentPage({
   );
 }
 
-function PaymentLinkMessage({ title, body }: { title: string; body: string }) {
+function PaymentLinkMessage({
+  title,
+  body,
+  contact = false,
+}: {
+  title: string;
+  body: string;
+  contact?: boolean;
+}) {
   return (
     <section className="section-padding">
       <div className="container-custom">
         <div className="mx-auto max-w-xl rounded-2xl border border-sand bg-white p-8 text-center md:p-12">
           <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">{title}</h1>
           <p className="mt-4 text-ink/60">{body}</p>
-          <Button href="/booking" className="mt-8">
-            Til booking
+          <Button href={contact ? "/kontakt" : "/booking"} className="mt-8">
+            {contact ? "Skriv til mig" : "Til booking"}
           </Button>
         </div>
       </div>
