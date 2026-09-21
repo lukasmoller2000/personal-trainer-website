@@ -45,9 +45,8 @@ export default function AboutPage() {
               <span className="mt-2 block text-sage">skal til.</span>
             </h1>
             <p className="mt-10 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg md:mt-12 md:text-xl">
-              Ikke fordi der findes en genvej. Fordi jeg har prøvet det, der ikke virker — og det,
-              der gør. Nu hjælper jeg dig med en klar plan, struktur og opfølgning, der passer til
-              dit liv.
+              Jeg hjælper dig med at gøre træningen enkel og målrettet, så du ved, hvad du skal
+              gøre, hvorfor du gør det, og hvordan du bliver ved med at rykke dig.
             </p>
           </div>
         </div>

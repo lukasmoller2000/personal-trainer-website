@@ -56,7 +56,7 @@ export const faqs = [
   {
     question: "Hvordan starter jeg Online Coaching?",
     answer:
-      "Du sender en forespørgsel via booking. Du vælger ikke tid i gymmet — opstart aftales, og Lukas kontakter dig.",
+      "Du sender en forespørgsel via booking. Du vælger ikke tid i gymmet — opstart aftales, og jeg kontakter dig.",
   },
   {
     question: "Hvordan betaler jeg?",
