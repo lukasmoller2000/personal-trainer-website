@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, Outfit } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { getSiteUrl, siteConfig } from "@/lib/utils";
 import { siteJsonLd } from "@/lib/seo";
 import "./globals.css";
@@ -94,6 +95,7 @@ export default function RootLayout({
         <Navbar />
         <main id="indhold">{children}</main>
         <Footer />
+        <ScrollToTop />
       </body>
     </html>
   );
