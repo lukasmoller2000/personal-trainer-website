@@ -5,10 +5,12 @@ import Link from "next/link";
 import { CheckCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { HealthConsentCheckbox } from "@/components/ui/HealthConsentCheckbox";
 import { Honeypot } from "@/components/ui/Honeypot";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { AnimatedSection } from "@/components/ui/AnimatedSection";
 import { contactFormShowsSuccess } from "@/lib/contact-ui";
+import { evaluateHealthConsent, HEALTH_CONSENT } from "@/lib/health-consent";
 import { track } from "@/lib/track";
 import { readErrorMessage } from "@/lib/validation";
 
@@ -17,6 +19,7 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitLock = useRef(false);
+  const [healthConsent, setHealthConsent] = useState<boolean>(HEALTH_CONSENT.defaultChecked);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -57,6 +60,14 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
           onSubmit={async (event) => {
             event.preventDefault();
             if (submitLock.current) return;
+            const healthGate = evaluateHealthConsent({
+              texts: [formData.message],
+              consent: healthConsent,
+            });
+            if (!healthGate.ok) {
+              setError(healthGate.error);
+              return;
+            }
             submitLock.current = true;
             setSubmitting(true);
             setError(null);
@@ -64,7 +75,7 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
               const response = await fetch("/api/contact", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData, healthConsent }),
               });
               if (!contactFormShowsSuccess(response.ok)) {
                 submitLock.current = false;
@@ -122,8 +133,13 @@ export function ContactForm({ showHeading = true }: { showHeading?: boolean }) {
               }
               className="w-full resize-none rounded-xl border border-sand bg-white px-4 py-3 text-base outline-none ring-sage/40 placeholder:text-ink/35 focus:ring-2"
               placeholder="Fx personlig træning i Viborg, online coaching, eller hvilket program der passer."
+              aria-describedby="message-hint"
             />
+            <p id="message-hint" className="mt-1.5 text-sm text-ink/55" data-testid="health-field-hint">
+              {HEALTH_CONSENT.fieldHint}
+            </p>
           </div>
+          <HealthConsentCheckbox checked={healthConsent} onChange={setHealthConsent} />
           {error && (
             <p className="text-sm text-red-700" role="alert">
               {error}

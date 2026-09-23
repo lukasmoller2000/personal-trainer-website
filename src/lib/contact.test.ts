@@ -45,6 +45,44 @@ describe("contact form success", () => {
     assert.equal(persisted, 1);
   });
 
+  it("does not treat a message without consent fields as consented", async () => {
+    let persisted: unknown;
+    let text = "";
+    await deliverContactMessage(sample, {
+      send: async (options) => {
+        text = options.text;
+      },
+      persist: async (input) => {
+        persisted = input;
+      },
+    });
+    assert.doesNotMatch(text, /Helbredssamtykke/);
+    assert.equal((persisted as { healthConsentAt?: unknown }).healthConsentAt, undefined);
+    assert.equal((persisted as { healthConsentVersion?: unknown }).healthConsentVersion, undefined);
+  });
+
+  it("passes health consent documentation to persist and the notification", async () => {
+    let persisted: unknown;
+    let text = "";
+    await deliverContactMessage(
+      {
+        ...sample,
+        healthConsentAt: "2026-09-23T10:00:00.000Z",
+        healthConsentVersion: "health-consent-v1",
+      },
+      {
+        send: async (options) => {
+          text = options.text;
+        },
+        persist: async (input) => {
+          persisted = input;
+        },
+      }
+    );
+    assert.match(text, /Helbredssamtykke: health-consent-v1/);
+    assert.equal((persisted as { healthConsentVersion?: string }).healthConsentVersion, "health-consent-v1");
+  });
+
   it("does not succeed when send fails", async () => {
     let persisted = 0;
     await assert.rejects(

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { HealthConsentCheckbox } from "@/components/ui/HealthConsentCheckbox";
 import { Honeypot } from "@/components/ui/Honeypot";
 import { ProductPrice } from "@/components/sections/ProductPrice";
 import {
@@ -21,6 +22,7 @@ import {
   sessionDuration,
 } from "@/lib/commerce";
 import { EARLY_PERFORMANCE_CONSENT } from "@/lib/early-performance";
+import { evaluateHealthConsent, HEALTH_CONSENT } from "@/lib/health-consent";
 import { hasVfgMemberPrice } from "@/lib/checkout-price";
 import {
   getProduct,
@@ -118,6 +120,7 @@ export function BookingWizard({
   const [earlyPerformanceRequested, setEarlyPerformanceRequested] = useState<boolean>(
     EARLY_PERFORMANCE_CONSENT.defaultChecked
   );
+  const [healthConsent, setHealthConsent] = useState<boolean>(HEALTH_CONSENT.defaultChecked);
   const [vfgPreview, setVfgPreview] = useState<VfgPricePreview | null>(null);
   const submitLock = useRef(false);
 
@@ -210,6 +213,14 @@ export function BookingWizard({
       setError("Bekræft, at du ønsker at ydelsen kan begynde, før fortrydelsesfristen er udløbet.");
       return;
     }
+    const healthGate = evaluateHealthConsent({
+      texts: clipMode ? [form.notes] : [form.goal, form.notes],
+      consent: healthConsent,
+    });
+    if (!healthGate.ok) {
+      setError(healthGate.error);
+      return;
+    }
     submitLock.current = true;
     setSubmitting(true);
     setError(null);
@@ -223,6 +234,7 @@ export function BookingWizard({
             token: clipToken,
             website: form.website,
             notes: form.notes,
+            healthConsent,
             ...(selectedDate && selectedTime
               ? { date: toIsoDate(selectedDate), time: selectedTime }
               : {}),
@@ -246,6 +258,7 @@ export function BookingWizard({
         body: JSON.stringify({
           productId: product?.id,
           earlyPerformanceRequested: payNow ? earlyPerformanceRequested : undefined,
+          healthConsent,
           ...form,
           birthYear: collectBirthYear && form.birthYear ? Number(form.birthYear) : undefined,
           ...(needsTimeslot && selectedDate && selectedTime
@@ -647,6 +660,7 @@ export function BookingWizard({
                         onChange={(value) => setForm((prev) => ({ ...prev, goal: value }))}
                         placeholder="Styrke, vægttab, struktur..."
                         maxLength={200}
+                        hint={HEALTH_CONSENT.fieldHint}
                       />
                       {collectBirthYear && payNow && (
                         <Field
@@ -673,8 +687,13 @@ export function BookingWizard({
                       }
                       className="w-full resize-none rounded-xl border border-sand px-4 py-3 outline-none ring-sage/40 focus:ring-2"
                       placeholder="Er der noget praktisk, jeg bør vide inden træningen?"
+                      aria-describedby="booking-notes-hint"
                     />
+                    <p id="booking-notes-hint" className="mt-1.5 text-sm text-ink/55" data-testid="health-field-hint">
+                      {HEALTH_CONSENT.fieldHint}
+                    </p>
                   </div>
+                  <HealthConsentCheckbox checked={healthConsent} onChange={setHealthConsent} />
                   {error && (
                     <p className="text-sm text-red-700" role="alert">
                       {error}

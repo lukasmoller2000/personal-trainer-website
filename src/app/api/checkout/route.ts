@@ -30,6 +30,11 @@ import { getClientKey, rateLimit } from "@/lib/rate-limit";
 import { bookingCancelQuery } from "@/lib/payment-result";
 import { getSiteUrl } from "@/lib/utils";
 import {
+  evaluateHealthConsent,
+  healthConsentWrite,
+  readHealthConsent,
+} from "@/lib/health-consent";
+import {
   honeypotFilled,
   isClockTime,
   isFilled,
@@ -147,6 +152,14 @@ export async function POST(request: NextRequest) {
   const phone = readString(body, "phone");
   const goal = readString(body, "goal");
   const notes = readString(body, "notes");
+  const healthConsent = readHealthConsent(body);
+  const healthGate = evaluateHealthConsent({
+    texts: [goal, notes],
+    consent: healthConsent,
+  });
+  if (!healthGate.ok) {
+    return NextResponse.json({ error: healthGate.error }, { status: 400 });
+  }
   const paymentToken = readString(body, "paymentToken").trim();
   const birthYearRaw = body.birthYear;
   const earlyPerformanceRequested = body.earlyPerformanceRequested === true;
@@ -360,6 +373,7 @@ export async function POST(request: NextRequest) {
         date: needsTimeslot ? date : undefined,
         time: needsTimeslot ? time : undefined,
         birthYear,
+        ...healthConsentWrite(healthConsent),
       },
     });
 

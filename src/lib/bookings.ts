@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { healthConsentEmailLine } from "@/lib/health-consent";
 import type { BookingType } from "@/lib/products";
 import { getProduct } from "@/lib/products";
 import { persistBooking } from "@/lib/db";
@@ -18,6 +19,8 @@ export type Booking = {
   notes?: string;
   status?: string;
   createdAt: string;
+  healthConsentAt?: Date | string | null;
+  healthConsentVersion?: string | null;
 };
 
 export async function createBooking(
@@ -60,6 +63,11 @@ export async function createBooking(
 
   if (input.notes) {
     lines.push("", `Bemærkninger: ${input.notes}`);
+  }
+
+  const consentLine = healthConsentEmailLine(input);
+  if (consentLine) {
+    lines.push("", consentLine);
   }
 
   await sendNotification({

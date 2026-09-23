@@ -55,6 +55,8 @@ export async function persistBooking(
     orderId?: string;
     clipCardId?: string;
     holdUntil?: Date | null;
+    healthConsentAt?: Date | string | null;
+    healthConsentVersion?: string | null;
   },
   client?: BookingWriteClient | null
 ) {
@@ -84,6 +86,10 @@ export async function persistBooking(
     orderId: booking.orderId ?? null,
     clipCardId: booking.clipCardId ?? null,
     holdUntil: booking.holdUntil ?? null,
+    healthConsentAt: booking.healthConsentAt
+      ? new Date(booking.healthConsentAt)
+      : null,
+    healthConsentVersion: booking.healthConsentVersion ?? null,
   };
   await (prisma as BookingWriteClient).booking.create({ data });
 
@@ -95,11 +101,22 @@ export async function persistContactMessage(input: {
   email: string;
   phone: string;
   message: string;
+  healthConsentAt?: Date | string | null;
+  healthConsentVersion?: string | null;
 }) {
   const prisma = getPrisma();
   if (!prisma) return;
 
-  await prisma.contactMessage.create({ data: input });
+  await prisma.contactMessage.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      phone: input.phone,
+      message: input.message,
+      healthConsentAt: input.healthConsentAt ? new Date(input.healthConsentAt) : null,
+      healthConsentVersion: input.healthConsentVersion ?? null,
+    },
+  });
 }
 
 export async function getTakenTimes(date: string): Promise<string[]> {

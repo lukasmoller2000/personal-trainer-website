@@ -10,6 +10,11 @@ import { getProduct, requiresTimeslot } from "@/lib/products";
 import { getSlotsForDate, isBookableDate } from "@/lib/availability";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
 import {
+  evaluateHealthConsent,
+  healthConsentWrite,
+  readHealthConsent,
+} from "@/lib/health-consent";
+import {
   honeypotFilled,
   isClockTime,
   isFilled,
@@ -66,6 +71,14 @@ export async function POST(request: NextRequest) {
   const phone = readString(body, "phone");
   const goal = readString(body, "goal");
   const notes = readString(body, "notes");
+  const healthConsent = readHealthConsent(body);
+  const healthGate = evaluateHealthConsent({
+    texts: [goal, notes],
+    consent: healthConsent,
+  });
+  if (!healthGate.ok) {
+    return NextResponse.json({ error: healthGate.error }, { status: 400 });
+  }
 
   if (!productId || !isFilled(name, 80) || !isFilled(goal, 200)) {
     return NextResponse.json({ error: "Udfyld alle påkrævede felter" }, { status: 400 });
@@ -117,6 +130,7 @@ export async function POST(request: NextRequest) {
       phone: phone.trim(),
       goal: goal.trim(),
       notes: notes.trim() || undefined,
+      ...healthConsentWrite(healthConsent),
       ...(needsTimeslot ? { date, time } : {}),
     });
     return NextResponse.json({ booking });

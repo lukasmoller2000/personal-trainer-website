@@ -71,6 +71,36 @@ describe("booking persistence", () => {
       assert.equal((created[0] as { id: string }).id, "booking_test");
       assert.equal((created[0] as { status: string }).status, "inquiry");
       assert.equal((created[0] as { orderId: string | null }).orderId, null);
+      assert.equal((created[0] as { healthConsentAt: Date | null }).healthConsentAt, null);
+      assert.equal((created[0] as { healthConsentVersion: string | null }).healthConsentVersion, null);
+    });
+  });
+
+  it("stores health consent timestamp and version when given", async () => {
+    const created: unknown[] = [];
+    await withEnv({ NODE_ENV: "production", VERCEL_ENV: "production" }, async () => {
+      const result = await persistBooking(
+        {
+          ...sample,
+          healthConsentAt: "2026-09-23T10:00:00.000Z",
+          healthConsentVersion: "health-consent-v1",
+        },
+        {
+          booking: {
+            create: async ({ data }) => {
+              created.push(data);
+              return data;
+            },
+          },
+        }
+      );
+      assert.equal(result.persisted, true);
+      const row = created[0] as {
+        healthConsentAt: Date | null;
+        healthConsentVersion: string | null;
+      };
+      assert.equal(row.healthConsentAt?.toISOString(), "2026-09-23T10:00:00.000Z");
+      assert.equal(row.healthConsentVersion, "health-consent-v1");
     });
   });
 

@@ -1,10 +1,18 @@
 import { persistContactMessage } from "@/lib/db";
+import { healthConsentEmailLine } from "@/lib/health-consent";
 import { sendNotification } from "@/lib/mail";
 
 export { contactFormShowsSuccess } from "@/lib/contact-ui";
 
 export async function deliverContactMessage(
-  input: { name: string; email: string; phone: string; message: string },
+  input: {
+    name: string;
+    email: string;
+    phone: string;
+    message: string;
+    healthConsentAt?: Date | string | null;
+    healthConsentVersion?: string | null;
+  },
   deps?: {
     send?: (options: { subject: string; text: string; replyTo?: string }) => Promise<void>;
     persist?: typeof persistContactMessage;
@@ -24,6 +32,7 @@ export async function deliverContactMessage(
       "",
       "Besked:",
       input.message,
+      ...(healthConsentEmailLine(input) ? ["", healthConsentEmailLine(input) as string] : []),
     ].join("\n"),
     replyTo: input.email,
   });

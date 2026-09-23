@@ -12,6 +12,7 @@ export function Field({
   required = true,
   minLength,
   maxLength,
+  hint,
 }: {
   id?: string;
   label: string;
@@ -22,6 +23,7 @@ export function Field({
   required?: boolean;
   minLength?: number;
   maxLength?: number;
+  hint?: string;
 }) {
   const inputId = id ?? label.toLowerCase().replace(/\s+/g, "-");
   const inferredMax =
@@ -47,6 +49,7 @@ export function Field({
           type === "email" ? "email" : type === "tel" ? "tel" : inputId === "name" ? "name" : undefined
         }
         aria-required={required}
+        aria-describedby={hint ? `${inputId}-hint` : undefined}
         inputMode={type === "email" ? "email" : type === "tel" ? "tel" : undefined}
         autoCapitalize={type === "email" ? "none" : undefined}
         autoCorrect={type === "email" || type === "tel" ? "off" : undefined}
@@ -56,6 +59,11 @@ export function Field({
           "placeholder:text-ink/35 focus:ring-2 focus:ring-sage/40"
         )}
       />
+      {hint ? (
+        <p id={`${inputId}-hint`} className="mt-1.5 text-sm text-ink/55" data-testid="health-field-hint">
+          {hint}
+        </p>
+      ) : null}
     </div>
   );
 }

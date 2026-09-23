@@ -82,13 +82,16 @@ export function getTermsCopy() {
     onlineCancelRequiredIfSubscription: ONLINE_CANCEL_REQUIRED_IF_SUBSCRIPTION,
     sessionDuration: sessionDuration.copy,
     sessionNotAPromise: sessionDuration.notAPromise,
+    healthDisclaimer:
+      "Personlig træning og online coaching er ikke lægelig rådgivning og erstatter ikke undersøgelse eller behandling hos læge eller andet sundhedspersonale. Fortæl mig om skader, sygdom eller andet helbred, der kan påvirke træningen, så jeg kan tilpasse forløbet. Er du i tvivl om, om aktiviteten er forsvarlig for dig, så spørg læge eller andet relevant sundhedspersonale, før du går i gang. Får du alvorligt ubehag eller smerter, skal du stoppe træningen og søge relevant hjælp.",
     liability:
-      "Træning sker på eget ansvar. Jeg kan aflyse ved sygdom eller force majeure og tilbyder i så fald en ny tid eller at lægge klippet tilbage.",
+      "Jeg kan aflyse ved sygdom eller force majeure og tilbyder i så fald en ny tid eller at lægge klippet tilbage. Det berører ikke dine ufravigelige rettigheder som forbruger.",
   };
 }
 
 export function getPrivacyCopy() {
   const company = getCompanyConfig();
+  const clipMonths = getClipExpiryMonths();
 
   return {
     companyName: company.name,
@@ -104,28 +107,52 @@ export function getPrivacyCopy() {
     processingIntro:
       "Når du skriver, booker eller betaler via siden, behandler vi de oplysninger, der er nødvendige for at svare dig, aftale træning og gennemføre købet.",
     contactAndBooking:
-      "Når du skriver via kontaktformularen, indsamler vi navn, email, telefonnummer og din besked. Når du sender en bookingforespørgsel, indsamler vi navn, email, telefonnummer, dit mål og eventuelle bemærkninger. Ved enkelt PT kan du også angive et ønsket dato og tidspunkt. Det er et ønske, ikke en bekræftet reservation.",
-    noSensitive:
-      "Vi indsamler ikke CPR-nummer og beder ikke om helbredsoplysninger. Skriver du selv noget i fritekst, bruges det kun til at svare dig og tilrettelægge det praktiske. Fødselsår indsamles kun, hvis det senere er slået til af moms-hensyn.",
+      "Når du skriver via kontaktformularen, indsamler vi navn, email, telefonnummer og din besked. Når du sender en bookingforespørgsel — også til online coaching — indsamler vi navn, email, telefonnummer, dit mål og eventuelle bemærkninger. Ved enkelt PT kan du også angive et ønsket dato og tidspunkt. Det er et ønske, ikke en bekræftet reservation.",
+    healthData:
+      "Vi indsamler ikke CPR-nummer og har ikke særlige felter til helbred. Du kan selv skrive dit mål og eventuelle bemærkninger i booking og en fri besked i kontaktformularen. Skriver du om skader, sygdom, medicin, vægt, kost eller andet helbred, kan det være helbredsoplysninger (særlige kategorier af personoplysninger).",
+    healthGate:
+      "Et automatisk nøgleordstjek er kun et ekstra værn. Det er ikke en fuldstændig klassificering af helbredsoplysninger og erstatter ikke samtykke, vejledning eller minimering. Tjekket fanger åbenlyse helbreds- og lægelige udtryk (fx skade, sygdom, medicin, diagnose og smerte) og enkelte kliniske vægt-/kostudtryk. Almindelige træningsmål som vægttab, tabe fedt eller komme i form behandles ikke som særlige kategorier af det automatiske tjek. Du bliver stadig bedt om ikke at skrive helbredsoplysninger uden samtykke.",
+    healthUse:
+      "Sådanne oplysninger bruges kun, hvis det er nødvendigt for at tilpasse træning eller coaching, og kun hvis du har givet et særskilt, udtrykkeligt samtykke i formularen. Samtykket er frivilligt og er ikke knyttet til handelsbetingelser, fortrydelsesret eller markedsføring. Vi bruger dem ikke til markedsføring, profilering eller andre formål. Fødselsår indsamles kun, hvis det er slået til af moms-hensyn.",
     hosting:
-      "Henvendelser sendes med Resend som e-mail, så Lukas kan svare. Notifikationer lander i den Gmail-indbakke, der er sat som kontaktmail. Hjemmesiden hostes hos Vercel, som kan behandle tekniske oplysninger (fx IP-adresse og serverlogs), der er nødvendige for at vise siden. Hvis en database er tilkoblet, kan forespørgsler, bookinger og ordreoplysninger også gemmes der. Uden database sendes henvendelser kun som e-mail.",
+      "Henvendelser sendes med Resend som e-mail, så Lukas kan svare. Notifikationer lander i den Gmail-indbakke, der er sat som kontaktmail. Hjemmesiden hostes hos Vercel, som kan behandle tekniske oplysninger (fx IP-adresse og serverlogs), der er nødvendige for at vise siden. Hvis en database er tilkoblet, kan forespørgsler, bookinger, kontaktbeskeder og ordreoplysninger også gemmes i PostgreSQL hos Neon. Uden database sendes henvendelser kun som e-mail.",
     payment:
       "Betaling kan ske via Stripe. Stripe behandler dine betalingsoplysninger. Siden gemmer ikke fulde kortoplysninger. Relevante ordre- og betalingsoplysninger kan gemmes til bogføring, dokumentation og for at levere ydelsen.",
     membership:
-      "Hvis du kan være berettiget til VFG-medlemspris, tjekker vi, om du har et aktivt medlemskab i Viborg Fitness Gym. Vi bruger først din email og kan bruge dit telefonnummer som reserve. Vi sender en forespørgsel til Viborg Fitness Gym og får kun svaret, om du er berettiget eller ej. Vi modtager ikke hele medlemsprofilen. Formålet er kun at fastsætte den rigtige pris. Hvis tjekket ikke kan gennemføres, bruges standardprisen.",
+      "Hvis du kan være berettiget til VFG-medlemspris, tjekker vi, om du har et aktivt medlemskab i Viborg Fitness Gym. Tjekket sker server-til-server. Vi bruger først din email og kan bruge dit telefonnummer som reserve. Vi sender en forespørgsel til Viborg Fitness Gym og får kun svaret, om du er berettiget eller ej. Vi modtager ikke hele medlemsprofilen. Formålet er kun at fastsætte den rigtige pris. Hvis tjekket ikke kan gennemføres, bruges standardprisen.",
     purpose:
-      "Oplysningerne bruges til at besvare din henvendelse, følge op på booking og levere personlig træning. Hvis en database er tilkoblet, bruges den til at holde styr på forespørgsler, ordrer og — ved et aktivt klippekort — saldo og booking-link knyttet til din mail. Vi bruger ikke oplysningerne til nyhedsbreve, medmindre du selv beder om det.",
+      "Oplysningerne bruges til at besvare din henvendelse, følge op på booking og levere personlig træning eller online coaching. Hvis en database er tilkoblet, bruges den til at holde styr på forespørgsler, ordrer og — ved et aktivt klippekort — saldo og booking-link knyttet til din mail. Vi bruger ikke oplysningerne til nyhedsbreve, medmindre du selv beder om det.",
     purposePayment:
       "Oplysningerne bruges også til at gennemføre køb, sende bekræftelse, dokumentere betaling og fastsætte den rigtige pris, hvis VFG-medlemspris kan være relevant.",
     legalBasis:
-      "Behandlingen sker for at opfylde eller forberede en aftale med dig (GDPR art. 6, stk. 1, litra b) og for bogføring, hvor det er påkrævet (art. 6, stk. 1, litra c).",
-    processors: `Hjemmesiden hostes hos Vercel. E-mail sendes med Resend og lander i Gmail, så henvendelsen kan besvares. Database (hvis tilkoblet) er PostgreSQL hos den tilkoblede udbyder. Betaling behandles af Stripe. Hvis medlemspris kan være relevant, sendes din email — og ved behov dit telefonnummer — til Viborg Fitness Gym, så det kan tjekkes, om du er berettiget. Vercel, Resend og Google er udbydere uden for eller med behandling uden for EU/EØS. De tilbyder databehandleraftaler.`,
+      "Almindelige personoplysninger behandles for at opfylde eller forberede en aftale med dig (GDPR art. 6, stk. 1, litra b) og til bogføring, hvor loven kræver det (art. 6, stk. 1, litra c). Helbredsoplysninger, som du selv skriver, behandles kun for at tilpasse træning eller coaching — ikke til andre formål. Det særlige grundlag er dit udtrykkelige samtykke (GDPR art. 9, stk. 2, litra a). Samtykket er frivilligt, vises som et særskilt afkrydsningsfelt og er ikke knyttet til handelsbetingelser, fortrydelsesret eller markedsføring.",
+    processors:
+      "Hjemmesiden hostes hos Vercel. E-mail sendes med Resend og lander i Gmail, så henvendelsen kan besvares. Database (hvis tilkoblet) er PostgreSQL hos Neon. Betaling behandles af Stripe. Hvis medlemspris kan være relevant, sendes din email — og ved behov dit telefonnummer — til Viborg Fitness Gym, så det kan tjekkes, om du er berettiget. Vercel, Resend, Google og Stripe er udbydere uden for eller med behandling uden for EU/EØS. De tilbyder databehandleraftaler.",
+    processorItems: [
+      "Vercel hoster hjemmesiden og kan behandle tekniske oplysninger som IP-adresse og serverlogs, der er nødvendige for at vise siden.",
+      "Resend sender e-mails fra siden (booking- og kontaktbeskeder). Det kan være navn, email, telefon og din besked eller booking. Notifikationer lander i den Gmail-indbakke, der er sat som kontaktmail, så Lukas kan svare. Google kan derfor behandle den samme korrespondance.",
+      "Hvis en database er tilkoblet, gemmes forespørgsler, bookinger, kontaktbeskeder, ordrer og klippekort i PostgreSQL hos Neon. Uden database sendes henvendelser kun som e-mail.",
+      "Stripe behandler betalingen. Stripe kan behandle navn, email, beløb og betalingsoplysninger. Siden gemmer ikke fulde kortoplysninger — kun de ordre- og betalingsreferencer, der er nødvendige for at levere ydelsen og til bogføring.",
+      "Hvis VFG-medlemspris kan være relevant, sender vi en server-til-server-forespørgsel til Viborg Fitness Gym. Vi bruger først din email og kan bruge dit telefonnummer som reserve. Vi får kun svaret, om du er berettiget eller ej — ikke hele medlemsprofilen.",
+      "Vercel, Resend, Google og Stripe kan behandle data uden for eller med behandling uden for EU/EØS. De tilbyder databehandleraftaler.",
+    ],
     noSale:
       "Vi sælger ikke dine data. Vi deler dem kun, hvis det er nødvendigt for at levere træningen, fastsætte prisen eller vi er forpligtet ved lov.",
-    retention: `Oplysninger opbevares, så henvendelsen kan besvares, og så en eventuel træning kan gennemføres. Bogføringsrelevante oplysninger kan opbevares i den periode, loven kræver. Når der ikke længere er et praktisk eller retligt behov, slettes oplysningerne efter anmodning eller i almindelig oprydning. Skriv til ${company.email} for indsigt eller sletning.`,
+    retention:
+      "Oplysninger opbevares kun, så længe det er nødvendigt for at svare, levere ydelsen eller overholde loven. Der er ikke sat automatisk sletning på siden i dag; sletning sker efter anmodning eller i almindelig oprydning.",
+    retentionItems: [
+      "Kontaktbeskeder (navn, email, telefon og din besked) sendes som e-mail. Hvis databasen er tilkoblet, kan beskeden også gemmes der. De opbevares, så længe det er nødvendigt for at svare dig og følge op, og slettes, når der ikke længere er et praktisk behov, eller hvis du beder om det.",
+      "Bookingoplysninger (navn, email, telefon, mål, bemærkninger, ønsket tid og status) opbevares, så længe det er nødvendigt for at aftale, gennemføre og administrere træningen, og indtil det ikke længere er nødvendigt efter seneste session.",
+      `Klippekort (navn, email, telefon, saldo og booking-link) opbevares, mens kortet er aktivt. Kortet gælder ${clipMonths} måneder fra køb. Efter udløb eller opbrug opbevares oplysningerne kun, så længe det er nødvendigt for at dokumentere saldo og bookinger.`,
+      "Helbredsoplysninger, som du selv har skrevet, opbevares ikke længere end nødvendigt for at tilpasse træning eller coaching. Der er ikke sat en automatisk slettefrist for helbredsoplysninger på siden.",
+      "Ordre- og betalingsoplysninger, der er nødvendige til bogføring (fx navn, beløb, ydelse, betalingsstatus og betalingsreferencer), kan opbevares i 5 år efter udløbet af det regnskabsår, de vedrører, jf. bogføringsloven. Siden gemmer ikke fulde kortoplysninger.",
+      "Tekniske oplysninger hos Vercel (fx IP-adresse og serverlogs) opbevares kun, så længe det er nødvendigt for drift og sikkerhed hos hostingudbyderen. E-mails i indbakken opbevares, så længe det er nødvendigt for korrespondancen.",
+      `Når der ikke længere er et praktisk eller retligt behov, slettes oplysningerne efter anmodning eller i almindelig oprydning. Skriv til ${company.email} for indsigt eller sletning.`,
+    ],
     cookies:
       "Siden bruger ikke analyse-, reklame- eller tracking-cookies. Der er ingen Instagram-embeds. Interne knaphændelser (fx at en booking er startet) sker som first-party CustomEvent i din browser og sendes ikke til annonce- eller analyseselskaber. Hostingudbyderen kan sætte teknisk nødvendige cookies. Admin-login bruger en httpOnly-cookie, som kun sættes, hvis nogen er logget ind som admin. Stripe kan sætte cookies på deres betalingsside.",
     rights: `Du kan bede om indsigt, berigtigelse, sletning, begrænsning, dataportabilitet og gøre indsigelse. Skriv til ${company.email}. Du kan også klage til Datatilsynet`,
+    healthWithdrawal: `Du kan trække dit udtrykkelige samtykke til behandling af helbredsoplysninger tilbage ved at skrive til ${company.email}. Når samtykket er trukket tilbage, stopper den fremtidige behandling, der alene sker på grundlag af samtykket. Tilbagetrækning ændrer ikke lovligheden af den behandling, der fandt sted, før samtykket blev trukket tilbage. Helbredsoplysningerne slettes eller anonymiseres, når der ikke længere er et andet lovligt behov for at opbevare dem. Der er ikke en automatisk slettefunktion på siden; skriv til os, så vi kan behandle anmodningen.`,
   };
 }
 

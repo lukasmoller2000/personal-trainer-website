@@ -39,6 +39,8 @@ export type CheckoutCustomer = {
   date?: string;
   time?: string;
   birthYear?: number | null;
+  healthConsentAt?: Date | string | null;
+  healthConsentVersion?: string | null;
 };
 
 export type OrderMembershipPricing = {
@@ -133,6 +135,10 @@ export async function createPendingOrder(input: {
     birthYear: input.customer.birthYear ?? null,
     earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
     earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
+    healthConsentAt: input.customer.healthConsentAt
+      ? new Date(input.customer.healthConsentAt)
+      : null,
+    healthConsentVersion: input.customer.healthConsentVersion ?? null,
   };
 
   const order = await prisma.$transaction(async (tx) => {
@@ -239,6 +245,8 @@ export async function createPendingOrderForExistingBooking(input: {
     birthYear: input.birthYear ?? null,
     earlyPerformanceRequested: Boolean(input.earlyPerformanceRequested),
     earlyPerformanceRequestedAt: input.earlyPerformanceRequested ? new Date() : null,
+    healthConsentAt: booking.healthConsentAt,
+    healthConsentVersion: booking.healthConsentVersion,
   };
 
   const order =

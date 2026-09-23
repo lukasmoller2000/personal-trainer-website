@@ -123,9 +123,10 @@ export default function TermsPage() {
           </section>
           <section>
             <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
-              12. Ansvar
+              12. Træning, helbred og ansvar
             </h2>
-            <p>{terms.liability}</p>
+            <p>{terms.healthDisclaimer}</p>
+            <p className="mt-3">{terms.liability}</p>
           </section>
           <section>
             <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">

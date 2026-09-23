@@ -283,6 +283,8 @@ export const ADMIN_DATA_FORBIDDEN_KEYS = [
   "metadata",
   "notes",
   "goal",
+  "healthConsentAt",
+  "healthConsentVersion",
   "vfgMemberId",
   "birthYear",
   "paymentUrl",

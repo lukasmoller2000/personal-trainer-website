@@ -7,6 +7,11 @@ import {
 } from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
 import {
+  evaluateHealthConsent,
+  healthConsentWrite,
+  readHealthConsent,
+} from "@/lib/health-consent";
+import {
   honeypotFilled,
   isFilled,
   isValidEmail,
@@ -38,6 +43,14 @@ export async function POST(request: NextRequest) {
   const email = readString(body, "email");
   const phone = readString(body, "phone");
   const message = readString(body, "message");
+  const healthConsent = readHealthConsent(body);
+  const healthGate = evaluateHealthConsent({
+    texts: [message],
+    consent: healthConsent,
+  });
+  if (!healthGate.ok) {
+    return NextResponse.json({ error: healthGate.error }, { status: 400 });
+  }
 
   if (!isFilled(name, 80) || !isFilled(message, 2000)) {
     return NextResponse.json({ error: "Udfyld alle påkrævede felter" }, { status: 400 });
@@ -57,6 +70,7 @@ export async function POST(request: NextRequest) {
       email: email.trim(),
       phone: phone.trim(),
       message: message.trim(),
+      ...healthConsentWrite(healthConsent),
     });
   } catch (error) {
     if (error instanceof MailNotConfiguredError) {

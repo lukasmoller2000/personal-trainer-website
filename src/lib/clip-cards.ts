@@ -32,6 +32,8 @@ export async function consumeClipAtomically(input: {
     phone: string;
     goal: string;
     notes?: string;
+    healthConsentAt?: Date | string | null;
+    healthConsentVersion?: string | null;
   };
 }) {
   const prisma = getPrisma();
@@ -77,6 +79,10 @@ export async function consumeClipAtomically(input: {
         phone: input.booking.phone,
         goal: input.booking.goal,
         notes: input.booking.notes ?? null,
+        healthConsentAt: input.booking.healthConsentAt
+          ? new Date(input.booking.healthConsentAt)
+          : null,
+        healthConsentVersion: input.booking.healthConsentVersion ?? null,
         status: "confirmed",
         clipCardId: card.id,
         orderId: card.orderId,

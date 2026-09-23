@@ -3,6 +3,12 @@ import { getSlotsForDate, isBookableDate } from "@/lib/availability";
 import { ClipConsumeError, consumeClipAtomically } from "@/lib/clip-cards";
 import { evaluateClipCardBooking, evaluateClipCardPublicView } from "@/lib/commerce";
 import { getTakenTimes, getPrisma } from "@/lib/db";
+import {
+  evaluateHealthConsent,
+  healthConsentEmailLine,
+  healthConsentWrite,
+  readHealthConsent,
+} from "@/lib/health-consent";
 import { trySendCustomerEmail, trySendNotification } from "@/lib/mail";
 import { getClientKey, rateLimit } from "@/lib/rate-limit";
 import { formatDate } from "@/lib/utils";
@@ -74,6 +80,14 @@ export async function POST(request: NextRequest) {
   const date = readString(body, "date").trim();
   const time = readString(body, "time").trim();
   const notes = readString(body, "notes");
+  const healthConsent = readHealthConsent(body);
+  const healthGate = evaluateHealthConsent({
+    texts: [notes],
+    consent: healthConsent,
+  });
+  if (!healthGate.ok) {
+    return NextResponse.json({ error: healthGate.error }, { status: 400 });
+  }
 
   if (token.length < 8) {
     return NextResponse.json({ error: "Ugyldigt klippekort" }, { status: 400 });
@@ -127,6 +141,7 @@ export async function POST(request: NextRequest) {
         phone: card.phone,
         goal: "Klippekort",
         notes: notes.trim() || undefined,
+        ...healthConsentWrite(healthConsent),
       },
     });
 
@@ -156,6 +171,7 @@ export async function POST(request: NextRequest) {
         `Dato: ${formatDate(date)}`,
         `Tid: ${time}`,
         `Klip tilbage: ${result.remaining}`,
+        ...(healthConsentEmailLine(result.booking) ? ["", healthConsentEmailLine(result.booking) as string] : []),
       ].join("\n"),
       replyTo: card.email,
     });

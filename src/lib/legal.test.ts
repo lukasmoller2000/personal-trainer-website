@@ -127,9 +127,106 @@ describe("privacy copy", () => {
     assert.match(privacy.membership, /standardprisen/);
     assert.match(privacy.processors, /Stripe/);
     assert.match(privacy.processors, /Viborg Fitness Gym/);
+    assert.match(privacy.processors, /Neon/);
+    assert.match(privacy.processors, /Resend/);
+    assert.match(privacy.processors, /Vercel/);
     assert.doesNotMatch(blob, /aktiv webshop/);
     assert.doesNotMatch(blob, /ikke slået til/);
     assert.doesNotMatch(blob, /Fremtidig betaling/);
     assert.doesNotMatch(blob, /TODO/i);
+    assert.doesNotMatch(blob, /Lenus/i);
+    assert.doesNotMatch(blob, /Apple Health/);
+    assert.doesNotMatch(blob, /Google Fit/);
+    assert.doesNotMatch(blob, /gruppechat/i);
+    assert.doesNotMatch(blob, /App Store/);
+  });
+
+  it("explains that free-text can be health data and limits the purpose", () => {
+    const privacy = getPrivacyCopy();
+
+    assert.match(privacy.healthData, /helbredsoplysninger/);
+    assert.match(privacy.healthData, /særlige kategorier/);
+    assert.match(privacy.healthData, /skader, sygdom, medicin, vægt, kost/);
+    assert.match(privacy.healthUse, /kun, hvis det er nødvendigt for at tilpasse træning eller coaching/);
+    assert.match(privacy.healthUse, /ikke til markedsføring, profilering eller andre formål/);
+    assert.match(privacy.healthUse, /særskilt, udtrykkeligt samtykke/);
+    assert.match(privacy.legalBasis, /art\. 6, stk\. 1, litra b/);
+    assert.match(privacy.legalBasis, /art\. 6, stk\. 1, litra c/);
+    assert.match(privacy.legalBasis, /GDPR art\. 9, stk\. 2, litra a/);
+    assert.match(privacy.legalBasis, /kun for at tilpasse træning eller coaching/);
+    assert.match(privacy.healthWithdrawal, /trække dit udtrykkelige samtykke/);
+    assert.match(privacy.healthWithdrawal, /skrive til/);
+    assert.match(privacy.healthWithdrawal, /stopper den fremtidige behandling/);
+    assert.match(privacy.healthWithdrawal, /ændrer ikke lovligheden/);
+    assert.match(privacy.healthWithdrawal, /slettes eller anonymiseres/);
+    assert.match(privacy.healthWithdrawal, /ikke en automatisk slettefunktion/);
+    assert.match(privacy.healthGate, /ikke en fuldstændig klassificering/);
+    assert.match(privacy.healthGate, /ekstra værn/);
+    assert.match(privacy.healthGate, /vægttab/);
+    assert.match(privacy.healthGate, /tabe fedt/);
+    assert.match(privacy.healthGate, /ikke at skrive helbredsoplysninger uden samtykke/);
+    assert.doesNotMatch(privacy.healthData, /beder ikke om helbredsoplysninger/);
+    assert.doesNotMatch(privacy.healthWithdrawal, /fortrydelsesret/);
+    assert.doesNotMatch(privacy.healthGate, /fortrydelsesret/);
+    assert.doesNotMatch(privacy.healthUse, /nyhedsbrev/);
+  });
+
+  it("states concrete retention criteria without invented product processors", () => {
+    const privacy = getPrivacyCopy();
+    const retention = [privacy.retention, ...privacy.retentionItems].join(" ");
+    const processors = [privacy.processors, ...privacy.processorItems].join(" ");
+
+    assert.match(retention, /5 år efter udløbet af det regnskabsår/);
+    assert.match(retention, /bogføringsloven/);
+    assert.match(retention, /\d+ måneder fra køb/);
+    assert.match(retention, /ikke længere end nødvendigt for at tilpasse træning eller coaching/);
+    assert.match(retention, /ikke sat en automatisk slettefrist for helbredsoplysninger/);
+    assert.match(retention, /indtil det ikke længere er nødvendigt efter seneste session/);
+    const healthRetention = privacy.retentionItems.find((item) => item.includes("Helbredsoplysninger"));
+    assert.ok(healthRetention);
+    assert.doesNotMatch(healthRetention, /6 måneder|12 måneder|36 måneder/);
+    assert.doesNotMatch(privacy.healthWithdrawal, /6 måneder|12 måneder|36 måneder/);
+    assert.match(privacy.membership, /server-til-server/);
+    assert.match(processors, /PostgreSQL hos Neon/);
+    assert.match(processors, /ikke hele medlemsprofilen/);
+  });
+});
+
+describe("legal page consistency", () => {
+  it("keeps terms and privacy aligned on company, Stripe, VFG and health", () => {
+    const terms = getTermsCopy();
+    const privacy = getPrivacyCopy();
+
+    assert.equal(terms.cvr, privacy.cvr);
+    assert.equal(terms.address, privacy.address);
+    assert.equal(terms.email, privacy.email);
+    assert.equal(terms.phone, privacy.phone);
+    assert.equal(terms.trainingAddress, privacy.trainingAddress);
+    assert.match(terms.payment, /Betaling kan ske via Stripe/);
+    assert.match(privacy.payment, /Betaling kan ske via Stripe/);
+    assert.match(terms.memberPrice, /standardprisen/);
+    assert.match(privacy.membership, /standardprisen/);
+    assert.match(privacy.healthData, /helbredsoplysninger/);
+    assert.match(terms.healthDisclaimer, /ikke lægelig rådgivning/);
+    assert.doesNotMatch(terms.address, /Falkevej/);
+    assert.match(terms.trainingAddress, /Falkevej 16B/);
+  });
+});
+
+describe("terms health disclaimer", () => {
+  it("states a short health disclaimer without waiving consumer rights", () => {
+    const terms = getTermsCopy();
+    const blob = JSON.stringify(terms);
+
+    assert.match(terms.healthDisclaimer, /ikke lægelig rådgivning/);
+    assert.match(terms.healthDisclaimer, /skader, sygdom eller andet helbred/);
+    assert.match(terms.healthDisclaimer, /læge eller andet relevant sundhedspersonale/);
+    assert.match(terms.healthDisclaimer, /alvorligt ubehag eller smerter/);
+    assert.match(terms.liability, /sygdom eller force majeure/);
+    assert.match(terms.liability, /ufravigelige rettigheder som forbruger/);
+    assert.doesNotMatch(terms.liability, /på eget ansvar/);
+    assert.doesNotMatch(blob, /Lenus/i);
+    assert.doesNotMatch(blob, /Apple Health/);
+    assert.doesNotMatch(blob, /Google Fit/);
   });
 });

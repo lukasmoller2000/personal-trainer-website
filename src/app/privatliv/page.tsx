@@ -55,7 +55,9 @@ export default function PrivacyPage() {
             </h2>
             <p>{privacy.processingIntro}</p>
             <p className="mt-3">{privacy.contactAndBooking}</p>
-            <p className="mt-3">{privacy.noSensitive}</p>
+            <p className="mt-3">{privacy.healthData}</p>
+            <p className="mt-3">{privacy.healthGate}</p>
+            <p className="mt-3">{privacy.healthUse}</p>
             <p className="mt-3">{privacy.hosting}</p>
           </section>
 
@@ -86,13 +88,18 @@ export default function PrivacyPage() {
               6. Retsgrundlag
             </h2>
             <p>{privacy.legalBasis}</p>
+            <p className="mt-3">{privacy.healthWithdrawal}</p>
           </section>
 
           <section>
             <h2 className="mb-2 font-display text-2xl font-semibold tracking-tight text-ink">
               7. Databehandlere og videregivelse
             </h2>
-            <p>{privacy.processors}</p>
+            {privacy.processorItems.map((item) => (
+              <p key={item} className="mt-3 first:mt-0">
+                {item}
+              </p>
+            ))}
             <p className="mt-3">{privacy.noSale}</p>
           </section>
 
@@ -101,6 +108,11 @@ export default function PrivacyPage() {
               8. Opbevaring
             </h2>
             <p>{privacy.retention}</p>
+            {privacy.retentionItems.map((item) => (
+              <p key={item} className="mt-3">
+                {item}
+              </p>
+            ))}
           </section>
 
           <section>

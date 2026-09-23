@@ -24,6 +24,9 @@ model Booking {
   clipCardId String?
   cancelledAt DateTime?
   createdAt  DateTime  @default(now())
+  /// Explicit Art. 9(2)(a) consent when the customer volunteered health free-text.
+  healthConsentAt      DateTime?
+  healthConsentVersion String?
 
   order    Order?    @relation(fields: [orderId], references: [id])
   clipCard ClipCard? @relation(fields: [clipCardId], references: [id])
@@ -70,6 +73,9 @@ model Order {
   /// Only set when an internal/external lookup already returned a member id.
   vfgMemberId                 String?
   createdAt               DateTime  @default(now())
+  /// Explicit Art. 9(2)(a) consent when the customer volunteered health free-text.
+  healthConsentAt      DateTime?
+  healthConsentVersion String?
 
   bookings Booking[]
   clipCard ClipCard?
@@ -110,7 +116,10 @@ model ContactMessage {
   email     String
   phone     String
   message   String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  /// Explicit Art. 9(2)(a) consent when the customer volunteered health free-text.
+  healthConsentAt      DateTime?
+  healthConsentVersion String?
 
   @@index([createdAt])
 }
